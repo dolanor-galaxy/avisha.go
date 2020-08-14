@@ -47,8 +47,8 @@ type Term struct {
 // Services consumed are tracked accordingly, typically involving Rent and
 // Utilities.
 type Lease struct {
-	Tenant Tenant
-	Site   Site
+	Tenant string
+	Site   string
 	Term   Term
 	Rent   Currency
 
@@ -85,21 +85,21 @@ type App struct {
 // SendInvoice sends the utility service invoice for the given Lease.
 func (app App) SendInvoice(t Tenant, s Site) error {
 	containsSite := storage.PredicateFunc(func(ent interface{}) bool {
-		if lease, ok := ent.(Lease); ok {
-			return lease.Site.Number == s.Number
+		if lease, ok := ent.(*Lease); ok {
+			return lease.Site == s.Number
 		}
 		return false
 	})
 
 	containsTenant := storage.PredicateFunc(func(ent interface{}) bool {
-		if lease, ok := ent.(Lease); ok {
-			return lease.Tenant.Name == t.Name
+		if lease, ok := ent.(*Lease); ok {
+			return lease.Tenant == t.Name
 		}
 		return false
 	})
 
 	if entity, ok := app.Query([]storage.Predicate{containsSite, containsTenant}); ok {
-		if lease, ok := entity.(Lease); ok {
+		if lease, ok := entity.(*Lease); ok {
 
 			// Note: Instead of any actual invoice rendering we will just render
 			// utility balance owed.
@@ -125,32 +125,45 @@ func (app App) SendInvoice(t Tenant, s Site) error {
 
 // CreateLease creates a new lease.
 func (app App) CreateLease(
-	t Tenant,
-	s Site,
+	tenant string,
+	site string,
 	term Term,
 	rent Currency,
 ) error {
 	containsSite := storage.PredicateFunc(func(ent interface{}) bool {
-		if lease, ok := ent.(Lease); ok {
-			return lease.Site.Number == s.Number
+		if lease, ok := ent.(*Lease); ok {
+			return lease.Site == site
 		}
 		return false
 	})
 
 	matchesTerm := storage.PredicateFunc(func(ent interface{}) bool {
-		if lease, ok := ent.(Lease); ok {
+		if lease, ok := ent.(*Lease); ok {
 			return lease.Term == term
 		}
 		return false
 	})
+
+	tenantExists := storage.PredicateFunc(func(ent interface{}) bool {
+		if t, ok := ent.(*Tenant); ok {
+			if t.Name == tenant {
+				return true
+			}
+		}
+		return false
+	})
+
+	if _, ok := app.Query([]storage.Predicate{tenantExists}); !ok {
+		return fmt.Errorf("tenant %s does not exist", tenant)
+	}
 
 	if _, ok := app.Query([]storage.Predicate{containsSite, matchesTerm}); ok {
 		return fmt.Errorf("lease conflict: site already leased during this term")
 	}
 
 	lease := Lease{
-		Tenant: t,
-		Site:   s,
+		Tenant: tenant,
+		Site:   site,
 		Term:   term,
 		Rent:   rent,
 		Services: map[string]Service{
@@ -169,7 +182,7 @@ func (app App) CreateLease(
 // ListSite enters a new, unqiue, leaseable Site.
 func (app App) ListSite(s Site) error {
 	exists := storage.PredicateFunc(func(ent interface{}) bool {
-		if site, ok := ent.(Site); ok {
+		if site, ok := ent.(*Site); ok {
 			return site.Number == s.Number
 		}
 		return false
@@ -189,7 +202,7 @@ func (app App) ListSite(s Site) error {
 // RegisterTenant enters a new, unique Tenant.
 func (app App) RegisterTenant(t Tenant) error {
 	exists := storage.PredicateFunc(func(ent interface{}) bool {
-		if tenant, ok := ent.(Tenant); ok {
+		if tenant, ok := ent.(*Tenant); ok {
 			return tenant.Name == t.Name
 		}
 		return false
@@ -208,4 +221,19 @@ func (app App) RegisterTenant(t Tenant) error {
 	}
 
 	return nil
+}
+
+// ID specifies the unique identifier.
+func (t Tenant) ID() string {
+	return t.Name
+}
+
+// ID specifies the unique identifier.
+func (s Site) ID() string {
+	return s.Number
+}
+
+// ID specifies the unique identifier.
+func (l Lease) ID() string {
+	return fmt.Sprintf("%s-%s", l.Tenant, l.Site)
 }

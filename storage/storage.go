@@ -3,7 +3,14 @@ package storage
 // Storer provides persistence for entities.
 type Storer interface {
 	Query(predicates []Predicate) (interface{}, bool)
-	Save(ent interface{}) error
+	Save(ent Entity) error
+	Delete(ent Entity) error
+}
+
+// Entity is a unique object that has an ID.
+// Used to compare for equality when saving objects.
+type Entity interface {
+	ID() string
 }
 
 // Predicate selects an an entity based on some criteria.
