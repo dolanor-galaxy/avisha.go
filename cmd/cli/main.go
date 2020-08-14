@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -23,7 +24,15 @@ func init() {
 
 func main() {
 	app := avisha.App{
-		Storer:   &storage.Local{},
+		Storer: &storage.File{
+			Path: "db.json",
+			Types: map[string]storage.Type{
+				"tenant": &TenantType{},
+				"site":   &SiteType{},
+				"lease":  &LeaseType{},
+			},
+			Buckets: make(map[string][]json.RawMessage),
+		},
 		Notifier: &notify.Console{},
 	}
 
@@ -43,4 +52,37 @@ func main() {
 			spew.Dump(app.Storer)
 		}
 	}
+}
+
+type TenantType struct{}
+
+func (t *TenantType) New() interface{} {
+	return &avisha.Tenant{}
+}
+
+func (t *TenantType) Is(v interface{}) bool {
+	_, ok := v.(avisha.Tenant)
+	return ok
+}
+
+type SiteType struct{}
+
+func (t *SiteType) New() interface{} {
+	return &avisha.Site{}
+}
+
+func (t *SiteType) Is(v interface{}) bool {
+	_, ok := v.(avisha.Site)
+	return ok
+}
+
+type LeaseType struct{}
+
+func (t *LeaseType) New() interface{} {
+	return &avisha.Lease{}
+}
+
+func (t *LeaseType) Is(v interface{}) bool {
+	_, ok := v.(avisha.Lease)
+	return ok
 }
