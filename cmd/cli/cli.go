@@ -56,7 +56,7 @@ func (m ArgMap) Match(args []string) {
 	}
 }
 
-// Err wraps and error and adds context.
+// Err wraps an error and adds context.
 // Ignores empty context.
 type Err struct {
 	Ctx string
