@@ -76,7 +76,7 @@ func (f *File) Query(plist []Predicate) (interface{}, bool) {
 func (f *File) Save(ent Entity) error {
 	for T := range f.Types {
 		if T == reflect.TypeOf(ent).Name() {
-			v, err := json.Marshal(ent)
+			v, err := json.MarshalIndent(ent, "", "\t")
 			if err != nil {
 				return fmt.Errorf("serializing entity: %w", err)
 			}
