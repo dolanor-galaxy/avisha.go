@@ -153,8 +153,21 @@ func (app App) CreateLease(
 		return false
 	})
 
+	siteExists := storage.PredicateFunc(func(ent interface{}) bool {
+		if s, ok := ent.(*Site); ok {
+			if s.Number == site {
+				return true
+			}
+		}
+		return false
+	})
+
 	if _, ok := app.Query([]storage.Predicate{tenantExists}); !ok {
 		return fmt.Errorf("tenant %s does not exist", tenant)
+	}
+
+	if _, ok := app.Query([]storage.Predicate{siteExists}); !ok {
+		return fmt.Errorf("site %s does not exist", site)
 	}
 
 	if _, ok := app.Query([]storage.Predicate{containsSite, matchesTerm}); ok {
