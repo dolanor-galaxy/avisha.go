@@ -72,6 +72,25 @@ func (f *File) Query(plist []Predicate) (interface{}, bool) {
 	return nil, false
 }
 
+// List query the file storage.
+func (f *File) List(plist []Predicate) []interface{} {
+	var found []interface{}
+	// Loop over all the buckets, every entity will be tested.
+	for T, bucket := range f.Buckets {
+		for _, by := range bucket {
+			// Deserialize each entity using the appropriate type.
+			ent := reflect.New(reflect.ValueOf(f.Types[T]).Elem().Type()).Interface()
+			// Test against predicates.
+			if err := json.Unmarshal(by, ent); err == nil {
+				if ok := Predicates(plist).Apply(ent); ok {
+					found = append(found, ent)
+				}
+			}
+		}
+	}
+	return found
+}
+
 // Save will update an entity or create a new on if it does not exist.
 func (f *File) Save(ent Entity) error {
 	for T := range f.Types {

@@ -3,6 +3,7 @@ package storage
 // Storer provides persistence for entities.
 type Storer interface {
 	Query(predicates []Predicate) (interface{}, bool)
+	List(predicates []Predicate) []interface{}
 	Save(ent Entity) error
 	Delete(ent Entity) error
 }

@@ -15,6 +15,17 @@ func (l *Local) Query(plist []Predicate) (interface{}, bool) {
 	return nil, false
 }
 
+// List query local storage.
+func (l *Local) List(plist []Predicate) []interface{} {
+	var found []interface{}
+	for _, ent := range l.Entities {
+		if ok := Predicates(plist).Apply(ent); ok {
+			found = append(found, ent)
+		}
+	}
+	return found
+}
+
 // Save to local storage.
 func (l *Local) Save(ent interface{}) error {
 	l.Entities = append(l.Entities, ent)
