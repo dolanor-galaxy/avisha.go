@@ -1,6 +1,10 @@
 package main
 
-import avisha "github.com/jackmordaunt/avisha-fn"
+import (
+	"fmt"
+
+	avisha "github.com/jackmordaunt/avisha-fn"
+)
 
 var tenant = Command{
 	Name:   "tenant",
@@ -13,16 +17,14 @@ var tenant = Command{
 
 				matcher := ArgMap{
 					Handlers: map[string]func(string){
-						"name": func(value string) {
-							tenant.Name = value
-						},
-						"contact": func(value string) {
-							tenant.Contact = value
-						},
+						"name":    Assigner(&tenant.Name),
+						"contact": Assigner(&tenant.Contact),
 					},
 				}
 
 				matcher.Match(args)
+
+				fmt.Printf("tenant: %#v\n", tenant)
 
 				if err := app.RegisterTenant(tenant); err != nil {
 					return err
