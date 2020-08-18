@@ -9,14 +9,24 @@ import (
 	"fyne.io/fyne/app"
 	"fyne.io/fyne/layout"
 	"fyne.io/fyne/widget"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/jackmordaunt/avisha-fn"
 	"github.com/jackmordaunt/avisha-fn/notify"
 	"github.com/jackmordaunt/avisha-fn/storage"
 )
 
+func init() {
+	// Note: Setup spew utility global config.
+	// Useful for debugging, subject to change.
+	spew.Config.DisablePointerAddresses = true
+	spew.Config.DisableCapacities = true
+	spew.Config.Indent = "\t"
+	spew.Config.SortKeys = true
+}
+
 func main() {
 	appo := avisha.App{
-		Storer: storage.FileStorage("target/cli/db.json").
+		Storage: storage.FileStorage("target/db.json").
 			With(&avisha.Tenant{}).
 			With(&avisha.Site{}).
 			With(&avisha.Lease{}).

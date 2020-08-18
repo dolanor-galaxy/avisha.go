@@ -78,28 +78,28 @@ func (s Service) Balance() int {
 
 // App implements use cases.
 type App struct {
-	storage.Storer
+	storage.Storage
 	notify.Notifier
 }
 
 // SendInvoice sends the utility service invoice for the given Lease.
 func (app App) SendInvoice(t Tenant, s Site) error {
-	containsSite := storage.PredicateFunc(func(ent interface{}) bool {
-		if lease, ok := ent.(*Lease); ok {
+	containsSite := func(ent storage.Entity) bool {
+		if lease, ok := ent.(Lease); ok {
 			return lease.Site == s.Number
 		}
 		return false
-	})
+	}
 
-	containsTenant := storage.PredicateFunc(func(ent interface{}) bool {
-		if lease, ok := ent.(*Lease); ok {
+	containsTenant := func(ent storage.Entity) bool {
+		if lease, ok := ent.(Lease); ok {
 			return lease.Tenant == t.Name
 		}
 		return false
-	})
+	}
 
-	if entity, ok := app.Query([]storage.Predicate{containsSite, containsTenant}); ok {
-		if lease, ok := entity.(*Lease); ok {
+	if entity, ok := app.Query(containsSite, containsTenant); ok {
+		if lease, ok := entity.(Lease); ok {
 
 			// Note: Instead of any actual invoice rendering we will just render
 			// utility balance owed.
@@ -130,47 +130,47 @@ func (app App) CreateLease(
 	term Term,
 	rent Currency,
 ) error {
-	containsSite := storage.PredicateFunc(func(ent interface{}) bool {
-		if lease, ok := ent.(*Lease); ok {
+	containsSite := func(ent storage.Entity) bool {
+		if lease, ok := ent.(Lease); ok {
 			return lease.Site == site
 		}
 		return false
-	})
+	}
 
-	matchesTerm := storage.PredicateFunc(func(ent interface{}) bool {
-		if lease, ok := ent.(*Lease); ok {
+	matchesTerm := func(ent storage.Entity) bool {
+		if lease, ok := ent.(Lease); ok {
 			return lease.Term == term
 		}
 		return false
-	})
+	}
 
-	tenantExists := storage.PredicateFunc(func(ent interface{}) bool {
+	tenantExists := func(ent storage.Entity) bool {
 		if t, ok := ent.(*Tenant); ok {
 			if t.Name == tenant {
 				return true
 			}
 		}
 		return false
-	})
+	}
 
-	siteExists := storage.PredicateFunc(func(ent interface{}) bool {
+	siteExists := func(ent storage.Entity) bool {
 		if s, ok := ent.(*Site); ok {
 			if s.Number == site {
 				return true
 			}
 		}
 		return false
-	})
+	}
 
-	if _, ok := app.Query([]storage.Predicate{tenantExists}); !ok {
+	if _, ok := app.Query(tenantExists); !ok {
 		return fmt.Errorf("tenant %s does not exist", tenant)
 	}
 
-	if _, ok := app.Query([]storage.Predicate{siteExists}); !ok {
+	if _, ok := app.Query(siteExists); !ok {
 		return fmt.Errorf("site %s does not exist", site)
 	}
 
-	if _, ok := app.Query([]storage.Predicate{containsSite, matchesTerm}); ok {
+	if _, ok := app.Query(containsSite, matchesTerm); ok {
 		return fmt.Errorf("lease conflict: site already leased during this term")
 	}
 
@@ -185,7 +185,7 @@ func (app App) CreateLease(
 		},
 	}
 
-	if err := app.Save(lease); err != nil {
+	if err := app.Create(lease); err != nil {
 		return fmt.Errorf("saving lease: %w", err)
 	}
 
@@ -194,18 +194,18 @@ func (app App) CreateLease(
 
 // ListSite enters a new, unqiue, leaseable Site.
 func (app App) ListSite(s Site) error {
-	exists := storage.PredicateFunc(func(ent interface{}) bool {
+	exists := func(ent storage.Entity) bool {
 		if site, ok := ent.(*Site); ok {
 			return site.Number == s.Number
 		}
 		return false
-	})
+	}
 
-	if _, ok := app.Query([]storage.Predicate{exists}); ok {
+	if _, ok := app.Query(exists); ok {
 		return fmt.Errorf("%s already exists", s.Number)
 	}
 
-	if err := app.Save(s); err != nil {
+	if err := app.Create(s); err != nil {
 		return fmt.Errorf("saving site: %w", err)
 	}
 
@@ -214,22 +214,22 @@ func (app App) ListSite(s Site) error {
 
 // RegisterTenant enters a new, unique Tenant.
 func (app App) RegisterTenant(t Tenant) error {
-	exists := storage.PredicateFunc(func(ent interface{}) bool {
+	exists := func(ent storage.Entity) bool {
 		if tenant, ok := ent.(*Tenant); ok {
 			return tenant.Name == t.Name
 		}
 		return false
-	})
+	}
 
 	if len(t.Name) < 1 {
 		return fmt.Errorf("name required")
 	}
 
-	if _, ok := app.Query([]storage.Predicate{exists}); ok {
+	if _, ok := app.Query(exists); ok {
 		return fmt.Errorf("%s already exists", t.Name)
 	}
 
-	if err := app.Save(t); err != nil {
+	if err := app.Create(t); err != nil {
 		return fmt.Errorf("saving tenant: %w", err)
 	}
 
