@@ -2,34 +2,32 @@ package storage
 
 // Storer provides persistence for entities.
 type Storer interface {
-	Query(predicates []Predicate) (interface{}, bool)
+	Query(filters ...func(interface{}) bool) (interface{}, bool)
+	List(filters ...func(interface{}) bool) []interface{}
 	Save(ent interface{}) error
 }
 
-// Predicate selects an an entity based on some criteria.
-// Predicate is responsible for type asserting the entity.
-type Predicate interface {
-	Apply(ent interface{}) bool
-}
-
-// PredicateFunc is a standalone func that implements Predicate.
-type PredicateFunc func(ent interface{}) bool
-
-// Apply the predicate func.
-func (fn PredicateFunc) Apply(ent interface{}) bool {
-	return fn(ent)
-}
-
-// Predicates treats a list of predicates as one big predicate.
-type Predicates []Predicate
-
-// Apply each predicate to the entity.
-// If any of the predicates fail, this predicate as a whole fails.
-func (predicates Predicates) Apply(ent interface{}) bool {
-	for _, p := range predicates {
-		if ok := p.Apply(ent); !ok {
+// Apply all filters to ent.
+func Apply(ent interface{}, filters ...func(interface{}) bool) bool {
+	for _, filter := range filters {
+		if !filter(ent) {
 			return false
 		}
 	}
 	return true
 }
+
+// // Tenant storage.
+// type Tenant interface {
+// 	Tenants(filters ...func(*avisha.Tenant) bool) []avisha.Tenant
+// }
+
+// // Site storage.
+// type Site interface {
+// 	Sites(filters ...func(*avisha.Site) bool) []avisha.Site
+// }
+
+// // Lease storage.
+// type Lease interface {
+// 	Leases(filters ...func(*avisha.Lease) bool) []avisha.Lease
+// }

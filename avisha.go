@@ -84,21 +84,21 @@ type App struct {
 
 // SendInvoice sends the utility service invoice for the given Lease.
 func (app App) SendInvoice(t Tenant, s Site) error {
-	containsSite := storage.PredicateFunc(func(ent interface{}) bool {
+	containsSite := func(ent interface{}) bool {
 		if lease, ok := ent.(Lease); ok {
 			return lease.Site.Number == s.Number
 		}
 		return false
-	})
+	}
 
-	containsTenant := storage.PredicateFunc(func(ent interface{}) bool {
+	containsTenant := func(ent interface{}) bool {
 		if lease, ok := ent.(Lease); ok {
 			return lease.Tenant.Name == t.Name
 		}
 		return false
-	})
+	}
 
-	if entity, ok := app.Query([]storage.Predicate{containsSite, containsTenant}); ok {
+	if entity, ok := app.Query(containsSite, containsTenant); ok {
 		if lease, ok := entity.(Lease); ok {
 
 			// Note: Instead of any actual invoice rendering we will just render
@@ -130,21 +130,21 @@ func (app App) CreateLease(
 	term Term,
 	rent Currency,
 ) error {
-	containsSite := storage.PredicateFunc(func(ent interface{}) bool {
+	containsSite := func(ent interface{}) bool {
 		if lease, ok := ent.(Lease); ok {
 			return lease.Site.Number == s.Number
 		}
 		return false
-	})
+	}
 
-	matchesTerm := storage.PredicateFunc(func(ent interface{}) bool {
+	matchesTerm := func(ent interface{}) bool {
 		if lease, ok := ent.(Lease); ok {
 			return lease.Term == term
 		}
 		return false
-	})
+	}
 
-	if _, ok := app.Query([]storage.Predicate{containsSite, matchesTerm}); ok {
+	if _, ok := app.Query(containsSite, matchesTerm); ok {
 		return fmt.Errorf("lease conflict: site already leased during this term")
 	}
 
@@ -168,14 +168,14 @@ func (app App) CreateLease(
 
 // ListSite enters a new, unqiue, leaseable Site.
 func (app App) ListSite(s Site) error {
-	exists := storage.PredicateFunc(func(ent interface{}) bool {
+	exists := func(ent interface{}) bool {
 		if site, ok := ent.(Site); ok {
 			return site.Number == s.Number
 		}
 		return false
-	})
+	}
 
-	if _, ok := app.Query([]storage.Predicate{exists}); ok {
+	if _, ok := app.Query(exists); ok {
 		return fmt.Errorf("%s already exists", s.Number)
 	}
 
@@ -188,18 +188,18 @@ func (app App) ListSite(s Site) error {
 
 // RegisterTenant enters a new, unique Tenant.
 func (app App) RegisterTenant(t Tenant) error {
-	exists := storage.PredicateFunc(func(ent interface{}) bool {
+	exists := func(ent interface{}) bool {
 		if tenant, ok := ent.(Tenant); ok {
 			return tenant.Name == t.Name
 		}
 		return false
-	})
+	}
 
 	if len(t.Name) < 1 {
 		return fmt.Errorf("name required")
 	}
 
-	if _, ok := app.Query([]storage.Predicate{exists}); ok {
+	if _, ok := app.Query(exists); ok {
 		return fmt.Errorf("%s already exists", t.Name)
 	}
 
