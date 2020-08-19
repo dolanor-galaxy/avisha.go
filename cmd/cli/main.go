@@ -25,7 +25,7 @@ func init() {
 
 func main() {
 	app := avisha.App{
-		Storer: storage.FileStorage("target/cli/db.json").
+		Storage: storage.FileStorage("target/db.json").
 			With(&avisha.Tenant{}).
 			With(&avisha.Site{}).
 			With(&avisha.Lease{}).
@@ -46,7 +46,7 @@ func main() {
 		if err := mux.Handle(&app, strings.Fields(line)); err != nil {
 			fmt.Printf("error: %s\n", err)
 		} else {
-			spew.Dump(app.Storer)
+			spew.Dump(app.Storage)
 		}
 	}
 }

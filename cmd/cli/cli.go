@@ -28,7 +28,7 @@ func (cmd Command) Handle(app *avisha.App, args []string) error {
 	}
 
 	for _, child := range cmd.Children {
-		if child.Name == args[0] {
+		if child.Name == args[0] || string(child.Name[0]) == args[0] {
 			if err := child.Handle(app, args[1:]); err != nil {
 				return Err{Ctx: cmd.Name, Err: err}
 			}
@@ -48,15 +48,32 @@ type ArgMap struct {
 // Match performs the argument matching.
 func (m ArgMap) Match(args []string) {
 	for _, arg := range args {
+		// name=value
 		parts := strings.Split(arg, "=")
-		name, value := strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
+		name, value := parts[0], parts[1]
+
+		// Check for exact match.
 		if handler, ok := m.Handlers[name]; ok {
 			handler(value)
+		} else {
+			// Check for abreviation.
+			for hname, handler := range m.Handlers {
+				if string(hname[0]) == name {
+					handler(value)
+				}
+			}
 		}
 	}
 }
 
-// Err wraps an error and adds context.
+// Assigner returns a function that assigns to ptr.
+func Assigner(ptr *string) func(string) {
+	return func(v string) {
+		*ptr = v
+	}
+}
+
+// Err wraps and error and adds context.
 // Ignores empty context.
 type Err struct {
 	Ctx string

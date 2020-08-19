@@ -55,21 +55,56 @@ func (f *File) MustLoad() *File {
 }
 
 // Query the file storage.
-func (f *File) Query(plist []Predicate) (interface{}, bool) {
+func (f *File) Query(plist ...func(Entity) bool) (Entity, bool) {
 	// Loop over all the buckets, every entity will be tested.
 	for T, bucket := range f.Buckets {
 		for _, by := range bucket {
 			// Deserialize each entity using the appropriate type.
-			ent := reflect.New(reflect.ValueOf(f.Types[T]).Elem().Type()).Interface()
+			ent, ok := reflect.New(reflect.ValueOf(f.Types[T]).Elem().Type()).Interface().(Entity)
+			if !ok {
+				continue
+			}
 			// Test against predicates.
 			if err := json.Unmarshal(by, ent); err == nil {
-				if ok := Predicates(plist).Apply(ent); ok {
+				if ok := Apply(ent, plist...); ok {
 					return ent, ok
 				}
 			}
 		}
 	}
 	return nil, false
+}
+
+// List query the file storage.
+func (f *File) List(plist ...func(Entity) bool) []Entity {
+	var found []Entity
+	// Loop over all the buckets, every entity will be tested.
+	for T, bucket := range f.Buckets {
+		for _, by := range bucket {
+			// Deserialize each entity using the appropriate type.
+			ent, ok := reflect.New(reflect.ValueOf(f.Types[T]).Elem().Type()).Interface().(Entity)
+			if !ok {
+				continue
+			}
+			// Test against predicates.
+			if err := json.Unmarshal(by, ent); err == nil {
+				if ok := Apply(ent, plist...); ok {
+					found = append(found, ent)
+				}
+			}
+		}
+	}
+	return found
+}
+
+// Create an entity
+func (f *File) Create(ent Entity) error {
+	return f.Save(ent)
+}
+
+// Update an entity
+func (f *File) Update(ent Entity) error {
+	return f.Save(ent)
 }
 
 // Save will update an entity or create a new on if it does not exist.

@@ -1,40 +1,38 @@
 package storage
 
-// Storer provides persistence for entities.
-type Storer interface {
-	Query(predicates []Predicate) (interface{}, bool)
-	Save(ent Entity) error
-	Delete(ent Entity) error
-}
-
-// Entity is a unique object that has an ID.
-// Used to compare for equality when saving objects.
+// Entity is a unique object.
 type Entity interface {
 	ID() string
 }
 
-// Predicate selects an an entity based on some criteria.
-// Predicate is responsible for type asserting the entity.
-type Predicate interface {
-	Apply(ent interface{}) bool
+// Storage is any object that can store and query entities.
+type Storage interface {
+	Storer
+	Queryer
 }
 
-// PredicateFunc is a standalone func that implements Predicate.
-type PredicateFunc func(ent interface{}) bool
-
-// Apply the predicate func.
-func (fn PredicateFunc) Apply(ent interface{}) bool {
-	return fn(ent)
+// Storer provides persistence for entities.
+type Storer interface {
+	// Create a new, unique entity.
+	Create(ent Entity) error
+	// Update an existing entity.
+	Update(ent Entity) error
+	// Delete an existing entity.
+	Delete(ent Entity) error
 }
 
-// Predicates treats a list of predicates as one big predicate.
-type Predicates []Predicate
+// Queryer is an object that can be queried for entities.
+type Queryer interface {
+	// Query for a single entity that satisfies the filters.
+	Query(filters ...func(Entity) bool) (Entity, bool)
+	// List all entities that satisfy the filters.
+	List(filters ...func(Entity) bool) []Entity
+}
 
-// Apply each predicate to the entity.
-// If any of the predicates fail, this predicate as a whole fails.
-func (predicates Predicates) Apply(ent interface{}) bool {
-	for _, p := range predicates {
-		if ok := p.Apply(ent); !ok {
+// Apply all filters to the entity.
+func Apply(entity Entity, filters ...func(Entity) bool) bool {
+	for _, filter := range filters {
+		if !filter(entity) {
 			return false
 		}
 	}
