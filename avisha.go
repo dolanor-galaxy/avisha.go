@@ -22,7 +22,7 @@ type Site struct {
 }
 
 // Dwelling is where a Tenant lives.
-type Dwelling = int
+type Dwelling int
 
 const (
 	// Cabin is a small, self contained temporary home.
@@ -32,6 +32,19 @@ const (
 	// House is a full size permanent home.
 	House
 )
+
+func (d Dwelling) String() string {
+	switch d {
+	case Flat:
+		return "Flat"
+	case House:
+		return "House"
+	case Cabin:
+		return "Cabin"
+	default:
+		return "Unknown"
+	}
+}
 
 // Currency in encoded in AUD cents, where 100 == $1.
 type Currency = uint
