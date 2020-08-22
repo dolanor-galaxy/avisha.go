@@ -17,5 +17,6 @@ function compile {
 
 function watch {
     # https://github.com/watchexec/watchexec
-    watchexec -r "go build -o ./target/$1/avisha ./cmd/$1 && ./target/$1/avisha"
+    watchexec -i target "go build -o ./target/$1/avisha ./cmd/$1" &
+    watchexec  -w target -i target/*.json -r "./target/$1/avisha"
 }
