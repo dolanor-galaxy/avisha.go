@@ -144,14 +144,14 @@ func (app App) CreateLease(
 	rent Currency,
 ) error {
 	containsSite := func(ent storage.Entity) bool {
-		if lease, ok := ent.(Lease); ok {
+		if lease, ok := ent.(*Lease); ok {
 			return lease.Site == site
 		}
 		return false
 	}
 
 	matchesTerm := func(ent storage.Entity) bool {
-		if lease, ok := ent.(Lease); ok {
+		if lease, ok := ent.(*Lease); ok {
 			return lease.Term == term
 		}
 		return false
