@@ -29,3 +29,13 @@ function compile {
     go build -o ./target/$bin/avisha.exe ./cmd/$bin
     return "./target/$bin/avisha.exe"
 }
+
+function watch {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]
+        $bin
+    )
+    watchexec.exe -i target/* "go build -o ./target/$bin/avisha.exe ./cmd/$bin" &
+    watchexec.exe -w target -i target/*.json -r ".\target\$bin\avisha.exe"
+}
