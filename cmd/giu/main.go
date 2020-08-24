@@ -20,73 +20,107 @@ func main() {
 		Notifier: &notify.Console{},
 	}
 
-	var (
-		content giu.Widget = giu.Label("DashBoard")
-	)
+	state := &State{
+		App: app,
+	}
 
-	w := giu.NewMasterWindow("Avisha", 1024, 768, giu.MasterWindowFlagsFrameless, nil)
-
-	w.Main(func() {
+	giu.NewMasterWindow(
+		"Avisha",
+		1024,
+		768,
+		giu.MasterWindowFlagsFrameless,
+		nil,
+	).Main(func() {
 		giu.SingleWindow("Avisha", giu.Layout{
-			giu.Layout{
-				giu.SplitLayout("Main", giu.DirectionHorizontal, true, 200,
-					giu.Layout{
-						giu.ButtonV("DashBoard", -1, 40, func() {
-							var leases []string
-							app.List(func(ent storage.Entity) bool {
-								l, ok := ent.(*avisha.Lease)
-								if ok {
-									leases = append(leases, l.ID())
-								}
-								return ok
-							})
-							var labels giu.Layout
-							for _, l := range leases {
-								labels = append(labels, giu.Label(l))
-							}
-							content = labels
-						}),
-						giu.ButtonV("Lease", -1, 40, func() {
-							content = &LeaseForm{
-								App: app,
-								OnSubmit: func(f *LeaseForm) {
-									err := app.CreateLease(f.Tenant, f.Site, avisha.Term{
-										Start: f.Start,
-										Days:  int(f.Days),
-									}, uint(f.Rent))
-									if err != nil {
-										fmt.Printf("CreateLease: %v\n", err)
-									}
-								},
-							}
-						}),
-						giu.ButtonV("Tenant", -1, 40, func() {
-							content = giu.Label("Tenant")
-							content = &TenantForm{
-								OnSubmit: func(f *TenantForm) {
-									app.RegisterTenant(avisha.Tenant{
-										Name:    f.Name,
-										Contact: f.Contact,
-									})
-								},
-							}
-						}),
-						giu.ButtonV("Site", -1, 40, func() {
-							content = &SiteForm{
-								OnSubmit: func(f *SiteForm) {
-									app.ListSite(avisha.Site{
-										Number:   f.Number,
-										Dwelling: f.Dwelling,
-									})
-								},
-							}
-						}),
-					},
-					content,
-				),
-			},
+			state,
 		})
 	})
+}
+
+// State contains the state of the gui.
+type State struct {
+	// App is the application.
+	avisha.App
+	// Page is the currently presented page.
+	Page giu.Widget
+}
+
+// Build the gui.
+func (s *State) Build() {
+	if s.Page == nil {
+		s.Page = s.DashBoardPage()
+	}
+	giu.SplitLayout("Main", giu.DirectionHorizontal, true, 200,
+		// Nav sidebar.
+		giu.Layout{
+			giu.ButtonV("DashBoard", -1, 40, func() {
+				s.Page = s.DashBoardPage()
+			}),
+			giu.ButtonV("Lease", -1, 40, func() {
+				s.Page = s.LeasePage()
+			}),
+			giu.ButtonV("Tenant", -1, 40, func() {
+				s.Page = s.TenantPage()
+			}),
+			giu.ButtonV("Site", -1, 40, func() {
+				s.Page = s.SitePage()
+			}),
+		},
+		s.Page,
+	).Build()
+}
+
+// DashBoardPage renders the Dashboard.
+func (s *State) DashBoardPage() giu.Widget {
+	var labels giu.Layout
+	s.List(func(ent storage.Entity) bool {
+		l, ok := ent.(*avisha.Lease)
+		if ok {
+			labels = append(labels, giu.Label(l.ID()))
+		}
+		return ok
+	})
+	return labels
+}
+
+// LeasePage renders Lease controls.
+func (s *State) LeasePage() giu.Widget {
+	return &LeaseForm{
+		App: s.App,
+		OnSubmit: func(f *LeaseForm) {
+			err := s.App.CreateLease(f.Tenant, f.Site, avisha.Term{
+				Start: f.Start,
+				Days:  int(f.Days),
+			}, uint(f.Rent))
+			if err != nil {
+				fmt.Printf("CreateLease: %v\n", err)
+			}
+		},
+	}
+}
+
+// TenantPage renders Tenant controls.
+func (s *State) TenantPage() giu.Widget {
+	return &TenantForm{
+		OnSubmit: func(f *TenantForm) {
+			s.App.RegisterTenant(avisha.Tenant{
+				Name:    f.Name,
+				Contact: f.Contact,
+			})
+		},
+	}
+}
+
+// SitePage renders site controls.
+func (s *State) SitePage() giu.Widget {
+	return &SiteForm{
+		OnSubmit: func(f *SiteForm) {
+			s.App.ListSite(avisha.Site{
+				Number:   f.Number,
+				Dwelling: f.Dwelling,
+			})
+		},
+	}
 }
 
 // LeaseForm for creating a Lease.
