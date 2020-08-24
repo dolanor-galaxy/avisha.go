@@ -24,7 +24,7 @@ func main() {
 		content giu.Widget = giu.Label("DashBoard")
 	)
 
-	w := giu.NewMasterWindow("Avisha", 1024, 768, 0, nil)
+	w := giu.NewMasterWindow("Avisha", 1024, 768, giu.MasterWindowFlagsFrameless, nil)
 
 	w.Main(func() {
 		giu.SingleWindow("Avisha", giu.Layout{
@@ -40,15 +40,11 @@ func main() {
 								}
 								return ok
 							})
-							content = giu.Layout{
-								giu.Table("Table", true, giu.Rows{
-									giu.Row(giu.Dummy(-1, -1), giu.Dummy(-1, -1)),
-									giu.Row(giu.Dummy(-1, -1), giu.Dummy(-1, -1)),
-									giu.Row(giu.Dummy(-1, -1), giu.Dummy(-1, -1)),
-									giu.Row(giu.Dummy(-1, -1), giu.Dummy(-1, -1)),
-									giu.Row(giu.Dummy(-1, -1), giu.Dummy(-1, -1)),
-								}),
+							var labels giu.Layout
+							for _, l := range leases {
+								labels = append(labels, giu.Label(l))
 							}
+							content = labels
 						}),
 						giu.ButtonV("Lease", -1, 40, func() {
 							content = &LeaseForm{
