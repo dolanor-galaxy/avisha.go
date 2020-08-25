@@ -55,6 +55,13 @@ type Term struct {
 	Days  int
 }
 
+// Overlaps returns whether both terms overlap.
+// A term overlaps another if they share active days.
+func (t Term) Overlaps(other Term) bool {
+	end := t.Start.Add(time.Hour * time.Duration(24) * time.Duration(t.Days))
+	return other.Start.After(t.Start) && other.Start.Before(end) || other.Overlaps(t)
+}
+
 // Lease describes the exclusive use of a Site by exactly one Tenant for the
 // duration of the Term specified.
 // Services consumed are tracked accordingly, typically involving Rent and
