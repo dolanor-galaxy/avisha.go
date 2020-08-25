@@ -230,16 +230,28 @@ func (c *Combo) Build() {
 		if !c.hasSelected {
 			return c.Preview
 		}
-		return c.Items[c.selected]
+		return c.item()
 	}
 	giu.Combo(c.Label, preview(), c.Items, &c.selected, -1, 0, func() {
 		c.hasSelected = true
 		if c.OnChange != nil {
-			if int(c.selected) < len(c.Values)-1 {
-				c.OnChange(c.Values[c.selected])
-			}
+			c.OnChange(c.value())
 		}
 	}).Build()
+}
+
+func (c *Combo) value() string {
+	if int(c.selected) < len(c.Values) {
+		return c.Values[c.selected]
+	}
+	return ""
+			}
+
+func (c *Combo) item() string {
+	if int(c.selected) < len(c.Items) {
+		return c.Items[c.selected]
+		}
+	return ""
 }
 
 // Date renders a date picker.
