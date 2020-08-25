@@ -146,7 +146,7 @@ type LeaseForm struct {
 	site   *Combo
 }
 
-// Build LeaseForm
+// Build LeaseForm.
 func (form *LeaseForm) Build() {
 	if form.tenant == nil {
 		form.tenant = &Combo{
@@ -224,7 +224,7 @@ func (c *Combo) Add(item, value string) {
 	c.Values = append(c.Values, value)
 }
 
-// Build Combo
+// Build Combo.
 func (c *Combo) Build() {
 	preview := func() string {
 		if !c.hasSelected {
@@ -262,7 +262,7 @@ type Date struct {
 	value *time.Time
 }
 
-// Build Date
+// Build Date.
 func (d *Date) Build() {
 	if d.value == nil {
 		now := time.Now()
@@ -285,7 +285,7 @@ type SiteForm struct {
 	dwelling *Combo
 }
 
-// Build SiteForm
+// Build SiteForm.
 func (form *SiteForm) Build() {
 	if form.dwelling == nil {
 		form.dwelling = &Combo{
