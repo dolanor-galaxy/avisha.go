@@ -245,12 +245,12 @@ func (c *Combo) value() string {
 		return c.Values[c.selected]
 	}
 	return ""
-			}
+}
 
 func (c *Combo) item() string {
 	if int(c.selected) < len(c.Items) {
 		return c.Items[c.selected]
-		}
+	}
 	return ""
 }
 
