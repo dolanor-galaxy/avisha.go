@@ -104,10 +104,13 @@ func (s *State) LeasePage() giu.Widget {
 func (s *State) TenantPage() giu.Widget {
 	return &TenantForm{
 		OnSubmit: func(f *TenantForm) {
-			s.App.RegisterTenant(avisha.Tenant{
+			err := s.App.RegisterTenant(avisha.Tenant{
 				Name:    f.Name,
 				Contact: f.Contact,
 			})
+			if err != nil {
+				fmt.Printf("RegisterTenant: %v\n", err)
+			}
 		},
 	}
 }
@@ -116,10 +119,13 @@ func (s *State) TenantPage() giu.Widget {
 func (s *State) SitePage() giu.Widget {
 	return &SiteForm{
 		OnSubmit: func(f *SiteForm) {
-			s.App.ListSite(avisha.Site{
+			err := s.App.ListSite(avisha.Site{
 				Number:   f.Number,
 				Dwelling: f.Dwelling,
 			})
+			if err != nil {
+				fmt.Printf("ListSite: %v\n", err)
+			}
 		},
 	}
 }
