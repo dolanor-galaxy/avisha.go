@@ -16,6 +16,7 @@ func main() {
 			With(&avisha.Tenant{}).
 			With(&avisha.Site{}).
 			With(&avisha.Lease{}).
+			Format(true).
 			MustLoad(),
 		Notifier: &notify.Console{},
 	}
@@ -28,7 +29,7 @@ func main() {
 		"Avisha",
 		1024,
 		768,
-		giu.MasterWindowFlagsFrameless,
+		0,
 		nil,
 	).Main(func() {
 		giu.SingleWindow("Avisha", giu.Layout{
@@ -228,7 +229,9 @@ func (c *Combo) Build() {
 	giu.Combo(c.Label, preview(), c.Items, &c.selected, -1, 0, func() {
 		c.hasSelected = true
 		if c.OnChange != nil {
-			c.OnChange(c.Values[c.selected])
+			if int(c.selected) < len(c.Values)-1 {
+				c.OnChange(c.Values[c.selected])
+			}
 		}
 	}).Build()
 }
