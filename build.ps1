@@ -34,8 +34,16 @@ function watch {
     param (
         [Parameter(Mandatory = $true)]
         [string]
+        $name,
+        [Parameter(Mandatory = $true)]
+        [string]
         $bin
     )
-    watchexec.exe -i target/* "go build -o ./target/$bin/avisha.exe ./cmd/$bin" &
-    watchexec.exe -w target -i target/*.json -r ".\target\$bin\avisha.exe"
+    if ($name -eq "files" || $name -eq "") {
+        watchexec.exe -e go "go build -o ./target/$bin/avisha.exe ./cmd/$bin"
+    }
+    if ($name -eq "bin" || $name -q "") {
+        watchexec.exe -w ".\target\$bin\avisha.exe" -i ".\target\db.json" -r ".\target\$bin\avisha.exe"
+
+    }
 }
