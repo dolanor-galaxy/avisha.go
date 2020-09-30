@@ -31,7 +31,7 @@ func (r *Router) Push(s string) {
 }
 
 func (r *Router) Update(gtx Ctx) {
-	if name, ok := r.Active().ReRoute(); ok {
+	if name, ok := r.Active().Route(); ok {
 		if name == RouteBack {
 			r.Pop()
 		} else if name != "" {
@@ -43,11 +43,14 @@ func (r *Router) Update(gtx Ctx) {
 // Layout static content as rigid, then layout the active route.
 func (r *Router) Layout(gtx Ctx) Dims {
 	r.Update(gtx)
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+	// return r.Active().Layout(gtx)
+	return layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx Ctx) Dims {
 			return r.Static(gtx, r)
 		}),
-		layout.Flexed(1, r.Active().Layout),
+		layout.Flexed(1, func(gtx Ctx) Dims {
+			return r.Active().Layout(gtx)
+		}),
 	)
 }
 
@@ -65,7 +68,7 @@ func (r *Router) lock() func() {
 }
 
 type Route interface {
-	ReRoute() (string, bool)
+	Route() (string, bool)
 	Actions() []layout.Widget
 	Layout(gtx Ctx) Dims
 }

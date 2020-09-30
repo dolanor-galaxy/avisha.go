@@ -1,11 +1,9 @@
 package main
 
 import (
-	"image/color"
 	"time"
 
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 )
@@ -73,43 +71,10 @@ func (p *Page) Actions() []layout.Widget {
 	}
 }
 
-func (p *Page) ReRoute() (string, bool) {
+func (p *Page) Route() (string, bool) {
 	defer func() { p.reroute = "" }()
 	if ok := p.reroute != ""; ok {
 		return p.reroute, ok
 	}
 	return "", false
-}
-
-// TopBar renders a title and the provided actions.
-type TopBar struct {
-}
-
-func (bar TopBar) Layout(gtx Ctx, r *Router) Dims {
-	return layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx Ctx) Dims {
-			return Rect{
-				Color: color.RGBA{B: 100, R: 50, A: 255},
-				Size:  gtx.Constraints.Max,
-			}.Layout(gtx)
-		}),
-		layout.Stacked(func(gtx Ctx) Dims {
-			actions := r.Active().Actions()
-			items := []layout.FlexChild{
-				layout.Flexed(float32(len(actions)+1), func(gtx Ctx) Dims {
-					th.Color.Text = color.RGBA{R: 255, G: 255, B: 255, A: 255}
-					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx Ctx) Dims {
-						return material.Label(th, unit.Dp(24), r.Name()).Layout(gtx)
-					})
-				}),
-			}
-			for _, action := range actions {
-				action := action
-				items = append(items, layout.Flexed(1, func(gtx Ctx) Dims {
-					return layout.UniformInset(unit.Dp(10)).Layout(gtx, action)
-				}))
-			}
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, items...)
-		}),
-	)
 }
