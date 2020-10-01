@@ -11,8 +11,13 @@ import (
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
 )
 
+type (
+	Ctx  = layout.Context
+	Dims = layout.Dimensions
+)
+
 // ListItem renders a list item.
-func ListItem(gtx Ctx, th *material.Theme, state *widget.Clickable, hover *Hoverable, active bool, w layout.Widget) Dims {
+func ListItem(gtx Ctx, th *material.Theme, state *widget.Clickable, hover *widget.Hoverable, active bool, w layout.Widget) Dims {
 	return layout.Stack{}.Layout(
 		gtx,
 		layout.Stacked(func(gtx Ctx) Dims {
