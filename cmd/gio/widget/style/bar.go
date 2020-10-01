@@ -22,14 +22,24 @@ func (bar TopBar) Layout(gtx Ctx, title string, actions ...layout.Widget) Dims {
 		}),
 		layout.Stacked(func(gtx Ctx) Dims {
 			items := []layout.FlexChild{
-				layout.Flexed(float32(len(actions)+1), func(gtx Ctx) Dims {
-					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx Ctx) Dims {
-						title := material.Label(bar.Theme, unit.Dp(24), title)
-						title.Color = bar.Theme.Color.InvText
-						return title.Layout(gtx)
-					})
+				layout.Rigid(func(gtx Ctx) Dims {
+					return layout.UniformInset(unit.Dp(10)).Layout(
+						gtx,
+						func(gtx Ctx) Dims {
+							title := material.Label(bar.Theme, unit.Dp(24), title)
+							title.Color = bar.Theme.Color.InvText
+							return title.Layout(gtx)
+						})
 				}),
 			}
+			// TODO: handle overflow (when actions don't fit the bar).
+			// - Detect overflow (dim calcs probably)
+			// - Render icon button
+			// - Display a list of overflowed actions when clicked
+			//
+			// TODO: auto centering of action content.
+			// Atm insets are hard-coded, thus actions have to know the bar height
+			// and if bar height changes then actions would need to change.
 			for _, action := range actions {
 				action := action
 				items = append(items, layout.Flexed(1, action))
