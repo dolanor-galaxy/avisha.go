@@ -8,8 +8,8 @@ import (
 	"gioui.org/font/gofont"
 	"gioui.org/widget/material"
 	"github.com/jackmordaunt/avisha-fn"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/util"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/views"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
 	"github.com/jackmordaunt/avisha-fn/notify"
 	"github.com/jackmordaunt/avisha-fn/storage"
 
@@ -45,10 +45,19 @@ func main() {
 	router := &Router{
 		Static: func(gtx Ctx, r *Router) Dims {
 			gtx.Constraints.Max.Y = 80
-			return util.TopBar{Theme: th}.Layout(gtx, r.Name(), r.Active().Actions()...)
+			return style.TopBar{Theme: th}.Layout(
+				gtx,
+				r.Name(),
+				func() (context []layout.Widget) {
+					if contexter, ok := r.Active().(Contexter); ok {
+						context = contexter.Context()
+					}
+					return context
+				}()...)
 		},
-		Routes: map[string]Route{
-			"Lease": &views.Lease{App: &api, Theme: th},
+		Routes: map[string]View{
+			"Lease":     &views.Lease{App: &api, Theme: th},
+			"LeaseForm": &views.LeaseForm{App: &api, Theme: th},
 		},
 		Stack: []string{"Lease"},
 	}

@@ -20,28 +20,33 @@ type Lease struct {
 	list   layout.List
 	states *States
 
-	edit LeaseForm
-
-	once sync.Once
+	route    string
+	selected *avisha.Lease
+	once     sync.Once
 }
 
-func (l *Lease) Route() (string, bool) {
-	return "", false
+func (l *Lease) ReRoute() (string, interface{}) {
+	if l.route != "" && l.selected != nil {
+		defer func() { l.route = "" }()
+		return l.route, l.selected
+	}
+	return "", nil
 }
 
-func (l *Lease) Actions() []layout.Widget {
+func (l *Lease) Context() []layout.Widget {
 	return nil
 }
 
 func (l *Lease) Update(gtx Ctx) {
 	for _, state := range l.states.List() {
 		if state.Item.Clicked() {
-			// navigate to LeaseFormView
-			fmt.Printf("clicked on: %s\n", state.ID())
+			fmt.Printf("navigating to LeaseForm for %s\n", state.ID())
+			l.route = "LeaseForm"
+			l.selected = state.Lease
 		}
-		if state.Hover.Hovered() {
-			// fmt.Printf("%s is hovered\n", state.ID())
-		}
+		// if state.Hover.Hovered() {
+		// 	// fmt.Printf("%s is hovered\n", state.ID())
+		// }
 	}
 }
 
