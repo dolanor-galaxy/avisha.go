@@ -33,8 +33,8 @@ type TextField struct {
 }
 
 type label struct {
-	FontSize float32
-	Inset    float32
+	TextSize float32
+	Inset    layout.Inset
 	Smallest layout.Dimensions
 }
 
@@ -98,36 +98,6 @@ func (in *TextField) Update(gtx Ctx, th *material.Theme, hint string) {
 	const (
 		duration = time.Millisecond * 100
 	)
-	var (
-		// Font size transitions.
-		normalFont = th.TextSize
-		smallFont  = th.TextSize.Scale(0.8)
-
-		// Border color transitions.
-		borderColor        = color.RGBA{A: 107}
-		borderColorHovered = color.RGBA{A: 221}
-		borderColorActive  = th.Color.Primary
-		// Border thickness transitions.
-		borderThickness       = float32(0.5)
-		borderThicknessActive = float32(2.0)
-	)
-	// cache the smallest size of the label.
-	if in.label.Smallest.Size == (image.Point{}) {
-		macro := op.Record(gtx.Ops)
-		in.label.Smallest = layout.Inset{
-			Left:  unit.Dp(4),
-			Right: unit.Dp(4),
-		}.Layout(gtx, func(gtx Ctx) Dims {
-			return material.Label(th, smallFont, hint).Layout(gtx)
-		})
-		macro.Stop()
-	}
-	var (
-		// inset start should be center of editor.
-		// TODO: calculate based on widget size and text size.
-		labelTopInset       = float32(in.label.Smallest.Size.Y)
-		labelTopInsetActive = float32(-8.0)
-	)
 	if in.anim == nil {
 		in.anim = &anim{Duration: duration}
 	}
@@ -141,8 +111,19 @@ func (in *TextField) Update(gtx Ctx, th *material.Theme, hint string) {
 		in.anim.start(reverse)
 	}
 	in.anim.update(gtx)
-	in.label.FontSize = lerp(smallFont.V, normalFont.V, 1.0-in.anim.progress)
-	in.label.Inset = lerp(labelTopInset, labelTopInsetActive, in.anim.progress)
+	var (
+		// Text size transitions.
+		textNormal = th.TextSize
+		textSmall  = th.TextSize.Scale(0.8)
+		// Border color transitions.
+		borderColor        = color.RGBA{A: 107}
+		borderColorHovered = color.RGBA{A: 221}
+		borderColorActive  = th.Color.Primary
+		// Border thickness transitions.
+		borderThickness       = float32(0.5)
+		borderThicknessActive = float32(2.0)
+	)
+	in.label.TextSize = lerp(textSmall.V, textNormal.V, 1.0-in.anim.progress)
 	in.border.Thickness = borderThickness
 	in.border.Color = borderColor
 	if in.Hoverable.Hovered() {
@@ -152,26 +133,43 @@ func (in *TextField) Update(gtx Ctx, th *material.Theme, hint string) {
 		in.border.Thickness = borderThicknessActive
 		in.border.Color = borderColorActive
 	}
+	// Calculate the dimensions of the smallest label size and store the
+	// result for use in clipping.
+	// Hack: Reset min constraint to 0 to avoid min == max.
+	gtx.Constraints.Min.X = 0
+	macro := op.Record(gtx.Ops)
+	in.label.Smallest = layout.Inset{
+		Left:  unit.Dp(4),
+		Right: unit.Dp(4),
+	}.Layout(gtx, func(gtx Ctx) Dims {
+		return material.Label(th, textSmall, hint).Layout(gtx)
+	})
+	macro.Stop()
+	labelTopInsetNormal := float32(in.label.Smallest.Size.Y) - float32(in.label.Smallest.Size.Y/4)
+	labelTopInsetActive := (labelTopInsetNormal / 2 * -1) - in.border.Thickness
+	in.label.Inset = layout.Inset{
+		Top:  unit.Px(lerp(labelTopInsetNormal, labelTopInsetActive, in.anim.progress)),
+		Left: unit.Dp(10),
+	}
 }
 
 func (in *TextField) Layout(gtx Ctx, th *material.Theme, hint string) Dims {
 	in.Update(gtx, th, hint)
-	// Offset accounts for label height, which sticks above the border dimensions.
 	defer op.Push(gtx.Ops).Pop()
+	// Offset accounts for label height, which sticks above the border dimensions.
 	op.Offset(f32.Pt(0, float32(in.label.Smallest.Size.Y)/2)).Add(gtx.Ops)
-	label := layout.Inset{
-		Top:  unit.Dp(in.label.Inset),
-		Left: unit.Dp(10.0),
-	}.Layout(gtx, func(gtx Ctx) Dims {
-		return layout.Inset{
-			Left:  unit.Dp(4),
-			Right: unit.Dp(4),
-		}.Layout(gtx, func(gtx Ctx) Dims {
-			label := material.Label(th, unit.Sp(in.label.FontSize), hint)
-			label.Color = in.border.Color
-			return label.Layout(gtx)
+	in.label.Inset.Layout(
+		gtx,
+		func(gtx Ctx) Dims {
+			return layout.Inset{
+				Left:  unit.Dp(4),
+				Right: unit.Dp(4),
+			}.Layout(gtx, func(gtx Ctx) Dims {
+				label := material.Label(th, unit.Sp(in.label.TextSize), hint)
+				label.Color = in.border.Color
+				return label.Layout(gtx)
+			})
 		})
-	})
 	dims := layout.Stack{}.Layout(
 		gtx,
 		layout.Expanded(func(gtx Ctx) Dims {
@@ -191,26 +189,27 @@ func (in *TextField) Layout(gtx Ctx, th *material.Theme, hint string) Dims {
 			)
 			border := macro.Stop()
 			if in.Editor.Focused() || in.Editor.Len() > 0 {
+				// Clip a concave shape which ignores the label area.
 				clips := []clip.Rect{
 					{
 						Max: image.Point{
-							X: gtx.Px(unit.Dp(10)),
+							X: gtx.Px(in.label.Inset.Left),
 							Y: gtx.Constraints.Min.Y,
 						},
 					},
 					{
 						Min: image.Point{
-							X: gtx.Px(unit.Dp(10)),
-							Y: int(float32(label.Size.Y) / 2),
+							X: gtx.Px(in.label.Inset.Left),
+							Y: in.label.Smallest.Size.Y / 2,
 						},
 						Max: image.Point{
-							X: gtx.Px(unit.Dp(10)) + in.label.Smallest.Size.X,
+							X: gtx.Px(in.label.Inset.Left) + in.label.Smallest.Size.X,
 							Y: gtx.Constraints.Min.Y,
 						},
 					},
 					{
 						Min: image.Point{
-							X: gtx.Px(unit.Dp(10)) + in.label.Smallest.Size.X,
+							X: gtx.Px(in.label.Inset.Left) + in.label.Smallest.Size.X,
 						},
 						Max: image.Point{
 							X: gtx.Constraints.Max.X,
