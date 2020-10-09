@@ -19,4 +19,5 @@ type (
 	Clickable = widget.Clickable
 	Bool      = widget.Bool
 	Border    = widget.Border
+	Icon      = widget.Icon
 )
