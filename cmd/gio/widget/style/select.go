@@ -54,14 +54,17 @@ func (lb *Select) Update(gtx Ctx, th *material.Theme, hint string, values []stri
 	}
 }
 
-func (lb *Select) Layout(gtx Ctx, th *material.Theme, hint string, values []string) util.OverlayChild {
-	return util.OverlayChild{
-		Content: func(gtx Ctx) Dims {
-			return lb.layout(gtx, th, hint, values)
-		},
-		Overlayed: lb.Overlay,
+func (lb *Select) Layout(gtx Ctx, th *material.Theme, hint string, values []string) util.Dimensions {
+	dims := lb.layout(gtx, th, hint, values)
+	macro := op.Record(gtx.Ops)
+	lb.Overlay(gtx)
+	overlay := macro.Stop()
+	return util.Dimensions{
+		Dims:    dims,
+		Overlay: overlay,
 	}
 }
+
 func (lb *Select) layout(gtx Ctx, th *material.Theme, hint string, values []string) Dims {
 	lb.Update(gtx, th, hint, values)
 	return layout.Stack{}.Layout(

@@ -70,12 +70,18 @@ func (l *LeaseForm) Layout(gtx Ctx) Dims {
 				Flex: layout.Flex{Axis: layout.Vertical},
 			}.Layout(
 				gtx,
-				func(gtx Ctx) util.OverlayChild {
-					gtx.Constraints.Max.X = gtx.Px(unit.Dp(80))
+				util.Rigid(func(gtx Ctx) util.Dimensions {
 					return l.Tenant.Layout(gtx, l.Theme, "Tenant", []string{"one", "two", "three"})
-				}(gtx),
-				l.Site.Layout(gtx, l.Theme, "Site", []string{"one", "two", "three"}),
-				l.Foo.Layout(gtx, l.Theme, "Foo", []string{"one", "two", "three"}),
+				}),
+				util.Rigid(func(gtx Ctx) util.Dimensions {
+					return util.Dimensions{Dims: l.Date.Layout(gtx, l.Theme, "Date")}
+				}),
+				util.Rigid(func(gtx Ctx) util.Dimensions {
+					return l.Site.Layout(gtx, l.Theme, "Site", []string{"one", "two", "three"})
+				}),
+				util.Rigid(func(gtx Ctx) util.Dimensions {
+					return l.Foo.Layout(gtx, l.Theme, "Foo", []string{"one", "two", "three"})
+				}),
 			)
 		},
 	)
