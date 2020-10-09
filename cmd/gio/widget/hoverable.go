@@ -20,14 +20,13 @@ func (h *Hoverable) Hovered() bool {
 // Layout Hoverable according to min constraints.
 func (h *Hoverable) Layout(gtx Ctx) Dims {
 	h.update(gtx)
-	stack := op.Push(gtx.Ops)
+	defer op.Push(gtx.Ops).Pop()
 	pointer.PassOp{Pass: true}.Add(gtx.Ops)
 	pointer.Rect(image.Rectangle{Max: gtx.Constraints.Min}).Add(gtx.Ops)
 	pointer.InputOp{
 		Tag:   h,
 		Types: pointer.Enter | pointer.Leave | pointer.Cancel,
 	}.Add(gtx.Ops)
-	stack.Pop()
 	return Dims{Size: gtx.Constraints.Min}
 
 }

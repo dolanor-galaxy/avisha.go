@@ -5,6 +5,16 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
+var ArrowUp *widget.Icon = func() *widget.Icon {
+	icon, _ := widget.NewIcon(icons.NavigationArrowDropUp)
+	return icon
+}()
+
+var ArrowDown *widget.Icon = func() *widget.Icon {
+	icon, _ := widget.NewIcon(icons.NavigationArrowDropDown)
+	return icon
+}()
+
 var NavigationArrowBack *widget.Icon = func() *widget.Icon {
 	icon, _ := widget.NewIcon(icons.NavigationArrowBack)
 	return icon

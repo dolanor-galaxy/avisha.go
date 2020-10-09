@@ -20,7 +20,7 @@ type (
 func ListItem(gtx Ctx, th *material.Theme, state *widget.Clickable, hover *widget.Hoverable, active bool, w layout.Widget) Dims {
 	return layout.Stack{}.Layout(
 		gtx,
-		layout.Stacked(func(gtx Ctx) Dims {
+		layout.Expanded(func(gtx Ctx) Dims {
 			if active {
 				util.Rect{
 					Color: materials.AlphaMultiply(th.Color.Hint, 150),
@@ -28,13 +28,13 @@ func ListItem(gtx Ctx, th *material.Theme, state *widget.Clickable, hover *widge
 				}.Layout(gtx)
 			} else if hover.Hovered() {
 				util.Rect{
-					Color: materials.AlphaMultiply(th.Color.Hint, 100),
+					Color: materials.AlphaMultiply(th.Color.Hint, 38),
 					Size:  gtx.Constraints.Max,
 				}.Layout(gtx)
 			}
 			return Dims{}
 		}),
-		layout.Expanded(func(gtx Ctx) Dims {
+		layout.Stacked(func(gtx Ctx) Dims {
 			return material.Clickable(gtx, state, func(gtx Ctx) Dims {
 				return layout.UniformInset(unit.Dp(10)).Layout(
 					gtx,
