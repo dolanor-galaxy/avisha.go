@@ -74,7 +74,9 @@ func (l *LeaseForm) Layout(gtx Ctx) Dims {
 					return l.Tenant.Layout(gtx, l.Theme, "Tenant", []string{"one", "two", "three"})
 				}),
 				util.Rigid(func(gtx Ctx) util.Dimensions {
-					return util.Dimensions{Dims: l.Date.Layout(gtx, l.Theme, "Date")}
+					return util.Dimensions{
+						Dimensions: l.Date.Layout(gtx, l.Theme, "Date"),
+					}
 				}),
 				util.Rigid(func(gtx Ctx) util.Dimensions {
 					return l.Site.Layout(gtx, l.Theme, "Site", []string{"one", "two", "three"})

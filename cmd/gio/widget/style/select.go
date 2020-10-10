@@ -60,8 +60,8 @@ func (lb *Select) Layout(gtx Ctx, th *material.Theme, hint string, values []stri
 	lb.Overlay(gtx)
 	overlay := macro.Stop()
 	return util.Dimensions{
-		Dims:    dims,
-		Overlay: overlay,
+		Dimensions: dims,
+		Overlay:    overlay,
 	}
 }
 

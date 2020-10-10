@@ -13,8 +13,8 @@ import (
 )
 
 type (
-	Ctx  = layout.Context
-	Dims = layout.Dimensions
+	C = layout.Context
+	D = layout.Dimensions
 )
 
 type Rect struct {
@@ -23,14 +23,14 @@ type Rect struct {
 	Radii float32
 }
 
-func (r Rect) Layout(gtx Ctx) Dims {
+func (r Rect) Layout(gtx C) D {
 	return DrawRect(gtx, r.Color, r.Size, r.Radii)
 }
 
 // DrawRect creates a rectangle of the provided background color with
 // Dimensions specified by size and a corner radius (on all corners)
 // specified by radii.
-func DrawRect(gtx Ctx, background color.RGBA, size image.Point, radii float32) Dims {
+func DrawRect(gtx C, background color.RGBA, size image.Point, radii float32) D {
 	stack := op.Push(gtx.Ops)
 	{
 		paint.ColorOp{
@@ -57,12 +57,12 @@ func DrawRect(gtx Ctx, background color.RGBA, size image.Point, radii float32) D
 }
 
 // Widget can render itself.
-type Widget = func(gtx Ctx) Dimensions
+type Widget = func(gtx C) Dimensions
 
 // Dimensions of a rendered widget.
 // Includes a macro for overlays.
 type Dimensions struct {
-	Dims
+	layout.Dimensions
 	Overlay op.CallOp
 }
 
@@ -93,32 +93,32 @@ func Flexed(weight float32, w Widget) FlexChild {
 	}
 }
 
-func (f Flex) Layout(gtx Ctx, children ...FlexChild) Dims {
+func (f Flex) Layout(gtx C, children ...FlexChild) D {
 	var dimlist = make([]Dimensions, len(children))
 	return layout.Stack{}.Layout(
 		gtx,
-		layout.Stacked(func(gtx Ctx) Dims {
+		layout.Stacked(func(gtx C) D {
 			var flex []layout.FlexChild
 			for ii, child := range children {
 				ii := ii
 				child := child
 				if child.Flex {
-					flex = append(flex, layout.Flexed(child.Weight, func(gtx Ctx) Dims {
+					flex = append(flex, layout.Flexed(child.Weight, func(gtx C) D {
 						dims := child.Widget(gtx)
 						dimlist[ii] = dims
-						return dims.Dims
+						return dims.Dimensions
 					}))
 				} else {
-					flex = append(flex, layout.Rigid(func(gtx Ctx) Dims {
+					flex = append(flex, layout.Rigid(func(gtx C) D {
 						dims := child.Widget(gtx)
 						dimlist[ii] = dims
-						return dims.Dims
+						return dims.Dimensions
 					}))
 				}
 			}
 			return f.Flex.Layout(gtx, flex...)
 		}),
-		layout.Expanded(func(gtx Ctx) Dims {
+		layout.Expanded(func(gtx C) D {
 			for ii := len(children) - 1; ii >= 0; ii-- {
 				var (
 					offset = image.Point{}
@@ -132,12 +132,12 @@ func (f Flex) Layout(gtx Ctx, children ...FlexChild) Dims {
 					Top: unit.Px(float32(offset.Y)),
 				}.Layout(
 					gtx,
-					func(gtx Ctx) Dims {
+					func(gtx C) D {
 						dims.Overlay.Add(gtx.Ops)
-						return Dims{}
+						return D{}
 					})
 			}
-			return Dims{}
+			return D{}
 		}),
 	)
 }
