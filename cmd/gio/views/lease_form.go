@@ -7,10 +7,9 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
+	"git.sr.ht/~whereswaldon/materials"
 	"github.com/jackmordaunt/avisha-fn"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/util"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
 )
 
 type LeaseForm struct {
@@ -18,14 +17,14 @@ type LeaseForm struct {
 	*material.Theme
 	lease *avisha.Lease
 
-	Tenant style.Select
-	Site   style.Select
-	Foo    style.Select
-	Date   style.TextField
-	Term   style.TextField
+	Tenant materials.TextField
+	Site   materials.TextField
+	Date   materials.TextField
+	Term   materials.TextField
 	// Start Date
 	// Duration Int
 	Submit widget.Clickable
+	layout.List
 }
 
 func (l *LeaseForm) ReRoute() (string, bool) {
@@ -57,32 +56,28 @@ func (l *LeaseForm) Context() (list []layout.Widget) {
 func (l *LeaseForm) Update(gtx Ctx) {
 	if l.Submit.Clicked() {
 		// grab data and submit to app;
-		fmt.Printf("submitted: tenant %q, site %q\n", l.Tenant.Value, l.Site.Value)
+		fmt.Printf("submitted: tenant %q, site %q\n", l.Tenant.Text(), l.Site.Text())
 	}
 }
 
 func (l *LeaseForm) Layout(gtx Ctx) Dims {
 	l.Update(gtx)
+	l.List.Axis = layout.Vertical
 	return layout.UniformInset(unit.Dp(10)).Layout(
 		gtx,
 		func(gtx Ctx) Dims {
-			return util.Flex{
-				Flex: layout.Flex{Axis: layout.Vertical},
+			return layout.Flex{
+				Axis: layout.Vertical,
 			}.Layout(
 				gtx,
-				util.Rigid(func(gtx Ctx) util.Dimensions {
-					return l.Tenant.Layout(gtx, l.Theme, "Tenant", []string{"one", "two", "three"})
+				layout.Rigid(func(gtx Ctx) Dims {
+					return l.Tenant.Layout(gtx, l.Theme, "Tenant")
 				}),
-				util.Rigid(func(gtx Ctx) util.Dimensions {
-					return util.Dimensions{
-						Dimensions: l.Date.Layout(gtx, l.Theme, "Date"),
-					}
+				layout.Rigid(func(gtx Ctx) Dims {
+					return l.Date.Layout(gtx, l.Theme, "Date")
 				}),
-				util.Rigid(func(gtx Ctx) util.Dimensions {
-					return l.Site.Layout(gtx, l.Theme, "Site", []string{"one", "two", "three"})
-				}),
-				util.Rigid(func(gtx Ctx) util.Dimensions {
-					return l.Foo.Layout(gtx, l.Theme, "Foo", []string{"one", "two", "three"})
+				layout.Rigid(func(gtx Ctx) Dims {
+					return l.Site.Layout(gtx, l.Theme, "Site")
 				}),
 			)
 		},
