@@ -31,6 +31,9 @@ func (bar TopBar) Layout(gtx Ctx, title string, actions ...layout.Widget) Dims {
 							return title.Layout(gtx)
 						})
 				}),
+				layout.Flexed(1, func(gtx Ctx) Dims {
+					return Dims{Size: gtx.Constraints.Min}
+				}),
 			}
 			// TODO: handle overflow (when actions don't fit the bar).
 			// - Detect overflow (dim calcs probably)
@@ -42,7 +45,7 @@ func (bar TopBar) Layout(gtx Ctx, title string, actions ...layout.Widget) Dims {
 			// and if bar height changes then actions would need to change.
 			for _, action := range actions {
 				action := action
-				items = append(items, layout.Flexed(1, action))
+				items = append(items, layout.Rigid(action))
 			}
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, items...)
 		}),

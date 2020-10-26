@@ -42,7 +42,7 @@ func (l *LeaseForm) ReRoute() (string, interface{}) {
 }
 
 func (l *LeaseForm) Receive(data interface{}) {
-	if lease, ok := data.(*avisha.Lease); ok {
+	if lease, ok := data.(*avisha.Lease); ok && lease != nil {
 		l.lease = lease
 		l.Tenant.SetText(l.lease.Tenant)
 		l.Site.SetText(l.lease.Site)

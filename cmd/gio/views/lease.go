@@ -8,6 +8,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"github.com/jackmordaunt/avisha-fn"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/icons"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
 	"github.com/jackmordaunt/avisha-fn/storage"
@@ -16,6 +17,8 @@ import (
 type Lease struct {
 	*avisha.App
 	*material.Theme
+
+	CreateLease widget.Clickable
 
 	list   layout.List
 	states *States
@@ -35,7 +38,11 @@ func (l *Lease) Receive(v interface{}) {
 }
 
 func (l *Lease) Context() []layout.Widget {
-	return nil
+	return []layout.Widget{
+		func(gtx Ctx) Dims {
+			return material.IconButton(l.Theme, &l.CreateLease, icons.Add).Layout(gtx)
+		},
+	}
 }
 
 func (l *Lease) Update(gtx Ctx) {
@@ -44,6 +51,10 @@ func (l *Lease) Update(gtx Ctx) {
 			l.reroute = RouteLeaseForm
 			l.selected = state.Lease
 		}
+	}
+	if l.CreateLease.Clicked() {
+		l.reroute = RouteLeaseForm
+		l.selected = &avisha.Lease{}
 	}
 }
 
