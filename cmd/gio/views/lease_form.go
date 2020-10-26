@@ -51,10 +51,10 @@ func (l *LeaseForm) Receive(data interface{}) {
 
 func (l *LeaseForm) Context() (list []layout.Widget) {
 	if l.lease != nil {
-		list = append(list, func(gtx Ctx) Dims {
+		list = append(list, func(gtx C) D {
 			return layout.UniformInset(unit.Dp(10)).Layout(
 				gtx,
-				func(gtx Ctx) Dims {
+				func(gtx C) D {
 					label := material.Label(l.Theme, unit.Dp(24), l.lease.ID())
 					label.Alignment = text.Middle
 					label.Color = l.Theme.Color.InvText
@@ -65,7 +65,7 @@ func (l *LeaseForm) Context() (list []layout.Widget) {
 	return list
 }
 
-func (l *LeaseForm) Update(gtx Ctx) {
+func (l *LeaseForm) Update(gtx C) {
 	if l.Submit.Clicked() {
 		if err := l.submit(); err != nil {
 			// give error to app or render under field.
@@ -77,50 +77,50 @@ func (l *LeaseForm) Update(gtx Ctx) {
 	}
 }
 
-func (l *LeaseForm) Layout(gtx Ctx) Dims {
+func (l *LeaseForm) Layout(gtx C) D {
 	l.Update(gtx)
 	l.List.Axis = layout.Vertical
 	return layout.UniformInset(unit.Dp(10)).Layout(
 		gtx,
-		func(gtx Ctx) Dims {
+		func(gtx C) D {
 			return layout.Flex{
 				Axis: layout.Vertical,
 			}.Layout(
 				gtx,
-				layout.Flexed(1, func(gtx Ctx) Dims {
+				layout.Flexed(1, func(gtx C) D {
 					return layout.Flex{
 						Axis: layout.Vertical,
 					}.Layout(
 						gtx,
-						layout.Rigid(func(gtx Ctx) Dims {
+						layout.Rigid(func(gtx C) D {
 							return l.Tenant.Layout(gtx, l.Theme, "Tenant")
 						}),
-						layout.Rigid(func(gtx Ctx) Dims {
+						layout.Rigid(func(gtx C) D {
 							return l.Site.Layout(gtx, l.Theme, "Site")
 						}),
-						layout.Rigid(func(gtx Ctx) Dims {
+						layout.Rigid(func(gtx C) D {
 							return l.Start.Layout(gtx, l.Theme, "Start")
 						}),
-						layout.Rigid(func(gtx Ctx) Dims {
+						layout.Rigid(func(gtx C) D {
 							return l.Days.Layout(gtx, l.Theme, "Days")
 						}),
-						layout.Rigid(func(gtx Ctx) Dims {
+						layout.Rigid(func(gtx C) D {
 							return l.Rent.Layout(gtx, l.Theme, "Rent")
 						}),
 					)
 				}),
-				layout.Rigid(func(gtx Ctx) Dims {
+				layout.Rigid(func(gtx C) D {
 					return layout.Flex{
 						Axis: layout.Horizontal,
 					}.Layout(
 						gtx,
-						layout.Rigid(func(gtx Ctx) Dims {
+						layout.Rigid(func(gtx C) D {
 							return material.Button(l.Theme, &l.Cancel, "Cancel").Layout(gtx)
 						}),
-						layout.Flexed(1, func(gtx Ctx) Dims {
-							return Dims{Size: gtx.Constraints.Min}
+						layout.Flexed(1, func(gtx C) D {
+							return D{Size: gtx.Constraints.Min}
 						}),
-						layout.Rigid(func(gtx Ctx) Dims {
+						layout.Rigid(func(gtx C) D {
 							return material.Button(l.Theme, &l.Submit, "Submit").Layout(gtx)
 						}),
 					)

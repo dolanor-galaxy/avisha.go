@@ -18,7 +18,7 @@ func (h *Hoverable) Hovered() bool {
 }
 
 // Layout Hoverable according to min constraints.
-func (h *Hoverable) Layout(gtx Ctx) Dims {
+func (h *Hoverable) Layout(gtx C) D {
 	h.update(gtx)
 	defer op.Push(gtx.Ops).Pop()
 	pointer.PassOp{Pass: true}.Add(gtx.Ops)
@@ -27,11 +27,11 @@ func (h *Hoverable) Layout(gtx Ctx) Dims {
 		Tag:   h,
 		Types: pointer.Enter | pointer.Leave | pointer.Cancel,
 	}.Add(gtx.Ops)
-	return Dims{Size: gtx.Constraints.Min}
+	return D{Size: gtx.Constraints.Min}
 
 }
 
-func (h *Hoverable) update(gtx Ctx) {
+func (h *Hoverable) update(gtx C) {
 	for _, event := range gtx.Events(h) {
 		if event, ok := event.(pointer.Event); ok {
 			switch event.Type {

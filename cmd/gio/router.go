@@ -12,14 +12,14 @@ import (
 // Static content is rendered independent of the current Route.
 type Router struct {
 	sync.Mutex
-	Static func(gtx Ctx, r *Router) Dims
+	Static func(gtx C, r *Router) D
 	Routes map[string]View
 	Stack  []string
 }
 
 // View types render themselves.
 type View interface {
-	Layout(gtx Ctx) Dims
+	Layout(gtx C) D
 }
 
 // ReRouter views can signal to reroute to another Route by name.
@@ -63,7 +63,7 @@ func (r *Router) Push(s string) {
 	}
 }
 
-func (r *Router) Update(gtx Ctx) {
+func (r *Router) Update(gtx C) {
 	if rerouter, ok := r.Active().(ReRouter); ok {
 		to, data := rerouter.ReRoute()
 		if to == "" {
@@ -81,16 +81,16 @@ func (r *Router) Update(gtx Ctx) {
 }
 
 // Layout static content as rigid, then layout the active route.
-func (r *Router) Layout(gtx Ctx) Dims {
+func (r *Router) Layout(gtx C) D {
 	r.Update(gtx)
 	return layout.Flex{
 		Axis:    layout.Vertical,
 		Spacing: layout.SpaceBetween,
 	}.Layout(gtx,
-		layout.Rigid(func(gtx Ctx) Dims {
+		layout.Rigid(func(gtx C) D {
 			return r.Static(gtx, r)
 		}),
-		layout.Flexed(1, func(gtx Ctx) Dims {
+		layout.Flexed(1, func(gtx C) D {
 			return r.Active().Layout(gtx)
 		}),
 	)

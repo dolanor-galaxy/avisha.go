@@ -39,13 +39,13 @@ func (l *Lease) Receive(v interface{}) {
 
 func (l *Lease) Context() []layout.Widget {
 	return []layout.Widget{
-		func(gtx Ctx) Dims {
+		func(gtx C) D {
 			return material.IconButton(l.Theme, &l.CreateLease, icons.Add).Layout(gtx)
 		},
 	}
 }
 
-func (l *Lease) Update(gtx Ctx) {
+func (l *Lease) Update(gtx C) {
 	for _, state := range l.states.List() {
 		for state.Item.Clicked() {
 			l.reroute = RouteLeaseForm
@@ -58,7 +58,7 @@ func (l *Lease) Update(gtx Ctx) {
 	}
 }
 
-func (l *Lease) Layout(gtx Ctx) Dims {
+func (l *Lease) Layout(gtx C) D {
 	l.once.Do(func() {
 		l.list.Axis = layout.Vertical
 		l.list.ScrollToEnd = false
@@ -76,13 +76,13 @@ func (l *Lease) Layout(gtx Ctx) Dims {
 		}
 		return ok
 	})
-	return l.list.Layout(gtx, len(leases), func(gtx Ctx, index int) Dims {
+	return l.list.Layout(gtx, len(leases), func(gtx C, index int) D {
 		var (
 			lease  = leases[index]
 			state  = l.states.Next(lease)
 			active = false
 		)
-		return style.ListItem(gtx, l.Theme, &state.Item, &state.Hover, active, func(gtx Ctx) Dims {
+		return style.ListItem(gtx, l.Theme, &state.Item, &state.Hover, active, func(gtx C) D {
 			return material.Label(
 				l.Theme,
 				unit.Dp(20),

@@ -20,10 +20,10 @@ import (
 )
 
 type (
-	// Ctx is shorthand for `layout.Context`.
-	Ctx = layout.Context
-	// Dims is shorthand for `layout.Dimensions`.
-	Dims = layout.Dimensions
+	// C is shorthand for `layout.Context`.
+	C = layout.Context
+	// D is shorthand for `layout.Dimensions`.
+	D = layout.Dimensions
 )
 
 // package global theme state.
@@ -43,7 +43,7 @@ func main() {
 	}
 	w := app.NewWindow(app.Title("Avisha"))
 	router := &Router{
-		Static: func(gtx Ctx, r *Router) Dims {
+		Static: func(gtx C, r *Router) D {
 			gtx.Constraints.Max.Y = 80
 			return style.TopBar{Theme: th}.Layout(
 				gtx,

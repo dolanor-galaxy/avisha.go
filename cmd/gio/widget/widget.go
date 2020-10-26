@@ -8,8 +8,8 @@ import (
 )
 
 type (
-	Ctx  = layout.Context
-	Dims = layout.Dimensions
+	C = layout.Context
+	D = layout.Dimensions
 )
 
 // Re-export widget types.
