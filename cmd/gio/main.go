@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
+
 	"gioui.org/font/gofont"
 	"gioui.org/widget/material"
 	"github.com/jackmordaunt/avisha-fn"
@@ -42,20 +44,20 @@ func main() {
 		Notifier: &notify.Console{},
 	}
 	w := app.NewWindow(app.Title("Avisha"))
-	router := &Router{
-		Static: func(gtx C, r *Router) D {
+	router := &nav.Router{
+		Static: func(gtx C, r *nav.Router) D {
 			gtx.Constraints.Max.Y = 80
 			return style.TopBar{Theme: th}.Layout(
 				gtx,
 				r.Name(),
 				func() (context []layout.Widget) {
-					if contexter, ok := r.Active().(Contexter); ok {
+					if contexter, ok := r.Active().(nav.Contexter); ok {
 						context = contexter.Context()
 					}
 					return context
 				}()...)
 		},
-		Routes: map[string]View{
+		Routes: map[string]nav.View{
 			views.RouteLease:     &views.Lease{App: &api, Theme: th},
 			views.RouteLeaseForm: &views.LeaseForm{App: &api, Theme: th},
 		},
@@ -70,7 +72,7 @@ func main() {
 	app.Main()
 }
 
-func loop(w *app.Window, r *Router) error {
+func loop(w *app.Window, r *nav.Router) error {
 	var ops op.Ops
 	for {
 		switch event := (<-w.Events()).(type) {

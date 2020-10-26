@@ -12,6 +12,7 @@ import (
 	"gioui.org/widget/material"
 	"git.sr.ht/~whereswaldon/materials"
 	"github.com/jackmordaunt/avisha-fn"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
 )
 
@@ -28,12 +29,7 @@ type LeaseForm struct {
 	Submit widget.Clickable
 	Cancel widget.Clickable
 
-	reroute string
-}
-
-func (l *LeaseForm) ReRoute() (string, interface{}) {
-	defer func() { l.reroute = "" }()
-	return l.reroute, nil
+	nav.Route
 }
 
 func (l *LeaseForm) Receive(data interface{}) {
@@ -71,7 +67,7 @@ func (l *LeaseForm) Update(gtx C) {
 		}
 	}
 	if l.Cancel.Clicked() {
-		l.reroute = "back"
+		l.Route.Back()
 	}
 }
 

@@ -1,9 +1,14 @@
-package main
+package nav
 
 import (
 	"sync"
 
 	"gioui.org/layout"
+)
+
+type (
+	C = layout.Context
+	D = layout.Dimensions
 )
 
 // Router implements routing between named views.
@@ -109,4 +114,30 @@ func (r *Router) Active() View {
 func (r *Router) lock() func() {
 	r.Lock()
 	return func() { r.Unlock() }
+}
+
+// Route is an embedable type that implements routing.
+type Route struct {
+	Path string
+	Data interface{}
+}
+
+// ReRoute tells the router to route to the named route.
+func (r *Route) ReRoute() (string, interface{}) {
+	defer func() { r.Path = "" }()
+	return r.Path, r.Data
+}
+
+// To sets the route path.
+func (r *Route) To(path string, data ...interface{}) {
+	r.Path = path
+	if len(data) > 0 {
+		r.Data = data[0]
+	}
+}
+
+// Back sets the route path to the special route "back".
+// Tells the router to pop the view off the stack.
+func (r *Route) Back() {
+	r.Path = RouteBack
 }
