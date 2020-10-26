@@ -56,10 +56,10 @@ func main() {
 				}()...)
 		},
 		Routes: map[string]View{
-			"Lease":     &views.Lease{App: &api, Theme: th},
-			"LeaseForm": &views.LeaseForm{App: &api, Theme: th},
+			views.RouteLease:     &views.Lease{App: &api, Theme: th},
+			views.RouteLeaseForm: &views.LeaseForm{App: &api, Theme: th},
 		},
-		Stack: []string{"Lease"},
+		Stack: []string{views.RouteLease},
 	}
 	go func() {
 		if err := loop(w, router); err != nil {

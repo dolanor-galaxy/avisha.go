@@ -20,17 +20,18 @@ type Lease struct {
 	list   layout.List
 	states *States
 
-	route    string
+	reroute  string
 	selected *avisha.Lease
 	once     sync.Once
 }
 
 func (l *Lease) ReRoute() (string, interface{}) {
-	if l.route != "" && l.selected != nil {
-		defer func() { l.route = "" }()
-		return l.route, l.selected
-	}
-	return "", nil
+	defer func() { l.reroute = "" }()
+	return l.reroute, l.selected
+}
+
+func (l *Lease) Receive(v interface{}) {
+	l.states = &States{}
 }
 
 func (l *Lease) Context() []layout.Widget {
@@ -39,14 +40,10 @@ func (l *Lease) Context() []layout.Widget {
 
 func (l *Lease) Update(gtx Ctx) {
 	for _, state := range l.states.List() {
-		if state.Item.Clicked() {
-			fmt.Printf("navigating to LeaseForm for %s\n", state.ID())
-			l.route = "LeaseForm"
+		for state.Item.Clicked() {
+			l.reroute = RouteLeaseForm
 			l.selected = state.Lease
 		}
-		// if state.Hover.Hovered() {
-		// 	// fmt.Printf("%s is hovered\n", state.ID())
-		// }
 	}
 }
 
@@ -75,7 +72,11 @@ func (l *Lease) Layout(gtx Ctx) Dims {
 			active = false
 		)
 		return style.ListItem(gtx, l.Theme, &state.Item, &state.Hover, active, func(gtx Ctx) Dims {
-			return material.Label(l.Theme, unit.Dp(20), fmt.Sprintf("%s - %s: %+v", lease.Site, lease.Tenant, lease.Term)).Layout(gtx)
+			return material.Label(
+				l.Theme,
+				unit.Dp(20),
+				fmt.Sprintf("%s - %s: %+v", lease.Site, lease.Tenant, lease.Term),
+			).Layout(gtx)
 		})
 	})
 }

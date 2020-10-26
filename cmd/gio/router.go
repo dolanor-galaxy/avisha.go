@@ -66,6 +66,9 @@ func (r *Router) Push(s string) {
 func (r *Router) Update(gtx Ctx) {
 	if rerouter, ok := r.Active().(ReRouter); ok {
 		to, data := rerouter.ReRoute()
+		if to == "" {
+			return
+		}
 		if to == RouteBack {
 			r.Pop()
 		} else {

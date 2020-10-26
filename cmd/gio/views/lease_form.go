@@ -2,6 +2,9 @@ package views
 
 import (
 	"fmt"
+	"log"
+	"strconv"
+	"time"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -19,21 +22,33 @@ type LeaseForm struct {
 
 	Tenant materials.TextField
 	Site   materials.TextField
-	Date   materials.TextField
-	Term   materials.TextField
-	// Start Date
-	// Duration Int
+
+	Start materials.TextField
+	Days  materials.TextField
+
+	Rent materials.TextField
+
 	Submit widget.Clickable
+	Cancel widget.Clickable
+
 	layout.List
+
+	reroute string
 }
 
-func (l *LeaseForm) ReRoute() (string, bool) {
-	return "", false
+func (l *LeaseForm) ReRoute() (string, interface{}) {
+	defer func() { l.reroute = "" }()
+	return l.reroute, nil
 }
 
 func (l *LeaseForm) Receive(data interface{}) {
 	if lease, ok := data.(*avisha.Lease); ok {
 		l.lease = lease
+		l.Tenant.SetText(l.lease.Tenant)
+		l.Site.SetText(l.lease.Site)
+		l.Start.SetText(l.lease.Term.Start.String())
+		l.Days.SetText(strconv.Itoa(l.lease.Term.Days))
+		l.Rent.SetText(strconv.Itoa(int(l.lease.Rent)))
 	}
 }
 
@@ -55,8 +70,13 @@ func (l *LeaseForm) Context() (list []layout.Widget) {
 
 func (l *LeaseForm) Update(gtx Ctx) {
 	if l.Submit.Clicked() {
-		// grab data and submit to app;
-		fmt.Printf("submitted: tenant %q, site %q\n", l.Tenant.Text(), l.Site.Text())
+		if err := l.submit(); err != nil {
+			// give error to app or render under field.
+			log.Printf("submitting lease form: %v", err)
+		}
+	}
+	if l.Cancel.Clicked() {
+		l.reroute = "back"
 	}
 }
 
@@ -70,16 +90,69 @@ func (l *LeaseForm) Layout(gtx Ctx) Dims {
 				Axis: layout.Vertical,
 			}.Layout(
 				gtx,
-				layout.Rigid(func(gtx Ctx) Dims {
-					return l.Tenant.Layout(gtx, l.Theme, "Tenant")
+				layout.Flexed(1, func(gtx Ctx) Dims {
+					return layout.Flex{
+						Axis: layout.Vertical,
+					}.Layout(
+						gtx,
+						layout.Rigid(func(gtx Ctx) Dims {
+							return l.Tenant.Layout(gtx, l.Theme, "Tenant")
+						}),
+						layout.Rigid(func(gtx Ctx) Dims {
+							return l.Site.Layout(gtx, l.Theme, "Site")
+						}),
+						layout.Rigid(func(gtx Ctx) Dims {
+							return l.Start.Layout(gtx, l.Theme, "Start")
+						}),
+						layout.Rigid(func(gtx Ctx) Dims {
+							return l.Days.Layout(gtx, l.Theme, "Days")
+						}),
+						layout.Rigid(func(gtx Ctx) Dims {
+							return l.Rent.Layout(gtx, l.Theme, "Rent")
+						}),
+					)
 				}),
 				layout.Rigid(func(gtx Ctx) Dims {
-					return l.Date.Layout(gtx, l.Theme, "Date")
-				}),
-				layout.Rigid(func(gtx Ctx) Dims {
-					return l.Site.Layout(gtx, l.Theme, "Site")
+					return layout.Flex{
+						Axis: layout.Horizontal,
+					}.Layout(
+						gtx,
+						layout.Rigid(func(gtx Ctx) Dims {
+							return material.Button(l.Theme, &l.Cancel, "Cancel").Layout(gtx)
+						}),
+						layout.Flexed(1, func(gtx Ctx) Dims {
+							return Dims{Size: gtx.Constraints.Min}
+						}),
+						layout.Rigid(func(gtx Ctx) Dims {
+							return material.Button(l.Theme, &l.Submit, "Submit").Layout(gtx)
+						}),
+					)
 				}),
 			)
 		},
 	)
+}
+
+func (l *LeaseForm) submit() error {
+	start, err := time.Parse("", l.Start.Text())
+	if err != nil {
+		return fmt.Errorf("invalid date specifier: %w", err)
+	}
+	days, err := strconv.Atoi(l.Days.Text())
+	if err != nil {
+		return fmt.Errorf("days not a number: %w", err)
+	}
+	rent, err := strconv.Atoi(l.Rent.Text())
+	if err != nil {
+		return fmt.Errorf("rent not a number: %w", err)
+	}
+	if err := l.App.CreateLease(
+		l.Tenant.Text(),
+		l.Site.Text(),
+		avisha.Term{Start: start, Days: days},
+		uint(rent),
+	); err != nil {
+		return fmt.Errorf("creating lease: %w", err)
+	}
+	return nil
 }
