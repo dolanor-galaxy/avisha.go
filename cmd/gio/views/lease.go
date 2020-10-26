@@ -9,12 +9,14 @@ import (
 	"gioui.org/widget/material"
 	"github.com/jackmordaunt/avisha-fn"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/icons"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
 	"github.com/jackmordaunt/avisha-fn/storage"
 )
 
 type Lease struct {
+	nav.Route
 	*avisha.App
 	*material.Theme
 
@@ -23,14 +25,7 @@ type Lease struct {
 	list   layout.List
 	states *States
 
-	reroute  string
-	selected *avisha.Lease
-	once     sync.Once
-}
-
-func (l *Lease) ReRoute() (string, interface{}) {
-	defer func() { l.reroute = "" }()
-	return l.reroute, l.selected
+	once sync.Once
 }
 
 func (l *Lease) Receive(v interface{}) {
@@ -48,13 +43,11 @@ func (l *Lease) Context() []layout.Widget {
 func (l *Lease) Update(gtx C) {
 	for _, state := range l.states.List() {
 		for state.Item.Clicked() {
-			l.reroute = RouteLeaseForm
-			l.selected = state.Lease
+			l.Route.To(RouteLeaseForm, state.Lease)
 		}
 	}
 	if l.CreateLease.Clicked() {
-		l.reroute = RouteLeaseForm
-		l.selected = &avisha.Lease{}
+		l.Route.To(RouteLeaseForm, &avisha.Lease{})
 	}
 }
 
