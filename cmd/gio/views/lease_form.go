@@ -28,8 +28,6 @@ type LeaseForm struct {
 	Submit widget.Clickable
 	Cancel widget.Clickable
 
-	layout.List
-
 	reroute string
 }
 
@@ -79,7 +77,6 @@ func (l *LeaseForm) Update(gtx C) {
 
 func (l *LeaseForm) Layout(gtx C) D {
 	l.Update(gtx)
-	l.List.Axis = layout.Vertical
 	return layout.UniformInset(unit.Dp(10)).Layout(
 		gtx,
 		func(gtx C) D {
