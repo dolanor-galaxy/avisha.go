@@ -22,12 +22,9 @@ type LeaseForm struct {
 
 	Tenant materials.TextField
 	Site   materials.TextField
-
-	Start materials.TextField
-	Days  materials.TextField
-
-	Rent materials.TextField
-
+	Start  materials.TextField
+	Days   materials.TextField
+	Rent   materials.TextField
 	Submit widget.Clickable
 	Cancel widget.Clickable
 
@@ -46,7 +43,7 @@ func (l *LeaseForm) Receive(data interface{}) {
 		l.lease = lease
 		l.Tenant.SetText(l.lease.Tenant)
 		l.Site.SetText(l.lease.Site)
-		l.Start.SetText(l.lease.Term.Start.String())
+		l.Start.SetText(l.lease.Term.Start.Format(time.RFC3339))
 		l.Days.SetText(strconv.Itoa(l.lease.Term.Days))
 		l.Rent.SetText(strconv.Itoa(int(l.lease.Rent)))
 	}
@@ -134,7 +131,7 @@ func (l *LeaseForm) Layout(gtx Ctx) Dims {
 }
 
 func (l *LeaseForm) submit() error {
-	start, err := time.Parse("", l.Start.Text())
+	start, err := time.Parse(time.RFC3339, l.Start.Text())
 	if err != nil {
 		return fmt.Errorf("invalid date specifier: %w", err)
 	}
