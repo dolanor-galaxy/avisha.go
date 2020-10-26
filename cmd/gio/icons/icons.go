@@ -84,3 +84,13 @@ var Identity *widget.Icon = func() *widget.Icon {
 	icon, _ := widget.NewIcon(icons.ActionPermIdentity)
 	return icon
 }()
+
+var Home *widget.Icon = func() *widget.Icon {
+	icon, _ := widget.NewIcon(icons.ActionHome)
+	return icon
+}()
+
+var Edit *widget.Icon = func() *widget.Icon {
+	icon, _ := widget.NewIcon(icons.ImageEdit)
+	return icon
+}()

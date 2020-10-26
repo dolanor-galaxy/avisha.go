@@ -10,9 +10,11 @@ import (
 // TopBar renders a title and the provided actions.
 type TopBar struct {
 	*material.Theme
+	Height unit.Value
 }
 
 func (bar TopBar) Layout(gtx Ctx, title string, actions ...layout.Widget) Dims {
+	gtx.Constraints.Max.Y = gtx.Px(bar.Height)
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx Ctx) Dims {
 			return util.Rect{

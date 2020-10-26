@@ -17,7 +17,6 @@ type (
 // Static content is rendered independent of the current Route.
 type Router struct {
 	sync.Mutex
-	Static func(gtx C, r *Router) D
 	Routes map[string]View
 	Stack  []string
 }
@@ -25,6 +24,11 @@ type Router struct {
 // View types render themselves.
 type View interface {
 	Layout(gtx C) D
+}
+
+// Titled views have pretty names.
+type Titled interface {
+	Title() string
 }
 
 // ReRouter views can signal to reroute to another Route by name.
@@ -88,17 +92,7 @@ func (r *Router) Update(gtx C) {
 // Layout static content as rigid, then layout the active route.
 func (r *Router) Layout(gtx C) D {
 	r.Update(gtx)
-	return layout.Flex{
-		Axis:    layout.Vertical,
-		Spacing: layout.SpaceBetween,
-	}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return r.Static(gtx, r)
-		}),
-		layout.Flexed(1, func(gtx C) D {
-			return r.Active().Layout(gtx)
-		}),
-	)
+	return r.Active().Layout(gtx)
 }
 
 func (r *Router) Name() string {

@@ -28,6 +28,10 @@ type Lease struct {
 	once sync.Once
 }
 
+func (l *Lease) Title() string {
+	return "Leases"
+}
+
 func (l *Lease) Receive(v interface{}) {
 	l.states = &States{}
 }

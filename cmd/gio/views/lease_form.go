@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"image"
 	"log"
 	"strconv"
 	"time"
@@ -30,6 +31,10 @@ type LeaseForm struct {
 	Cancel widget.Clickable
 
 	nav.Route
+}
+
+func (l *LeaseForm) Title() string {
+	return "Lease Form"
 }
 
 func (l *LeaseForm) Receive(data interface{}) {
@@ -73,36 +78,38 @@ func (l *LeaseForm) Update(gtx C) {
 
 func (l *LeaseForm) Layout(gtx C) D {
 	l.Update(gtx)
-	return layout.UniformInset(unit.Dp(10)).Layout(
+	return layout.Flex{
+		Axis: layout.Vertical,
+	}.Layout(
 		gtx,
-		func(gtx C) D {
+		layout.Rigid(func(gtx C) D {
 			return layout.Flex{
 				Axis: layout.Vertical,
 			}.Layout(
 				gtx,
-				layout.Flexed(1, func(gtx C) D {
-					return layout.Flex{
-						Axis: layout.Vertical,
-					}.Layout(
-						gtx,
-						layout.Rigid(func(gtx C) D {
-							return l.Tenant.Layout(gtx, l.Theme, "Tenant")
-						}),
-						layout.Rigid(func(gtx C) D {
-							return l.Site.Layout(gtx, l.Theme, "Site")
-						}),
-						layout.Rigid(func(gtx C) D {
-							return l.Start.Layout(gtx, l.Theme, "Start")
-						}),
-						layout.Rigid(func(gtx C) D {
-							return l.Days.Layout(gtx, l.Theme, "Days")
-						}),
-						layout.Rigid(func(gtx C) D {
-							return l.Rent.Layout(gtx, l.Theme, "Rent")
-						}),
-					)
+				layout.Rigid(func(gtx C) D {
+					return l.Tenant.Layout(gtx, l.Theme, "Tenant")
 				}),
 				layout.Rigid(func(gtx C) D {
+					return l.Site.Layout(gtx, l.Theme, "Site")
+				}),
+				layout.Rigid(func(gtx C) D {
+					return l.Start.Layout(gtx, l.Theme, "Start")
+				}),
+				layout.Rigid(func(gtx C) D {
+					return l.Days.Layout(gtx, l.Theme, "Days")
+				}),
+				layout.Rigid(func(gtx C) D {
+					return l.Rent.Layout(gtx, l.Theme, "Rent")
+				}),
+			)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{
+				Top: unit.Dp(10),
+			}.Layout(
+				gtx,
+				func(gtx C) D {
 					return layout.Flex{
 						Axis: layout.Horizontal,
 					}.Layout(
@@ -110,16 +117,15 @@ func (l *LeaseForm) Layout(gtx C) D {
 						layout.Rigid(func(gtx C) D {
 							return material.Button(l.Theme, &l.Cancel, "Cancel").Layout(gtx)
 						}),
-						layout.Flexed(1, func(gtx C) D {
-							return D{Size: gtx.Constraints.Min}
+						layout.Rigid(func(gtx C) D {
+							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
 						}),
 						layout.Rigid(func(gtx C) D {
 							return material.Button(l.Theme, &l.Submit, "Submit").Layout(gtx)
 						}),
 					)
-				}),
-			)
-		},
+				})
+		}),
 	)
 }
 

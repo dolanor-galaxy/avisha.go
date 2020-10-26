@@ -10,6 +10,7 @@ type (
 type Route = string
 
 const (
-	RouteLease     Route = "lease"
-	RouteLeaseForm Route = "lease-form"
+	RouteLease      Route = "lease"
+	RouteLeaseForm  Route = "lease-form"
+	RouteTenantForm Route = "tenant-form"
 )

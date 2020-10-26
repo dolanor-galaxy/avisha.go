@@ -5,13 +5,14 @@ import (
 	"log"
 	"os"
 
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/icons"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
 
 	"gioui.org/font/gofont"
+	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"github.com/jackmordaunt/avisha-fn"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/views"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
 	"github.com/jackmordaunt/avisha-fn/notify"
 	"github.com/jackmordaunt/avisha-fn/storage"
 
@@ -19,13 +20,6 @@ import (
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
-)
-
-type (
-	// C is shorthand for `layout.Context`.
-	C = layout.Context
-	// D is shorthand for `layout.Dimensions`.
-	D = layout.Dimensions
 )
 
 // package global theme state.
@@ -44,27 +38,43 @@ func main() {
 		Notifier: &notify.Console{},
 	}
 	w := app.NewWindow(app.Title("Avisha"))
-	router := &nav.Router{
-		Static: func(gtx C, r *nav.Router) D {
-			gtx.Constraints.Max.Y = 80
-			return style.TopBar{Theme: th}.Layout(
-				gtx,
-				r.Name(),
-				func() (context []layout.Widget) {
-					if contexter, ok := r.Active().(nav.Contexter); ok {
-						context = contexter.Context()
-					}
-					return context
-				}()...)
+	page := &nav.Page{
+		Theme: th,
+		Router: nav.Router{
+			Routes: map[string]nav.View{
+				views.RouteLease:      &views.Lease{App: &api, Theme: th},
+				views.RouteLeaseForm:  &views.LeaseForm{App: &api, Theme: th},
+				views.RouteTenantForm: &views.TenantForm{App: &api, Theme: th},
+			},
+			Stack: []string{views.RouteLease},
 		},
-		Routes: map[string]nav.View{
-			views.RouteLease:     &views.Lease{App: &api, Theme: th},
-			views.RouteLeaseForm: &views.LeaseForm{App: &api, Theme: th},
+		Rail: nav.Rail{
+			Width: unit.Dp(80),
+			Destinations: []nav.Destination{
+				// {
+				// 	Label: "Home",
+				// 	Route: views.RouteLease,
+				// 	Icon:  icons.Home,
+				// },
+				{
+					Label: "Leases",
+					Route: views.RouteLease,
+					Icon:  icons.Edit,
+				},
+				{
+					Label: "Tenants",
+					Route: views.RouteTenantForm,
+					Icon:  icons.Edit,
+				},
+				{
+					Label: "Sites",
+					Icon:  icons.Edit,
+				},
+			},
 		},
-		Stack: []string{views.RouteLease},
 	}
 	go func() {
-		if err := loop(w, router); err != nil {
+		if err := loop(w, page); err != nil {
 			log.Fatalf("error: %v", err)
 		}
 		os.Exit(0)
@@ -72,7 +82,7 @@ func main() {
 	app.Main()
 }
 
-func loop(w *app.Window, r *nav.Router) error {
+func loop(w *app.Window, p *nav.Page) error {
 	var ops op.Ops
 	for {
 		switch event := (<-w.Events()).(type) {
@@ -82,11 +92,11 @@ func loop(w *app.Window, r *nav.Router) error {
 			fmt.Printf("clipboard: %v\n", event.Text)
 		case *system.CommandEvent:
 			if event.Type == system.CommandBack {
-				r.Pop()
+				p.Router.Pop()
 			}
 		case system.FrameEvent:
 			gtx := layout.NewContext(&ops, event)
-			r.Layout(gtx)
+			p.Layout(gtx)
 			event.Frame(gtx.Ops)
 		}
 	}
