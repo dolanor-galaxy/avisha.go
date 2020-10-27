@@ -25,8 +25,7 @@ type Lease struct {
 
 	list   layout.List
 	states *States
-
-	once sync.Once
+	once   sync.Once
 }
 
 func (l *Lease) Title() string {

@@ -44,8 +44,10 @@ func main() {
 			Routes: map[string]nav.View{
 				views.RouteLease:      &views.Lease{App: &api, Theme: th},
 				views.RouteTenants:    &views.Tenants{App: &api, Theme: th},
+				views.RouteSites:      &views.Sites{App: &api, Theme: th},
 				views.RouteLeaseForm:  &views.LeaseForm{App: &api, Theme: th},
 				views.RouteTenantForm: &views.TenantForm{App: &api, Theme: th},
+				views.RouteSiteForm:   &views.SiteForm{App: &api, Theme: th},
 			},
 			Stack: []string{views.RouteLease},
 		},
@@ -69,6 +71,7 @@ func main() {
 				},
 				{
 					Label: "Sites",
+					Route: views.RouteSites,
 					Icon:  icons.Edit,
 				},
 			},

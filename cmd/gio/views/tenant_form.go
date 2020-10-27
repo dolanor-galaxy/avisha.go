@@ -16,6 +16,7 @@ import (
 )
 
 type TenantForm struct {
+	nav.Route
 	*avisha.App
 	*material.Theme
 	tenant *avisha.Tenant
@@ -24,8 +25,6 @@ type TenantForm struct {
 	Contact materials.TextField
 	Submit  widget.Clickable
 	Cancel  widget.Clickable
-
-	nav.Route
 }
 
 func (f *TenantForm) Title() string {
@@ -34,6 +33,7 @@ func (f *TenantForm) Title() string {
 
 func (f *TenantForm) Receive(data interface{}) {
 	if tenant, ok := data.(*avisha.Tenant); ok && tenant != nil {
+		f.tenant = tenant
 		f.Name.SetText(tenant.Name)
 		f.Contact.SetText(tenant.Contact)
 	}

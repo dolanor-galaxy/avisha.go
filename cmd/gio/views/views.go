@@ -17,8 +17,10 @@ type Route = string
 const (
 	RouteLease      Route = "lease"
 	RouteTenants    Route = "tenants"
+	RouteSites      Route = "sites"
 	RouteLeaseForm  Route = "lease-form"
 	RouteTenantForm Route = "tenant-form"
+	RouteSiteForm   Route = "site-form"
 )
 
 // States maintains list-item state, between frame updates.

@@ -18,6 +18,7 @@ import (
 )
 
 type LeaseForm struct {
+	nav.Route
 	*avisha.App
 	*material.Theme
 	lease *avisha.Lease
@@ -29,8 +30,6 @@ type LeaseForm struct {
 	Rent   materials.TextField
 	Submit widget.Clickable
 	Cancel widget.Clickable
-
-	nav.Route
 }
 
 func (l *LeaseForm) Title() string {
