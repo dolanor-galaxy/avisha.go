@@ -211,7 +211,7 @@ func (f *File) load() error {
 func (f *File) prepare() (*os.File, error) {
 	handle, err := os.OpenFile(f.Path, os.O_RDWR, 0777)
 	if os.IsNotExist(err) {
-		if err := os.MkdirAll(filepath.Dir(f.Path), os.ModeDir); err != nil {
+		if err := os.MkdirAll(filepath.Dir(f.Path), 0777); err != nil {
 			return nil, fmt.Errorf("preparing directories: %w", err)
 		}
 		handle, err = os.Create(f.Path)
