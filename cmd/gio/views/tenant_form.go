@@ -61,6 +61,7 @@ func (f *TenantForm) Update(gtx C) {
 			// give error to app or render under field.
 			log.Printf("submitting tenant form: %v", err)
 		}
+		f.Route.Back()
 	}
 	if f.Cancel.Clicked() {
 		f.Route.Back()

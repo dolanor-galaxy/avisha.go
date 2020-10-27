@@ -43,6 +43,7 @@ func main() {
 		Router: nav.Router{
 			Routes: map[string]nav.View{
 				views.RouteLease:      &views.Lease{App: &api, Theme: th},
+				views.RouteTenants:    &views.Tenants{App: &api, Theme: th},
 				views.RouteLeaseForm:  &views.LeaseForm{App: &api, Theme: th},
 				views.RouteTenantForm: &views.TenantForm{App: &api, Theme: th},
 			},
@@ -63,7 +64,7 @@ func main() {
 				},
 				{
 					Label: "Tenants",
-					Route: views.RouteTenantForm,
+					Route: views.RouteTenants,
 					Icon:  icons.Edit,
 				},
 				{

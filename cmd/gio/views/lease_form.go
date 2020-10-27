@@ -70,6 +70,7 @@ func (l *LeaseForm) Update(gtx C) {
 			// give error to app or render under field.
 			log.Printf("submitting lease form: %v", err)
 		}
+		l.Route.Back()
 	}
 	if l.Cancel.Clicked() {
 		l.Route.Back()

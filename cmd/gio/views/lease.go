@@ -3,6 +3,7 @@ package views
 import (
 	"fmt"
 	"sync"
+	"unsafe"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -47,7 +48,7 @@ func (l *Lease) Context() []layout.Widget {
 func (l *Lease) Update(gtx C) {
 	for _, state := range l.states.List() {
 		for state.Item.Clicked() {
-			l.Route.To(RouteLeaseForm, state.Lease)
+			l.Route.To(RouteLeaseForm, (*avisha.Lease)(state.Data))
 		}
 	}
 	if l.CreateLease.Clicked() {
@@ -76,7 +77,7 @@ func (l *Lease) Layout(gtx C) D {
 	return l.list.Layout(gtx, len(leases), func(gtx C, index int) D {
 		var (
 			lease  = leases[index]
-			state  = l.states.Next(lease)
+			state  = l.states.Next(unsafe.Pointer(lease))
 			active = false
 		)
 		return style.ListItem(gtx, l.Theme, &state.Item, &state.Hover, active, func(gtx C) D {
@@ -87,36 +88,4 @@ func (l *Lease) Layout(gtx C) D {
 			).Layout(gtx)
 		})
 	})
-}
-
-// States tracks state per list-item, between frame updates.
-// Allocates memory "as needed", alternative to pre-allocating
-// slice of states.
-type States struct {
-	current int
-	list    []State
-}
-
-type State struct {
-	*avisha.Lease
-	Item  widget.Clickable
-	Hover widget.Hoverable
-}
-
-func (s *States) Begin() {
-	s.current = 0
-}
-
-func (s *States) Next(lease *avisha.Lease) *State {
-	defer func() { s.current += 1 }()
-	if s.current > len(s.list)-1 {
-		s.list = append(s.list, State{})
-	}
-	state := &s.list[s.current]
-	state.Lease = lease
-	return state
-}
-
-func (s *States) List() []State {
-	return s.list[:s.current]
 }
