@@ -39,7 +39,11 @@ func (s *Sites) Receive(v interface{}) {
 func (s *Sites) Context() []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
-			return material.IconButton(s.Theme, &s.RegisterSite, icons.Add).Layout(gtx)
+			return material.IconButton(
+				s.Theme,
+				&s.RegisterSite,
+				icons.Add,
+			).Layout(gtx)
 		},
 	}
 }
@@ -79,12 +83,18 @@ func (s *Sites) Layout(gtx C) D {
 			state  = s.states.Next(unsafe.Pointer(site))
 			active = false
 		)
-		return style.ListItem(gtx, s.Theme, &state.Item, &state.Hover, active, func(gtx C) D {
-			return material.Label(
-				s.Theme,
-				unit.Dp(20),
-				fmt.Sprintf("%s", site.Number),
-			).Layout(gtx)
-		})
+		return style.ListItem(
+			gtx,
+			s.Theme,
+			&state.Item,
+			&state.Hover,
+			active,
+			func(gtx C) D {
+				return material.Label(
+					s.Theme,
+					unit.Dp(20),
+					fmt.Sprintf("%s", site.Number),
+				).Layout(gtx)
+			})
 	})
 }

@@ -39,7 +39,11 @@ func (l *Lease) Receive(v interface{}) {
 func (l *Lease) Context() []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
-			return material.IconButton(l.Theme, &l.CreateLease, icons.Add).Layout(gtx)
+			return material.IconButton(
+				l.Theme,
+				&l.CreateLease,
+				icons.Add,
+			).Layout(gtx)
 		},
 	}
 }
@@ -79,12 +83,18 @@ func (l *Lease) Layout(gtx C) D {
 			state  = l.states.Next(unsafe.Pointer(lease))
 			active = false
 		)
-		return style.ListItem(gtx, l.Theme, &state.Item, &state.Hover, active, func(gtx C) D {
-			return material.Label(
-				l.Theme,
-				unit.Dp(20),
-				fmt.Sprintf("%s - %s: %+v", lease.Site, lease.Tenant, lease.Term),
-			).Layout(gtx)
-		})
+		return style.ListItem(
+			gtx,
+			l.Theme,
+			&state.Item,
+			&state.Hover,
+			active,
+			func(gtx C) D {
+				return material.Label(
+					l.Theme,
+					unit.Dp(20),
+					fmt.Sprintf("%s - %s: %+v", lease.Site, lease.Tenant, lease.Term),
+				).Layout(gtx)
+			})
 	})
 }

@@ -40,7 +40,11 @@ func (t *Tenants) Receive(v interface{}) {
 func (t *Tenants) Context() []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
-			return material.IconButton(t.Theme, &t.RegisterTenant, icons.Add).Layout(gtx)
+			return material.IconButton(
+				t.Theme,
+				&t.RegisterTenant,
+				icons.Add,
+			).Layout(gtx)
 		},
 	}
 }
@@ -80,12 +84,18 @@ func (t *Tenants) Layout(gtx C) D {
 			state  = t.states.Next(unsafe.Pointer(tenant))
 			active = false
 		)
-		return style.ListItem(gtx, t.Theme, &state.Item, &state.Hover, active, func(gtx C) D {
-			return material.Label(
-				t.Theme,
-				unit.Dp(20),
-				fmt.Sprintf("%s", tenant.Name),
-			).Layout(gtx)
-		})
+		return style.ListItem(
+			gtx,
+			t.Theme,
+			&state.Item,
+			&state.Hover,
+			active,
+			func(gtx C) D {
+				return material.Label(
+					t.Theme,
+					unit.Dp(20),
+					fmt.Sprintf("%s", tenant.Name),
+				).Layout(gtx)
+			})
 	})
 }
