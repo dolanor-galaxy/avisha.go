@@ -29,7 +29,7 @@ type Sites struct {
 }
 
 func (s *Sites) Title() string {
-	return "Leases"
+	return "Sites"
 }
 
 func (s *Sites) Receive(v interface{}) {

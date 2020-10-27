@@ -78,6 +78,7 @@ func (l *SiteForm) Layout(gtx C) D {
 			}.Layout(
 				gtx,
 				layout.Rigid(func(gtx C) D {
+					l.Number.SingleLine = true
 					return l.Number.Layout(gtx, l.Theme, "Number")
 				}),
 			)

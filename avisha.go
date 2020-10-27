@@ -2,6 +2,7 @@ package avisha
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackmordaunt/avisha-fn/notify"
@@ -214,6 +215,8 @@ func (app App) CreateLease(
 
 // ListSite enters a new, unqiue, leaseable Site.
 func (app App) ListSite(s Site) error {
+	s.Number = strings.TrimSpace(s.Number)
+
 	exists := func(ent storage.Entity) bool {
 		if site, ok := ent.(*Site); ok {
 			return site.Number == s.Number
