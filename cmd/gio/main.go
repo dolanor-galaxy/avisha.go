@@ -54,25 +54,20 @@ func main() {
 		Rail: nav.Rail{
 			Width: unit.Dp(80),
 			Destinations: []nav.Destination{
-				// {
-				// 	Label: "Home",
-				// 	Route: views.RouteLease,
-				// 	Icon:  icons.Home,
-				// },
 				{
 					Label: "Leases",
 					Route: views.RouteLease,
-					Icon:  icons.Edit,
+					Icon:  icons.Description,
 				},
 				{
 					Label: "Tenants",
 					Route: views.RouteTenants,
-					Icon:  icons.Edit,
+					Icon:  icons.Person,
 				},
 				{
 					Label: "Sites",
 					Route: views.RouteSites,
-					Icon:  icons.Edit,
+					Icon:  icons.Home,
 				},
 			},
 		},

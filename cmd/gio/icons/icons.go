@@ -94,3 +94,13 @@ var Edit *widget.Icon = func() *widget.Icon {
 	icon, _ := widget.NewIcon(icons.ImageEdit)
 	return icon
 }()
+
+var Person *widget.Icon = func() *widget.Icon {
+	icon, _ := widget.NewIcon(icons.SocialPerson)
+	return icon
+}()
+
+var Description *widget.Icon = func() *widget.Icon {
+	icon, _ := widget.NewIcon(icons.ActionDescription)
+	return icon
+}()
