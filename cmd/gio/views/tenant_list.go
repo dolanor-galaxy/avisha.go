@@ -1,7 +1,6 @@
 package views
 
 import (
-	"fmt"
 	"sync"
 	"unsafe"
 
@@ -21,20 +20,15 @@ type Tenants struct {
 	nav.Route
 	*avisha.App
 	*material.Theme
+	list   layout.List
+	states States
+	once   sync.Once
 
 	RegisterTenant widget.Clickable
-
-	list   layout.List
-	states *States
-	once   sync.Once
 }
 
 func (t *Tenants) Title() string {
 	return "Tenants"
-}
-
-func (t *Tenants) Receive(v interface{}) {
-	t.states = &States{}
 }
 
 func (t *Tenants) Context() []layout.Widget {
@@ -51,7 +45,7 @@ func (t *Tenants) Context() []layout.Widget {
 
 func (t *Tenants) Update(gtx C) {
 	for _, state := range t.states.List() {
-		for state.Item.Clicked() {
+		if state.Item.Clicked() {
 			t.Route.To(RouteTenantForm, (*avisha.Tenant)(state.Data))
 		}
 	}
@@ -64,7 +58,6 @@ func (t *Tenants) Layout(gtx C) D {
 	t.once.Do(func() {
 		t.list.Axis = layout.Vertical
 		t.list.ScrollToEnd = false
-		t.states = &States{}
 	})
 	t.Update(gtx)
 	t.states.Begin()
@@ -94,7 +87,7 @@ func (t *Tenants) Layout(gtx C) D {
 				return material.Label(
 					t.Theme,
 					unit.Dp(20),
-					fmt.Sprintf("%s", tenant.Name),
+					tenant.Name,
 				).Layout(gtx)
 			})
 	})

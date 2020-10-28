@@ -1,7 +1,6 @@
 package views
 
 import (
-	"fmt"
 	"sync"
 	"unsafe"
 
@@ -20,20 +19,15 @@ type Sites struct {
 	nav.Route
 	*avisha.App
 	*material.Theme
+	list   layout.List
+	states States
+	once   sync.Once
 
 	RegisterSite widget.Clickable
-
-	list   layout.List
-	states *States
-	once   sync.Once
 }
 
 func (s *Sites) Title() string {
 	return "Sites"
-}
-
-func (s *Sites) Receive(v interface{}) {
-	s.states = &States{}
 }
 
 func (s *Sites) Context() []layout.Widget {
@@ -50,7 +44,7 @@ func (s *Sites) Context() []layout.Widget {
 
 func (s *Sites) Update(gtx C) {
 	for _, state := range s.states.List() {
-		for state.Item.Clicked() {
+		if state.Item.Clicked() {
 			s.Route.To(RouteSiteForm, (*avisha.Site)(state.Data))
 		}
 	}
@@ -63,7 +57,6 @@ func (s *Sites) Layout(gtx C) D {
 	s.once.Do(func() {
 		s.list.Axis = layout.Vertical
 		s.list.ScrollToEnd = false
-		s.states = &States{}
 	})
 	s.Update(gtx)
 	s.states.Begin()
@@ -93,7 +86,7 @@ func (s *Sites) Layout(gtx C) D {
 				return material.Label(
 					s.Theme,
 					unit.Dp(20),
-					fmt.Sprintf("%s", site.Number),
+					site.Number,
 				).Layout(gtx)
 			})
 	})

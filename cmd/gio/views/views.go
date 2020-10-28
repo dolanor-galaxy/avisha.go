@@ -52,6 +52,12 @@ func (s *States) Next(data unsafe.Pointer) *State {
 	return state
 }
 
-func (s *States) List() []State {
-	return s.list[:s.current]
+// List returns a view over the active states in memory.
+func (s *States) List() []*State {
+	list := make([]*State, s.current)
+	view := s.list[:s.current]
+	for ii := range view {
+		list[ii] = &view[ii]
+	}
+	return list
 }

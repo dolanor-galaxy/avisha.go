@@ -20,20 +20,15 @@ type Lease struct {
 	nav.Route
 	*avisha.App
 	*material.Theme
+	list   layout.List
+	states States
+	once   sync.Once
 
 	CreateLease widget.Clickable
-
-	list   layout.List
-	states *States
-	once   sync.Once
 }
 
 func (l *Lease) Title() string {
 	return "Leases"
-}
-
-func (l *Lease) Receive(v interface{}) {
-	l.states = &States{}
 }
 
 func (l *Lease) Context() []layout.Widget {
@@ -50,7 +45,7 @@ func (l *Lease) Context() []layout.Widget {
 
 func (l *Lease) Update(gtx C) {
 	for _, state := range l.states.List() {
-		for state.Item.Clicked() {
+		if state.Item.Clicked() {
 			l.Route.To(RouteLeaseForm, (*avisha.Lease)(state.Data))
 		}
 	}
@@ -63,7 +58,6 @@ func (l *Lease) Layout(gtx C) D {
 	l.once.Do(func() {
 		l.list.Axis = layout.Vertical
 		l.list.ScrollToEnd = false
-		l.states = &States{}
 	})
 	l.Update(gtx)
 	l.states.Begin()
