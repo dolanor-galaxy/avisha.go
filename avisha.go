@@ -2,6 +2,7 @@ package avisha
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackmordaunt/avisha-fn/notify"
@@ -22,7 +23,7 @@ type Site struct {
 }
 
 // Dwelling is where a Tenant lives.
-type Dwelling = int
+type Dwelling int
 
 const (
 	// Cabin is a small, self contained temporary home.
@@ -33,6 +34,19 @@ const (
 	House
 )
 
+func (d Dwelling) String() string {
+	switch d {
+	case Flat:
+		return "Flat"
+	case House:
+		return "House"
+	case Cabin:
+		return "Cabin"
+	default:
+		return "Unknown"
+	}
+}
+
 // Currency in encoded in AUD cents, where 100 == $1.
 type Currency = uint
 
@@ -42,13 +56,20 @@ type Term struct {
 	Days  int
 }
 
+// Overlaps returns whether both terms overlap.
+// A term overlaps another if they share active days.
+func (t Term) Overlaps(other Term) bool {
+	end := t.Start.Add(time.Hour * time.Duration(24) * time.Duration(t.Days))
+	return other.Start.After(t.Start) && other.Start.Before(end) || other.Overlaps(t)
+}
+
 // Lease describes the exclusive use of a Site by exactly one Tenant for the
 // duration of the Term specified.
 // Services consumed are tracked accordingly, typically involving Rent and
 // Utilities.
 type Lease struct {
-	Tenant Tenant
-	Site   Site
+	Tenant string
+	Site   string
 	Term   Term
 	Rent   Currency
 
@@ -78,22 +99,22 @@ func (s Service) Balance() int {
 
 // App implements use cases.
 type App struct {
-	storage.Storer
+	storage.Storage
 	notify.Notifier
 }
 
 // SendInvoice sends the utility service invoice for the given Lease.
 func (app App) SendInvoice(t Tenant, s Site) error {
-	containsSite := func(ent interface{}) bool {
+	containsSite := func(ent storage.Entity) bool {
 		if lease, ok := ent.(Lease); ok {
-			return lease.Site.Number == s.Number
+			return lease.Site == s.Number
 		}
 		return false
 	}
 
-	containsTenant := func(ent interface{}) bool {
+	containsTenant := func(ent storage.Entity) bool {
 		if lease, ok := ent.(Lease); ok {
-			return lease.Tenant.Name == t.Name
+			return lease.Tenant == t.Name
 		}
 		return false
 	}
@@ -125,23 +146,49 @@ func (app App) SendInvoice(t Tenant, s Site) error {
 
 // CreateLease creates a new lease.
 func (app App) CreateLease(
-	t Tenant,
-	s Site,
+	tenant string,
+	site string,
 	term Term,
 	rent Currency,
 ) error {
-	containsSite := func(ent interface{}) bool {
-		if lease, ok := ent.(Lease); ok {
-			return lease.Site.Number == s.Number
+	containsSite := func(ent storage.Entity) bool {
+		if lease, ok := ent.(*Lease); ok {
+			return lease.Site == site
 		}
 		return false
 	}
 
-	matchesTerm := func(ent interface{}) bool {
-		if lease, ok := ent.(Lease); ok {
+	matchesTerm := func(ent storage.Entity) bool {
+		if lease, ok := ent.(*Lease); ok {
 			return lease.Term == term
 		}
 		return false
+	}
+
+	tenantExists := func(ent storage.Entity) bool {
+		if t, ok := ent.(*Tenant); ok {
+			if t.Name == tenant {
+				return true
+			}
+		}
+		return false
+	}
+
+	siteExists := func(ent storage.Entity) bool {
+		if s, ok := ent.(*Site); ok {
+			if s.Number == site {
+				return true
+			}
+		}
+		return false
+	}
+
+	if _, ok := app.Query(tenantExists); !ok {
+		return fmt.Errorf("tenant %s does not exist", tenant)
+	}
+
+	if _, ok := app.Query(siteExists); !ok {
+		return fmt.Errorf("site %s does not exist", site)
 	}
 
 	if _, ok := app.Query(containsSite, matchesTerm); ok {
@@ -149,8 +196,8 @@ func (app App) CreateLease(
 	}
 
 	lease := Lease{
-		Tenant: t,
-		Site:   s,
+		Tenant: tenant,
+		Site:   site,
 		Term:   term,
 		Rent:   rent,
 		Services: map[string]Service{
@@ -159,7 +206,7 @@ func (app App) CreateLease(
 		},
 	}
 
-	if err := app.Save(lease); err != nil {
+	if err := app.Create(lease); err != nil {
 		return fmt.Errorf("saving lease: %w", err)
 	}
 
@@ -168,8 +215,10 @@ func (app App) CreateLease(
 
 // ListSite enters a new, unqiue, leaseable Site.
 func (app App) ListSite(s Site) error {
-	exists := func(ent interface{}) bool {
-		if site, ok := ent.(Site); ok {
+	s.Number = strings.TrimSpace(s.Number)
+
+	exists := func(ent storage.Entity) bool {
+		if site, ok := ent.(*Site); ok {
 			return site.Number == s.Number
 		}
 		return false
@@ -179,7 +228,7 @@ func (app App) ListSite(s Site) error {
 		return fmt.Errorf("%s already exists", s.Number)
 	}
 
-	if err := app.Save(s); err != nil {
+	if err := app.Create(s); err != nil {
 		return fmt.Errorf("saving site: %w", err)
 	}
 
@@ -188,8 +237,8 @@ func (app App) ListSite(s Site) error {
 
 // RegisterTenant enters a new, unique Tenant.
 func (app App) RegisterTenant(t Tenant) error {
-	exists := func(ent interface{}) bool {
-		if tenant, ok := ent.(Tenant); ok {
+	exists := func(ent storage.Entity) bool {
+		if tenant, ok := ent.(*Tenant); ok {
 			return tenant.Name == t.Name
 		}
 		return false
@@ -203,9 +252,24 @@ func (app App) RegisterTenant(t Tenant) error {
 		return fmt.Errorf("%s already exists", t.Name)
 	}
 
-	if err := app.Save(t); err != nil {
+	if err := app.Create(t); err != nil {
 		return fmt.Errorf("saving tenant: %w", err)
 	}
 
 	return nil
+}
+
+// ID specifies the unique identifier.
+func (t Tenant) ID() string {
+	return t.Name
+}
+
+// ID specifies the unique identifier.
+func (s Site) ID() string {
+	return s.Number
+}
+
+// ID specifies the unique identifier.
+func (l Lease) ID() string {
+	return fmt.Sprintf("%s-%s", l.Tenant, l.Site)
 }

@@ -1,33 +1,40 @@
 package storage
 
-// Storer provides persistence for entities.
-type Storer interface {
-	Query(filters ...func(interface{}) bool) (interface{}, bool)
-	List(filters ...func(interface{}) bool) []interface{}
-	Save(ent interface{}) error
+// Entity is a unique object.
+type Entity interface {
+	ID() string
 }
 
-// Apply all filters to ent.
-func Apply(ent interface{}, filters ...func(interface{}) bool) bool {
+// Storage is any object that can store and query entities.
+type Storage interface {
+	Storer
+	Queryer
+}
+
+// Storer provides persistence for entities.
+type Storer interface {
+	// Create a new, unique entity.
+	Create(ent Entity) error
+	// Update an existing entity.
+	Update(ent Entity) error
+	// Delete an existing entity.
+	Delete(ent Entity) error
+}
+
+// Queryer is an object that can be queried for entities.
+type Queryer interface {
+	// Query for a single entity that satisfies the filters.
+	Query(filters ...func(Entity) bool) (Entity, bool)
+	// List all entities that satisfy the filters.
+	List(filters ...func(Entity) bool) []Entity
+}
+
+// Apply all filters to the entity.
+func Apply(entity Entity, filters ...func(Entity) bool) bool {
 	for _, filter := range filters {
-		if !filter(ent) {
+		if !filter(entity) {
 			return false
 		}
 	}
 	return true
 }
-
-// // Tenant storage.
-// type Tenant interface {
-// 	Tenants(filters ...func(*avisha.Tenant) bool) []avisha.Tenant
-// }
-
-// // Site storage.
-// type Site interface {
-// 	Sites(filters ...func(*avisha.Site) bool) []avisha.Site
-// }
-
-// // Lease storage.
-// type Lease interface {
-// 	Leases(filters ...func(*avisha.Lease) bool) []avisha.Lease
-// }

@@ -21,9 +21,15 @@ func init() {
 	spew.Config.SortKeys = true
 }
 
+// tenant register name=jack contact=jack@protonmail.com
+
 func main() {
 	app := avisha.App{
-		Storer:   &storage.Local{},
+		Storage: storage.FileStorage("target/db.json").
+			With(&avisha.Tenant{}).
+			With(&avisha.Site{}).
+			With(&avisha.Lease{}).
+			MustLoad(),
 		Notifier: &notify.Console{},
 	}
 
@@ -40,7 +46,7 @@ func main() {
 		if err := mux.Handle(&app, strings.Fields(line)); err != nil {
 			fmt.Printf("error: %s\n", err)
 		} else {
-			spew.Dump(app.Storer)
+			spew.Dump(app.Storage)
 		}
 	}
 }

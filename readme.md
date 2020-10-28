@@ -1,4 +1,6 @@
-# Avisha Fn
+<!-- markdownlint-disable MD029 -->
+
+# Avisha
 
 > Decompose a system based on volatility and implement use cases as an integeration between the areas of volatility.
 
