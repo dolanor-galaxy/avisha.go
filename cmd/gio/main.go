@@ -28,8 +28,12 @@ var th = func() *material.Theme {
 }()
 
 func main() {
+	db, ok := os.LookupEnv("avisha_db")
+	if !ok {
+		db = "target/db.json"
+	}
 	api := avisha.App{
-		Storage: storage.FileStorage("target/db.json").
+		Storage: storage.FileStorage(db).
 			With(&avisha.Tenant{}).
 			With(&avisha.Site{}).
 			With(&avisha.Lease{}).
