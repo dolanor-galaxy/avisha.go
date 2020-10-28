@@ -54,6 +54,8 @@ type Receiver interface {
 
 // RouteBack is a special route that tells the Router to route
 // to the previous view.
+//
+// TODO(jfm): more principled approach would be better.
 const RouteBack = "back"
 
 func (r *Router) Pop() {
@@ -61,14 +63,20 @@ func (r *Router) Pop() {
 	if len(r.Stack) > 1 {
 		r.Stack = r.Stack[:len(r.Stack)-1]
 	}
+	if receiver, ok := r.active().(Receiver); ok {
+		receiver.Receive(nil)
+	}
 }
 
-func (r *Router) Push(s string) {
+func (r *Router) Push(s string, data interface{}) {
 	defer r.lock()()
 	if r.Stack[len(r.Stack)-1] != s {
 		if _, ok := r.Routes[s]; ok {
 			r.Stack = append(r.Stack, s)
 		}
+	}
+	if receiver, ok := r.active().(Receiver); ok {
+		receiver.Receive(data)
 	}
 }
 
@@ -81,15 +89,12 @@ func (r *Router) Update(gtx C) {
 		if to == RouteBack {
 			r.Pop()
 		} else {
-			r.Push(to)
-		}
-		if receiver, ok := r.Active().(Receiver); ok {
-			receiver.Receive(data)
+			r.Push(to, data)
 		}
 	}
 }
 
-// Layout static content as rigid, then layout the active route.
+// Layout the active route.
 func (r *Router) Layout(gtx C) D {
 	r.Update(gtx)
 	return r.Active().Layout(gtx)
@@ -102,6 +107,10 @@ func (r *Router) Name() string {
 
 func (r *Router) Active() View {
 	defer r.lock()()
+	return r.active()
+}
+
+func (r *Router) active() View {
 	return r.Routes[r.Stack[len(r.Stack)-1]]
 }
 
@@ -110,19 +119,22 @@ func (r *Router) lock() func() {
 	return func() { r.Unlock() }
 }
 
-// Route is an embedable type that implements routing.
+// Route is an embedable type that signals to the router to re-route.
+// Data is dynamic: the caller must know what type of data the destination
+// route accepts.
 type Route struct {
 	Path string
 	Data interface{}
 }
 
-// ReRoute tells the router to route to the named route.
+// ReRoute signals to the router to reroute to the named route with the given
+// data.
 func (r *Route) ReRoute() (string, interface{}) {
-	defer func() { r.Path = "" }()
+	defer func() { r.Path = ""; r.Data = nil }()
 	return r.Path, r.Data
 }
 
-// To sets the route path.
+// To sets the route path and data.
 func (r *Route) To(path string, data ...interface{}) {
 	r.Path = path
 	if len(data) > 0 {

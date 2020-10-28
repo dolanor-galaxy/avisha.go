@@ -15,12 +15,11 @@ type Page struct {
 	layout.List
 }
 
-// Pass the router's active view to layout.
 func (p *Page) Layout(gtx C) D {
 	p.List.Axis = layout.Vertical
 	for _, d := range p.Rail.Destinations {
 		if d.Clicked() {
-			p.Router.Push(d.Route)
+			p.Router.Push(d.Route, nil)
 		}
 	}
 	for ii := range p.Rail.Destinations {
