@@ -15,12 +15,13 @@ import (
 	"github.com/jackmordaunt/avisha-fn"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/theme"
 )
 
 type LeaseForm struct {
 	nav.Route
-	*avisha.App
-	*material.Theme
+	App   *avisha.App
+	Th    *theme.Theme
 	lease *avisha.Lease
 
 	Tenant materials.TextField
@@ -53,9 +54,9 @@ func (l *LeaseForm) Context() (list []layout.Widget) {
 			return layout.UniformInset(unit.Dp(10)).Layout(
 				gtx,
 				func(gtx C) D {
-					label := material.Label(l.Theme, unit.Dp(24), l.lease.ID())
+					label := material.Label(l.Th.Primary(), unit.Dp(24), l.lease.ID())
 					label.Alignment = text.Middle
-					label.Color = l.Theme.Color.InvText
+					label.Color = l.Th.Color.InvText
 					return label.Layout(gtx)
 				})
 		})
@@ -88,19 +89,19 @@ func (l *LeaseForm) Layout(gtx C) D {
 			}.Layout(
 				gtx,
 				layout.Rigid(func(gtx C) D {
-					return l.Tenant.Layout(gtx, l.Theme, "Tenant")
+					return l.Tenant.Layout(gtx, l.Th.Primary(), "Tenant")
 				}),
 				layout.Rigid(func(gtx C) D {
-					return l.Site.Layout(gtx, l.Theme, "Site")
+					return l.Site.Layout(gtx, l.Th.Primary(), "Site")
 				}),
 				layout.Rigid(func(gtx C) D {
-					return l.Start.Layout(gtx, l.Theme, "Start")
+					return l.Start.Layout(gtx, l.Th.Primary(), "Start")
 				}),
 				layout.Rigid(func(gtx C) D {
-					return l.Days.Layout(gtx, l.Theme, "Days")
+					return l.Days.Layout(gtx, l.Th.Primary(), "Days")
 				}),
 				layout.Rigid(func(gtx C) D {
-					return l.Rent.Layout(gtx, l.Theme, "Rent")
+					return l.Rent.Layout(gtx, l.Th.Primary(), "Rent")
 				}),
 			)
 		}),
@@ -115,13 +116,13 @@ func (l *LeaseForm) Layout(gtx C) D {
 					}.Layout(
 						gtx,
 						layout.Rigid(func(gtx C) D {
-							return material.Button(l.Theme, &l.Cancel, "Cancel").Layout(gtx)
+							return material.Button(l.Th.Secondary(), &l.Cancel, "Cancel").Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
 						}),
 						layout.Rigid(func(gtx C) D {
-							return material.Button(l.Theme, &l.Submit, "Submit").Layout(gtx)
+							return material.Button(l.Th.Primary(), &l.Submit, "Submit").Layout(gtx)
 						}),
 					)
 				})

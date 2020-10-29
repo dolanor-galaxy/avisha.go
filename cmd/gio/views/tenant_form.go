@@ -13,12 +13,13 @@ import (
 	"github.com/jackmordaunt/avisha-fn"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/theme"
 )
 
 type TenantForm struct {
 	nav.Route
-	*avisha.App
-	*material.Theme
+	App    *avisha.App
+	Th     *theme.Theme
 	tenant *avisha.Tenant
 
 	Name    materials.TextField
@@ -45,9 +46,9 @@ func (f *TenantForm) Context() (list []layout.Widget) {
 			return layout.UniformInset(unit.Dp(10)).Layout(
 				gtx,
 				func(gtx C) D {
-					label := material.Label(f.Theme, unit.Dp(24), f.tenant.ID())
+					label := material.Label(f.Th.Primary(), unit.Dp(24), f.tenant.ID())
 					label.Alignment = text.Middle
-					label.Color = f.Theme.Color.InvText
+					label.Color = f.Th.Primary().Color.InvText
 					return label.Layout(gtx)
 				})
 		})
@@ -80,10 +81,10 @@ func (f *TenantForm) Layout(gtx C) D {
 			}.Layout(
 				gtx,
 				layout.Rigid(func(gtx C) D {
-					return f.Name.Layout(gtx, f.Theme, "Name")
+					return f.Name.Layout(gtx, f.Th.Primary(), "Name")
 				}),
 				layout.Rigid(func(gtx C) D {
-					return f.Contact.Layout(gtx, f.Theme, "Contact")
+					return f.Contact.Layout(gtx, f.Th.Primary(), "Contact")
 				}),
 			)
 		}),
@@ -98,13 +99,13 @@ func (f *TenantForm) Layout(gtx C) D {
 					}.Layout(
 						gtx,
 						layout.Rigid(func(gtx C) D {
-							return material.Button(f.Theme, &f.Cancel, "Cancel").Layout(gtx)
+							return material.Button(f.Th.Secondary(), &f.Cancel, "Cancel").Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
 						}),
 						layout.Rigid(func(gtx C) D {
-							return material.Button(f.Theme, &f.Submit, "Submit").Layout(gtx)
+							return material.Button(f.Th.Primary(), &f.Submit, "Submit").Layout(gtx)
 						}),
 					)
 				},

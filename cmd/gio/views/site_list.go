@@ -12,13 +12,14 @@ import (
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/theme"
 	"github.com/jackmordaunt/avisha-fn/storage"
 )
 
 type Sites struct {
 	nav.Route
-	*avisha.App
-	*material.Theme
+	App    *avisha.App
+	Th     *theme.Theme
 	list   layout.List
 	states States
 	once   sync.Once
@@ -34,7 +35,7 @@ func (s *Sites) Context() []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
 			return material.IconButton(
-				s.Theme,
+				s.Th.Primary(),
 				&s.RegisterSite,
 				icons.Add,
 			).Layout(gtx)
@@ -78,13 +79,13 @@ func (s *Sites) Layout(gtx C) D {
 		)
 		return style.ListItem(
 			gtx,
-			s.Theme,
+			s.Th.Primary(),
 			&state.Item,
 			&state.Hover,
 			active,
 			func(gtx C) D {
 				return material.Label(
-					s.Theme,
+					s.Th.Primary(),
 					unit.Dp(20),
 					site.Number,
 				).Layout(gtx)

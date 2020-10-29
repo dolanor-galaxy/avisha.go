@@ -7,10 +7,9 @@ import (
 
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/icons"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/theme"
 
-	"gioui.org/font/gofont"
 	"gioui.org/unit"
-	"gioui.org/widget/material"
 	"github.com/jackmordaunt/avisha-fn"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/views"
 	"github.com/jackmordaunt/avisha-fn/notify"
@@ -23,8 +22,8 @@ import (
 )
 
 // package global theme state.
-var th = func() *material.Theme {
-	return material.NewTheme(gofont.Collection())
+var th = func() *theme.Theme {
+	return theme.New(theme.BootstrapPalette)
 }()
 
 func main() {
@@ -43,15 +42,15 @@ func main() {
 	}
 	w := app.NewWindow(app.Title("Avisha"))
 	page := &nav.Page{
-		Theme: th,
+		Th: th,
 		Router: nav.Router{
 			Routes: map[string]nav.View{
-				views.RouteLease:      &views.Lease{App: &api, Theme: th},
-				views.RouteTenants:    &views.Tenants{App: &api, Theme: th},
-				views.RouteSites:      &views.Sites{App: &api, Theme: th},
-				views.RouteLeaseForm:  &views.LeaseForm{App: &api, Theme: th},
-				views.RouteTenantForm: &views.TenantForm{App: &api, Theme: th},
-				views.RouteSiteForm:   &views.SiteForm{App: &api, Theme: th},
+				views.RouteLease:      &views.Lease{App: &api, Th: th},
+				views.RouteTenants:    &views.Tenants{App: &api, Th: th},
+				views.RouteSites:      &views.Sites{App: &api, Th: th},
+				views.RouteLeaseForm:  &views.LeaseForm{App: &api, Th: th},
+				views.RouteTenantForm: &views.TenantForm{App: &api, Th: th},
+				views.RouteSiteForm:   &views.SiteForm{App: &api, Th: th},
 			},
 			Stack: []string{views.RouteLease},
 		},

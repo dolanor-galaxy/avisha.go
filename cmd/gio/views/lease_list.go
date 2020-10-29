@@ -13,13 +13,14 @@ import (
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/theme"
 	"github.com/jackmordaunt/avisha-fn/storage"
 )
 
 type Lease struct {
 	nav.Route
-	*avisha.App
-	*material.Theme
+	App    *avisha.App
+	Th     *theme.Theme
 	list   layout.List
 	states States
 	once   sync.Once
@@ -35,7 +36,7 @@ func (l *Lease) Context() []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
 			return material.IconButton(
-				l.Theme,
+				l.Th.Primary(),
 				&l.CreateLease,
 				icons.Add,
 			).Layout(gtx)
@@ -79,13 +80,13 @@ func (l *Lease) Layout(gtx C) D {
 		)
 		return style.ListItem(
 			gtx,
-			l.Theme,
+			l.Th.Primary(),
 			&state.Item,
 			&state.Hover,
 			active,
 			func(gtx C) D {
 				return material.Label(
-					l.Theme,
+					l.Th.Primary(),
 					unit.Dp(20),
 					fmt.Sprintf("%s - %s: %+v", lease.Site, lease.Tenant, lease.Term),
 				).Layout(gtx)

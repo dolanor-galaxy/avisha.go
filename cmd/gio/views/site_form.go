@@ -13,12 +13,13 @@ import (
 	"github.com/jackmordaunt/avisha-fn"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/theme"
 )
 
 type SiteForm struct {
 	nav.Route
-	*avisha.App
-	*material.Theme
+	App  *avisha.App
+	Th   *theme.Theme
 	site *avisha.Site
 
 	Number materials.TextField
@@ -43,9 +44,9 @@ func (l *SiteForm) Context() (list []layout.Widget) {
 			return layout.UniformInset(unit.Dp(10)).Layout(
 				gtx,
 				func(gtx C) D {
-					label := material.Label(l.Theme, unit.Dp(24), l.site.ID())
+					label := material.Label(l.Th.Primary(), unit.Dp(24), l.site.ID())
 					label.Alignment = text.Middle
-					label.Color = l.Theme.Color.InvText
+					label.Color = l.Th.Primary().Color.InvText
 					return label.Layout(gtx)
 				})
 		})
@@ -79,7 +80,7 @@ func (l *SiteForm) Layout(gtx C) D {
 				gtx,
 				layout.Rigid(func(gtx C) D {
 					l.Number.SingleLine = true
-					return l.Number.Layout(gtx, l.Theme, "Number")
+					return l.Number.Layout(gtx, l.Th.Primary(), "Number")
 				}),
 			)
 		}),
@@ -94,13 +95,13 @@ func (l *SiteForm) Layout(gtx C) D {
 					}.Layout(
 						gtx,
 						layout.Rigid(func(gtx C) D {
-							return material.Button(l.Theme, &l.Cancel, "Cancel").Layout(gtx)
+							return material.Button(l.Th.Secondary(), &l.Cancel, "Cancel").Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
 						}),
 						layout.Rigid(func(gtx C) D {
-							return material.Button(l.Theme, &l.Submit, "Submit").Layout(gtx)
+							return material.Button(l.Th.Primary(), &l.Submit, "Submit").Layout(gtx)
 						}),
 					)
 				})

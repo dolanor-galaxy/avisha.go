@@ -12,14 +12,15 @@ import (
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/theme"
 	"github.com/jackmordaunt/avisha-fn/storage"
 )
 
 // Tenants displays a list of Tenants and provides controls for editing them.
 type Tenants struct {
 	nav.Route
-	*avisha.App
-	*material.Theme
+	App    *avisha.App
+	Th     *theme.Theme
 	list   layout.List
 	states States
 	once   sync.Once
@@ -35,7 +36,7 @@ func (t *Tenants) Context() []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
 			return material.IconButton(
-				t.Theme,
+				t.Th.Primary(),
 				&t.RegisterTenant,
 				icons.Add,
 			).Layout(gtx)
@@ -79,13 +80,13 @@ func (t *Tenants) Layout(gtx C) D {
 		)
 		return style.ListItem(
 			gtx,
-			t.Theme,
+			t.Th.Primary(),
 			&state.Item,
 			&state.Hover,
 			active,
 			func(gtx C) D {
 				return material.Label(
-					t.Theme,
+					t.Th.Primary(),
 					unit.Dp(20),
 					tenant.Name,
 				).Layout(gtx)

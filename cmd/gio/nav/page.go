@@ -3,13 +3,13 @@ package nav
 import (
 	"gioui.org/layout"
 	"gioui.org/unit"
-	"gioui.org/widget/material"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/theme"
 )
 
 // Page wraps content in navigation context, such as a top bar and nav rail.
 type Page struct {
-	*material.Theme
+	Th     *theme.Theme
 	Router Router
 	Rail   Rail
 	layout.List
@@ -32,7 +32,7 @@ func (p *Page) Layout(gtx C) D {
 		gtx,
 		layout.Rigid(func(gtx C) D {
 			return style.TopBar{
-				Theme:  p.Theme,
+				Theme:  p.Th.Primary(),
 				Height: unit.Dp(50),
 			}.Layout(
 				gtx,
@@ -55,7 +55,7 @@ func (p *Page) Layout(gtx C) D {
 			}.Layout(
 				gtx,
 				layout.Rigid(func(gtx C) D {
-					return p.Rail.Layout(gtx, p.Theme)
+					return p.Rail.Layout(gtx, p.Th.Primary())
 				}),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.UniformInset(unit.Dp(10)).Layout(
