@@ -1,4 +1,4 @@
-package nav
+package style
 
 import (
 	"image"
@@ -15,8 +15,9 @@ import (
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
 )
 
-// Rail implements material.io navigation rail.
-type Rail struct {
+// NavRail implements material.io navigation rail.
+type NavRail struct {
+	Th           *Theme
 	Destinations []Destination
 	Width        unit.Value
 	layout.List
@@ -32,7 +33,7 @@ type Destination struct {
 	Icon   *widget.Icon
 }
 
-func (r *Rail) Layout(gtx C, th *material.Theme) D {
+func (r *NavRail) Layout(gtx C) D {
 	r.List.Axis = layout.Vertical
 	width := gtx.Px(r.Width)
 	cs := &gtx.Constraints
@@ -84,18 +85,18 @@ func (r *Rail) Layout(gtx C, th *material.Theme) D {
 							if item.Icon == nil {
 								return D{}
 							}
-							item.Icon.Color = th.Color.Text
+							item.Icon.Color = r.Th.Color.Text
 							if item.Active {
-								item.Icon.Color = th.Color.Primary
+								item.Icon.Color = r.Th.Color.Primary
 							}
 							return item.Icon.Layout(gtx, unit.Dp(25))
 						}),
 						layout.Rigid(func(gtx C) D {
-							l := material.Label(th, unit.Dp(16), item.Label)
+							l := material.Label(r.Th.Primary(), unit.Dp(16), item.Label)
 							l.Alignment = text.Middle
-							l.Color = th.Color.Text
+							l.Color = r.Th.Color.Text
 							if item.Active {
-								l.Color = th.Color.Primary
+								l.Color = r.Th.Color.Primary
 							}
 							return l.Layout(gtx)
 						}),

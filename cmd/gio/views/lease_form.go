@@ -15,13 +15,13 @@ import (
 	"github.com/jackmordaunt/avisha-fn"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/theme"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
 )
 
 type LeaseForm struct {
 	nav.Route
 	App   *avisha.App
-	Th    *theme.Theme
+	Th    *style.Theme
 	lease *avisha.Lease
 
 	Tenant materials.TextField

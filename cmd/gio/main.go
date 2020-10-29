@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/icons"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/theme"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
 
 	"gioui.org/unit"
 	"github.com/jackmordaunt/avisha-fn"
@@ -20,11 +20,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op"
 )
-
-// package global theme state.
-var th = func() *theme.Theme {
-	return theme.New(theme.BootstrapPalette)
-}()
 
 func main() {
 	db, ok := os.LookupEnv("avisha_db")
@@ -41,8 +36,10 @@ func main() {
 		Notifier: &notify.Console{},
 	}
 	w := app.NewWindow(app.Title("Avisha"))
-	page := &nav.Page{
-		Th: th,
+	th := style.NewTheme(style.BootstrapPalette)
+	ui := &UI{
+		Window: w,
+		Th:     th,
 		Router: nav.Router{
 			Routes: map[string]nav.View{
 				views.RouteLease:      &views.Lease{App: &api, Th: th},
@@ -54,9 +51,10 @@ func main() {
 			},
 			Stack: []string{views.RouteLease},
 		},
-		Rail: nav.Rail{
+		Rail: style.NavRail{
+			Th:    th,
 			Width: unit.Dp(80),
-			Destinations: []nav.Destination{
+			Destinations: []style.Destination{
 				{
 					Label: "Leases",
 					Route: views.RouteLease,
@@ -76,7 +74,7 @@ func main() {
 		},
 	}
 	go func() {
-		if err := loop(w, page); err != nil {
+		if err := ui.Loop(); err != nil {
 			log.Fatalf("error: %v", err)
 		}
 		os.Exit(0)
@@ -84,22 +82,95 @@ func main() {
 	app.Main()
 }
 
-func loop(w *app.Window, p *nav.Page) error {
+// UI is the high level object that contains all global state.
+// Anything that needs to integrate with the external system is allocated on
+// this object.
+type UI struct {
+	*app.Window
+	Th     *style.Theme
+	Router nav.Router
+	Rail   style.NavRail
+}
+
+func (ui *UI) Loop() error {
 	var ops op.Ops
 	for {
-		switch event := (<-w.Events()).(type) {
+		switch event := (<-ui.Events()).(type) {
 		case system.DestroyEvent:
 			return event.Err
 		case system.ClipboardEvent:
 			fmt.Printf("clipboard: %v\n", event.Text)
 		case *system.CommandEvent:
 			if event.Type == system.CommandBack {
-				p.Router.Pop()
+				ui.Router.Pop()
 			}
 		case system.FrameEvent:
 			gtx := layout.NewContext(&ops, event)
-			p.Layout(gtx)
+			ui.Layout(gtx)
 			event.Frame(gtx.Ops)
 		}
 	}
+}
+
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
+
+func (ui *UI) Layout(gtx C) D {
+	for _, d := range ui.Rail.Destinations {
+		if d.Clicked() {
+			ui.Router.Push(d.Route, nil)
+		}
+	}
+	for ii := range ui.Rail.Destinations {
+		d := &ui.Rail.Destinations[ii]
+		d.Active = d.Route == ui.Router.Name()
+	}
+	return layout.Flex{
+		Axis: layout.Vertical,
+	}.Layout(
+		gtx,
+		layout.Rigid(func(gtx C) D {
+			return style.TopBar{
+				Theme:  ui.Th.Primary(),
+				Height: unit.Dp(50),
+			}.Layout(
+				gtx,
+				func() string {
+					if titled, ok := ui.Router.Active().(nav.Titled); ok {
+						return titled.Title()
+					}
+					return ""
+				}(),
+				func() []layout.Widget {
+					if contexter, ok := ui.Router.Active().(nav.Contexter); ok {
+						return contexter.Context()
+					}
+					return nil
+				}()...)
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Flex{
+				Axis: layout.Horizontal,
+			}.Layout(
+				gtx,
+				layout.Rigid(func(gtx C) D {
+					return ui.Rail.Layout(gtx)
+				}),
+				layout.Flexed(1, func(gtx C) D {
+					return layout.UniformInset(unit.Dp(10)).Layout(
+						gtx,
+						func(gtx C) D {
+							return ui.Router.Layout(gtx)
+						},
+					)
+					// FIXME: nested lists do not scroll: how to scroll both list and page?
+					// return p.List.Layout(gtx, 1, func(gtx C, _ int) D {
+					// 	return p.Router.Layout(gtx)
+					// })
+				}),
+			)
+		}),
+	)
 }

@@ -12,15 +12,15 @@ import (
 )
 
 type (
-	Ctx  = layout.Context
-	Dims = layout.Dimensions
+	C = layout.Context
+	D = layout.Dimensions
 )
 
 // ListItem renders a list item.
-func ListItem(gtx Ctx, th *material.Theme, state *widget.Clickable, hover *widget.Hoverable, active bool, w layout.Widget) Dims {
+func ListItem(gtx C, th *material.Theme, state *widget.Clickable, hover *widget.Hoverable, active bool, w layout.Widget) D {
 	return layout.Stack{}.Layout(
 		gtx,
-		layout.Expanded(func(gtx Ctx) Dims {
+		layout.Expanded(func(gtx C) D {
 			if active {
 				util.Rect{
 					Color: materials.AlphaMultiply(th.Color.Hint, 150),
@@ -32,13 +32,13 @@ func ListItem(gtx Ctx, th *material.Theme, state *widget.Clickable, hover *widge
 					Size:  gtx.Constraints.Max,
 				}.Layout(gtx)
 			}
-			return Dims{}
+			return D{}
 		}),
-		layout.Stacked(func(gtx Ctx) Dims {
-			return material.Clickable(gtx, state, func(gtx Ctx) Dims {
+		layout.Stacked(func(gtx C) D {
+			return material.Clickable(gtx, state, func(gtx C) D {
 				return layout.UniformInset(unit.Dp(10)).Layout(
 					gtx,
-					func(gtx Ctx) Dims {
+					func(gtx C) D {
 						dims := w(gtx)
 						dims.Size.X = gtx.Constraints.Max.X
 						return dims
@@ -46,7 +46,7 @@ func ListItem(gtx Ctx, th *material.Theme, state *widget.Clickable, hover *widge
 				)
 			})
 		}),
-		layout.Expanded(func(gtx Ctx) Dims {
+		layout.Expanded(func(gtx C) D {
 			return hover.Layout(gtx)
 		}),
 	)

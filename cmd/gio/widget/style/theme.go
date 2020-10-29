@@ -1,4 +1,4 @@
-package theme
+package style
 
 import (
 	"image/color"
@@ -25,11 +25,11 @@ type Palette struct {
 	Dark      color.RGBA
 }
 
-// Option can be used to initialise a theme.
-type Option func(*Theme)
+// ThemeOption can be used to initialise a theme.
+type ThemeOption = func(*Theme)
 
-// New theme instance.
-func New(options ...Option) *Theme {
+// NewTheme allocates a theme instance.
+func NewTheme(options ...ThemeOption) *Theme {
 	th := &Theme{
 		Theme: material.NewTheme(gofont.Collection()),
 	}
