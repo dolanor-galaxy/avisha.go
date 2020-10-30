@@ -273,3 +273,14 @@ func (s Site) ID() string {
 func (l Lease) ID() string {
 	return fmt.Sprintf("%s-%s", l.Tenant, l.Site)
 }
+
+func (t Term) String() string {
+	format := func(t time.Time) string {
+		return fmt.Sprintf("%d/%d/%d", t.Day(), t.Month(), t.Year())
+	}
+	return fmt.Sprintf("%s - %s", format(t.Start), format(t.End()))
+}
+
+func (t Term) End() time.Time {
+	return t.Start.Add(time.Hour * 24 * time.Duration(t.Days))
+}
