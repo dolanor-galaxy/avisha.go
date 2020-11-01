@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 	"log"
 	"os"
 
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/icons"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
+	"github.com/jackmordaunt/avisha-fn/cmd/gio/util"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
 
 	"gioui.org/unit"
@@ -159,11 +161,19 @@ func (ui *UI) Layout(gtx C) D {
 					return ui.Rail.Layout(gtx)
 				}),
 				layout.Flexed(1, func(gtx C) D {
-					return layout.UniformInset(unit.Dp(10)).Layout(
+					return layout.Stack{}.Layout(
 						gtx,
-						func(gtx C) D {
-							return ui.Router.Layout(gtx)
-						},
+						layout.Expanded(func(gtx C) D {
+							return util.DrawRect(gtx, color.RGBA{R: 250, G: 250, B: 250, A: 255}, gtx.Constraints.Max, unit.Dp(0))
+						}),
+						layout.Stacked(func(gtx C) D {
+							return layout.UniformInset(unit.Dp(10)).Layout(
+								gtx,
+								func(gtx C) D {
+									return ui.Router.Layout(gtx)
+								},
+							)
+						}),
 					)
 					// FIXME: nested lists do not scroll: how to scroll both list and page?
 					// return p.List.Layout(gtx, 1, func(gtx C, _ int) D {

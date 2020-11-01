@@ -51,7 +51,7 @@ func (r *NavRail) Layout(gtx C) D {
 		},
 		Min: image.Point{
 			Y: 0,
-			X: width - gtx.Px(unit.Dp(1)),
+			X: width - gtx.Px(unit.Dp(2)),
 		},
 	}.Add(gtx.Ops)
 	paint.ColorOp{Color: color.RGBA{A: 100}}.Add(gtx.Ops)

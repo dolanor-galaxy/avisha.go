@@ -276,7 +276,7 @@ func (l Lease) ID() string {
 
 func (t Term) String() string {
 	format := func(t time.Time) string {
-		return fmt.Sprintf("%d/%d/%d", t.Day(), t.Month(), t.Year())
+		return fmt.Sprintf("%02d/%02d/%04d", t.Day(), t.Month(), t.Year())
 	}
 	return fmt.Sprintf("%s - %s", format(t.Start), format(t.End()))
 }

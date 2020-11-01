@@ -17,7 +17,14 @@ type (
 )
 
 // ListItem renders a list item.
-func ListItem(gtx C, th *material.Theme, state *widget.Clickable, hover *widget.Hoverable, active bool, w layout.Widget) D {
+func ListItem(
+	gtx C,
+	th *material.Theme,
+	state *widget.Clickable,
+	hover *widget.Hoverable,
+	active bool,
+	w layout.Widget,
+) D {
 	return layout.Stack{}.Layout(
 		gtx,
 		layout.Expanded(func(gtx C) D {

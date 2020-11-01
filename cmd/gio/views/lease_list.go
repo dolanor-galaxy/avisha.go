@@ -1,7 +1,6 @@
 package views
 
 import (
-	"fmt"
 	"sync"
 	"unsafe"
 
@@ -85,11 +84,19 @@ func (l *Lease) Layout(gtx C) D {
 			&state.Hover,
 			active,
 			func(gtx C) D {
-				return material.Label(
-					l.Th.Primary(),
-					unit.Dp(20),
-					fmt.Sprintf("%s - %s: %+v", lease.Site, lease.Tenant, lease.Term),
-				).Layout(gtx)
+				return style.Card{
+					Content: []layout.Widget{
+						func(gtx C) D {
+							return material.Label(l.Th.Primary(), unit.Dp(20), lease.Tenant).Layout(gtx)
+						},
+						func(gtx C) D {
+							return material.Label(l.Th.Primary(), unit.Dp(20), lease.Site).Layout(gtx)
+						},
+						func(gtx C) D {
+							return material.Label(l.Th.Primary(), unit.Dp(20), lease.Term.String()).Layout(gtx)
+						},
+					},
+				}.Layout(gtx, l.Th.Primary())
 			})
 	})
 }
