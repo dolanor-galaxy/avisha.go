@@ -3,7 +3,6 @@ package views
 import (
 	"fmt"
 	"image"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -17,8 +16,10 @@ import (
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
+	"github.com/jackmordaunt/avisha-fn/storage"
 )
 
+// LeaseForm performs data mutations on a Lease entity.
 type LeaseForm struct {
 	nav.Route
 	App   *avisha.App
@@ -32,6 +33,10 @@ type LeaseForm struct {
 	Rent   materials.TextField
 	Submit widget.Clickable
 	Cancel widget.Clickable
+
+	// creating if in "create mode", which means the entity doesn't exist.
+	// This determines whether submissions creates or updates an entity.
+	creating bool
 }
 
 func (l *LeaseForm) Title() string {
@@ -41,6 +46,7 @@ func (l *LeaseForm) Title() string {
 func (l *LeaseForm) Receive(data interface{}) {
 	if lease, ok := data.(*avisha.Lease); ok && lease != nil {
 		l.lease = lease
+		l.creating = lease.Cmp() == (avisha.Lease{}).Cmp()
 		l.Tenant.SetText(l.lease.Tenant)
 		l.Site.SetText(l.lease.Site)
 		l.Days.SetText(strconv.Itoa(l.lease.Term.Days))
@@ -66,32 +72,72 @@ func (l *LeaseForm) Context() (list []layout.Widget) {
 	return list
 }
 
-// Creating reports whether the form is creating a new entity.
-// Returns false when the entity already exists.
-func (l *LeaseForm) Creating() bool {
-	return l.lease.Cmp() == (avisha.Lease{}).Cmp()
-}
-
 func (l *LeaseForm) Update(gtx C) {
 	if l.Submit.Clicked() {
-		if err := l.submit(); err != nil {
-			// give error to app or render under field.
-			log.Printf("submitting lease form: %v", err)
-		}
-		l.Route.Back()
+		l.submit()
 	}
 	if l.Cancel.Clicked() {
 		l.Route.Back()
 	}
+	l.Tenant.Disabled = !l.creating
+	l.Site.Disabled = !l.creating
+	l.Date.Disabled = !l.creating
 }
 
 func (l *LeaseForm) Layout(gtx C) D {
 	l.Update(gtx)
-	// TODO: implement disabled text field states.
-	if !l.Creating() {
-		l.Tenant.Disabled = true
-		l.Site.Disabled = true
-		l.Date.Disabled = true
+	l.Tenant.Validator = func(text string) string {
+		if _, ok := l.App.Query(func(ent storage.Entity) bool {
+			if tenant, ok := ent.(*avisha.Tenant); ok {
+				return tenant.Name == text
+			}
+			return false
+		}); !ok {
+			return fmt.Sprintf("tenant %q does not exist", text)
+		}
+		return ""
+	}
+	l.Site.Validator = func(text string) string {
+		if _, ok := l.App.Query(func(ent storage.Entity) bool {
+			if site, ok := ent.(*avisha.Site); ok {
+				return site.Number == text
+			}
+			return false
+		}); !ok {
+			return fmt.Sprintf("site %q does not exist", text)
+		}
+		return ""
+	}
+	l.Date.Validator = func(text string) string {
+		parts := strings.Split(text, "/")
+		if len(parts) != 3 {
+			return "format must be dd/mm/yyy"
+		}
+		for ii, part := range parts {
+			if _, err := strconv.Atoi(part); err != nil {
+				switch ii {
+				case 0:
+					return "day must be a number"
+				case 1:
+					return "month must be a number"
+				case 2:
+					return "year must be a number"
+				}
+			}
+		}
+		return ""
+	}
+	l.Days.Validator = func(text string) string {
+		if _, err := strconv.Atoi(text); err != nil {
+			return "must be a number"
+		}
+		return ""
+	}
+	l.Rent.Validator = func(text string) string {
+		if _, err := strconv.Atoi(text); err != nil {
+			return "must be a number"
+		}
+		return ""
 	}
 	return layout.Flex{
 		Axis: layout.Vertical,
@@ -149,7 +195,10 @@ func (l *LeaseForm) Layout(gtx C) D {
 							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
 						}),
 						layout.Rigid(func(gtx C) D {
-							return material.Button(l.Th.Primary(), &l.Submit, "Submit").Layout(gtx)
+							if l.creating {
+								return material.Button(l.Th.Success(), &l.Submit, "Create").Layout(gtx)
+							}
+							return material.Button(l.Th.Primary(), &l.Submit, "Update").Layout(gtx)
 						}),
 					)
 				})
@@ -157,51 +206,83 @@ func (l *LeaseForm) Layout(gtx C) D {
 	)
 }
 
-func (l *LeaseForm) submit() error {
-	s := l.Date.Text()
-	parts := strings.Split(s, "/")
-	if len(parts) != 3 {
-		return fmt.Errorf("start date: invalid format: must be dd/mm/yyyy")
+// validate form date returning true if the form is ready to be submitted.
+// Data is saved to the embedded entity.
+func (l *LeaseForm) validate() bool {
+	var err error
+	if l.Tenant.Text() == "" {
+		l.Tenant.SetError("tenant cannot be empty")
+		return false
 	}
-	year, err := strconv.Atoi(parts[2])
+	if l.Site.Text() == "" {
+		l.Tenant.SetError("site cannot be empty")
+		return false
+	}
+	l.lease.Term.Start, err = func() (time.Time, error) {
+		s := l.Date.Text()
+		parts := strings.Split(s, "/")
+		if len(parts) != 3 {
+			return time.Time{}, fmt.Errorf("invalid format: must be dd/mm/yyyy")
+		}
+		year, err := strconv.Atoi(parts[2])
+		if err != nil {
+			return time.Time{}, fmt.Errorf("year not a number: %s", parts[2])
+		}
+		month, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return time.Time{}, fmt.Errorf("month not a number: %s", parts[2])
+		}
+		day, err := strconv.Atoi(parts[0])
+		if err != nil {
+			return time.Time{}, fmt.Errorf("day not a number: %s", parts[2])
+		}
+		return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local), nil
+	}()
 	if err != nil {
-		return fmt.Errorf("start date: year not a number: %s", parts[2])
+		l.Date.SetError(err.Error())
+		return false
 	}
-	month, err := strconv.Atoi(parts[1])
+	l.lease.Term.Days, err = strconv.Atoi(l.Days.Text())
 	if err != nil {
-		return fmt.Errorf("start date: month not a number: %s", parts[2])
+		l.Days.SetError("days not a number")
+		return false
 	}
-	day, err := strconv.Atoi(parts[0])
+	l.lease.Rent, err = func() (uint, error) {
+		n, err := strconv.Atoi(l.Rent.Text())
+		return uint(n), err
+	}()
 	if err != nil {
-		return fmt.Errorf("start date: day not a number: %s", parts[2])
+		l.Days.SetError("rent not a number")
+		return false
 	}
-	start := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
-	days, err := strconv.Atoi(l.Days.Text())
-	if err != nil {
-		return fmt.Errorf("days not a number: %w", err)
+	return true
+}
+
+func (l *LeaseForm) submit() {
+	if isValid := l.validate(); !isValid {
+		return
 	}
-	rent, err := strconv.Atoi(l.Rent.Text())
-	if err != nil {
-		return fmt.Errorf("rent not a number: %w", err)
-	}
-	if l.Creating() {
+	if l.creating {
 		if err := l.App.CreateLease(
 			l.Tenant.Text(),
 			l.Site.Text(),
-			avisha.Term{Start: start, Days: days},
-			uint(rent),
+			l.lease.Term,
+			l.lease.Rent,
 		); err != nil {
-			return fmt.Errorf("creating lease: %w", err)
+			fmt.Printf("creating lease: %v\n", err)
+			return
 		}
+		l.Route.Back()
 	} else {
 		if err := l.App.ChangeRent(
 			l.Tenant.Text(),
 			l.Site.Text(),
-			avisha.Term{Start: start, Days: days},
-			uint(rent),
+			l.lease.Term,
+			l.lease.Rent,
 		); err != nil {
-			return fmt.Errorf("changing rent: %w", err)
+			fmt.Printf("changing rent: %v\n", err)
+			return
 		}
+		l.Route.Back()
 	}
-	return nil
 }
