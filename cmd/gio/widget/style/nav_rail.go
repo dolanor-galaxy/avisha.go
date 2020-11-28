@@ -4,7 +4,6 @@ import (
 	"image"
 	"image/color"
 
-	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -54,8 +53,9 @@ func (r *NavRail) Layout(gtx C) D {
 			X: width - gtx.Px(unit.Dp(2)),
 		},
 	}.Add(gtx.Ops)
+	clip.Rect{Max: cs.Max}.Add(gtx.Ops)
 	paint.ColorOp{Color: color.RGBA{A: 100}}.Add(gtx.Ops)
-	paint.PaintOp{Rect: f32.Rectangle{Max: layout.FPt(cs.Max)}}.Add(gtx.Ops)
+	paint.PaintOp{}.Add(gtx.Ops)
 	stack.Pop()
 	cs.Max.X -= gtx.Px(unit.Dp(1))
 	cs.Min.X -= gtx.Px(unit.Dp(1))
