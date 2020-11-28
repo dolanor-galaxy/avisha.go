@@ -309,6 +309,7 @@ func (t Term) End() time.Time {
 	return t.Start.Add(time.Hour * 24 * time.Duration(t.Days))
 }
 
+// LeaseComparitor can be used for comparison between lease entities.
 type LeaseComparitor struct {
 	Tenant string
 	Site   string
