@@ -5,6 +5,8 @@ import (
 	"image"
 	"log"
 	"strconv"
+	"strings"
+	"time"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -25,7 +27,7 @@ type LeaseForm struct {
 
 	Tenant materials.TextField
 	Site   materials.TextField
-	Date   style.DateInput
+	Date   materials.TextField
 	Days   materials.TextField
 	Rent   materials.TextField
 	Submit widget.Clickable
@@ -43,7 +45,8 @@ func (l *LeaseForm) Receive(data interface{}) {
 		l.Site.SetText(l.lease.Site)
 		l.Days.SetText(strconv.Itoa(l.lease.Term.Days))
 		l.Rent.SetText(strconv.Itoa(int(l.lease.Rent)))
-		l.Date.Set(lease.Term.Start)
+		start := lease.Term.Start
+		l.Date.SetText(fmt.Sprintf("%d/%d/%d", start.Day(), start.Month(), start.Year()))
 	}
 }
 
@@ -63,6 +66,12 @@ func (l *LeaseForm) Context() (list []layout.Widget) {
 	return list
 }
 
+// Creating reports whether the form is creating a new entity.
+// Returns false when the entity already exists.
+func (l *LeaseForm) Creating() bool {
+	return l.lease.Cmp() == (avisha.Lease{}).Cmp()
+}
+
 func (l *LeaseForm) Update(gtx C) {
 	if l.Submit.Clicked() {
 		if err := l.submit(); err != nil {
@@ -78,6 +87,7 @@ func (l *LeaseForm) Update(gtx C) {
 
 func (l *LeaseForm) Layout(gtx C) D {
 	l.Update(gtx)
+	// TODO: implement disabled text field states.
 	return layout.Flex{
 		Axis: layout.Vertical,
 	}.Layout(
@@ -88,19 +98,32 @@ func (l *LeaseForm) Layout(gtx C) D {
 			}.Layout(
 				gtx,
 				layout.Rigid(func(gtx C) D {
-					return l.Tenant.Layout(gtx, l.Th.Primary(), "Tenant")
+					return layout.Flex{
+						Axis: layout.Horizontal,
+					}.Layout(
+						gtx,
+						layout.Flexed(1, func(gtx C) D {
+							return l.Tenant.Layout(gtx, l.Th.Primary(), "Tenant")
+						}),
+						layout.Rigid(func(gtx C) D {
+							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							return l.Site.Layout(gtx, l.Th.Primary(), "Site")
+						}),
+					)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return l.Site.Layout(gtx, l.Th.Primary(), "Site")
+					return l.Date.Layout(gtx, l.Th.Primary(), "Start Date")
 				}),
 				layout.Rigid(func(gtx C) D {
-					return l.Date.Layout(gtx, l.Th)
+					return l.Days.Layout(gtx, l.Th.Primary(), "Duration (days)")
 				}),
 				layout.Rigid(func(gtx C) D {
-					return l.Days.Layout(gtx, l.Th.Primary(), "Days")
-				}),
-				layout.Rigid(func(gtx C) D {
-					return l.Rent.Layout(gtx, l.Th.Primary(), "Rent")
+					l.Rent.Prefix = func(gtx C) D {
+						return material.Body1(l.Th.Primary(), "$").Layout(gtx)
+					}
+					return l.Rent.Layout(gtx, l.Th.Primary(), "Rent (weekly)")
 				}),
 			)
 		}),
@@ -130,10 +153,24 @@ func (l *LeaseForm) Layout(gtx C) D {
 }
 
 func (l *LeaseForm) submit() error {
-	start, err := l.Date.Date()
-	if err != nil {
-		return fmt.Errorf("start date: %w", err)
+	s := l.Date.Text()
+	parts := strings.Split(s, "/")
+	if len(parts) != 3 {
+		return fmt.Errorf("start date: invalid format: must be dd/mm/yyyy")
 	}
+	year, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return fmt.Errorf("start date: year not a number: %s", parts[2])
+	}
+	month, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return fmt.Errorf("start date: month not a number: %s", parts[2])
+	}
+	day, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return fmt.Errorf("start date: day not a number: %s", parts[2])
+	}
+	start := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
 	days, err := strconv.Atoi(l.Days.Text())
 	if err != nil {
 		return fmt.Errorf("days not a number: %w", err)
@@ -142,13 +179,24 @@ func (l *LeaseForm) submit() error {
 	if err != nil {
 		return fmt.Errorf("rent not a number: %w", err)
 	}
-	if err := l.App.CreateLease(
-		l.Tenant.Text(),
-		l.Site.Text(),
-		avisha.Term{Start: start, Days: days},
-		uint(rent),
-	); err != nil {
-		return fmt.Errorf("creating lease: %w", err)
+	if l.Creating() {
+		if err := l.App.CreateLease(
+			l.Tenant.Text(),
+			l.Site.Text(),
+			avisha.Term{Start: start, Days: days},
+			uint(rent),
+		); err != nil {
+			return fmt.Errorf("creating lease: %w", err)
+		}
+	} else {
+		if err := l.App.ChangeRent(
+			l.Tenant.Text(),
+			l.Site.Text(),
+			avisha.Term{Start: start, Days: days},
+			uint(rent),
+		); err != nil {
+			return fmt.Errorf("changing rent: %w", err)
+		}
 	}
 	return nil
 }
