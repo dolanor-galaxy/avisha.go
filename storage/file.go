@@ -141,8 +141,11 @@ func (f *File) Save(ent Entity) error {
 			if err != nil {
 				return fmt.Errorf("serializing entity: %w", err)
 			}
+			_, ok := f.Buckets[T][ent.ID()]
 			f.Buckets[T][ent.ID()] = v
-			f.ValueOrder[T] = append(f.ValueOrder[T], ent.ID())
+			if !ok {
+				f.ValueOrder[T] = append(f.ValueOrder[T], ent.ID())
+			}
 			break
 		}
 	}
