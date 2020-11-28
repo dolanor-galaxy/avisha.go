@@ -15,14 +15,14 @@ type Theme struct {
 
 // Palette contains all semantic colors of a theme.
 type Palette struct {
-	Primary   color.RGBA
-	Secondary color.RGBA
-	Success   color.RGBA
-	Info      color.RGBA
-	Warning   color.RGBA
-	Danger    color.RGBA
-	Light     color.RGBA
-	Dark      color.RGBA
+	Primary   color.NRGBA
+	Secondary color.NRGBA
+	Success   color.NRGBA
+	Info      color.NRGBA
+	Warning   color.NRGBA
+	Danger    color.NRGBA
+	Light     color.NRGBA
+	Dark      color.NRGBA
 }
 
 // ThemeOption can be used to initialise a theme.
@@ -71,7 +71,7 @@ func (th Theme) Dark() *material.Theme {
 	return with(th.Theme, th.Palette.Dark)
 }
 
-func with(base *material.Theme, c color.RGBA) *material.Theme {
+func with(base *material.Theme, c color.NRGBA) *material.Theme {
 	if base == nil {
 		base = material.NewTheme(gofont.Collection())
 	}
@@ -84,13 +84,13 @@ func with(base *material.Theme, c color.RGBA) *material.Theme {
 // https://getbootstrap.com/docs/4.0/utilities/colors/
 func BootstrapPalette(th *Theme) {
 	th.Palette = Palette{
-		Primary:   color.RGBA{R: 0, G: 123, B: 255, A: 255},
-		Secondary: color.RGBA{R: 108, G: 117, B: 125, A: 255},
-		Success:   color.RGBA{R: 40, G: 167, B: 69, A: 255},
-		Warning:   color.RGBA{R: 255, G: 193, B: 7, A: 255},
-		Danger:    color.RGBA{R: 220, G: 53, B: 69, A: 255},
-		Info:      color.RGBA{R: 23, G: 162, B: 184, A: 255},
-		Light:     color.RGBA{R: 248, G: 249, B: 250, A: 255},
-		Dark:      color.RGBA{R: 52, G: 58, B: 64, A: 255},
+		Primary:   color.NRGBA{R: 0, G: 123, B: 255, A: 255},
+		Secondary: color.NRGBA{R: 108, G: 117, B: 125, A: 255},
+		Success:   color.NRGBA{R: 40, G: 167, B: 69, A: 255},
+		Warning:   color.NRGBA{R: 255, G: 193, B: 7, A: 255},
+		Danger:    color.NRGBA{R: 220, G: 53, B: 69, A: 255},
+		Info:      color.NRGBA{R: 23, G: 162, B: 184, A: 255},
+		Light:     color.NRGBA{R: 248, G: 249, B: 250, A: 255},
+		Dark:      color.NRGBA{R: 52, G: 58, B: 64, A: 255},
 	}
 }

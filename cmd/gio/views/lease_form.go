@@ -88,6 +88,11 @@ func (l *LeaseForm) Update(gtx C) {
 func (l *LeaseForm) Layout(gtx C) D {
 	l.Update(gtx)
 	// TODO: implement disabled text field states.
+	if !l.Creating() {
+		l.Tenant.Disabled = true
+		l.Site.Disabled = true
+		l.Date.Disabled = true
+	}
 	return layout.Flex{
 		Axis: layout.Vertical,
 	}.Layout(

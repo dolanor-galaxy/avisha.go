@@ -32,7 +32,7 @@ type Div struct {
 	Thickness unit.Value
 	Length    unit.Value
 	Axis      layout.Axis
-	Color     color.RGBA
+	Color     color.NRGBA
 }
 
 func (d Div) Layout(gtx C) D {

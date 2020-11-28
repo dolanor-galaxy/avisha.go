@@ -3,10 +3,11 @@
 package style
 
 import (
+	"image/color"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
-	"git.sr.ht/~whereswaldon/materials"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/util"
 	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
 )
@@ -30,12 +31,12 @@ func ListItem(
 		layout.Expanded(func(gtx C) D {
 			if active {
 				util.Rect{
-					Color: materials.AlphaMultiply(th.Color.Hint, 150),
+					Color: WithAlpha(th.Color.Hint, 150),
 					Size:  gtx.Constraints.Max,
 				}.Layout(gtx)
 			} else if hover.Hovered() {
 				util.Rect{
-					Color: materials.AlphaMultiply(th.Color.Hint, 38),
+					Color: WithAlpha(th.Color.Hint, 38),
 					Size:  gtx.Constraints.Max,
 				}.Layout(gtx)
 			}
@@ -57,4 +58,13 @@ func ListItem(
 			return hover.Layout(gtx)
 		}),
 	)
+}
+
+func WithAlpha(c color.NRGBA, a uint8) color.NRGBA {
+	return color.NRGBA{
+		R: c.R,
+		G: c.G,
+		B: c.B,
+		A: a,
+	}
 }

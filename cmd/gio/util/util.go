@@ -18,7 +18,7 @@ type (
 )
 
 type Rect struct {
-	Color color.RGBA
+	Color color.NRGBA
 	Size  image.Point
 	Radii unit.Value
 }
@@ -30,7 +30,7 @@ func (r Rect) Layout(gtx C) D {
 // DrawRect creates a rectangle of the provided background color with
 // Dimensions specified by size and a corner radius (on all corners)
 // specified by radii.
-func DrawRect(gtx C, background color.RGBA, size image.Point, radii unit.Value) D {
+func DrawRect(gtx C, background color.NRGBA, size image.Point, radii unit.Value) D {
 	defer op.Push(gtx.Ops).Pop()
 	rr := float32(gtx.Px(radii))
 	clip.Rect{Max: size}.Add(gtx.Ops)

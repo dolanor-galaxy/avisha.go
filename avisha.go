@@ -213,6 +213,30 @@ func (app App) CreateLease(
 	return nil
 }
 
+// ChangeRent updates the weekly rent for a given lease.
+func (app App) ChangeRent(
+	tenant string,
+	site string,
+	term Term,
+	rent Currency,
+) error {
+	l, ok := app.Query(func(ent storage.Entity) bool {
+		if l, ok := ent.(*Lease); ok {
+			return l.Term == term
+		}
+		return false
+	})
+	if !ok {
+		return fmt.Errorf("no lease exists for tenant %s and site %s during %s", tenant, site, term)
+	}
+	lease := l.(*Lease)
+	lease.Rent = rent
+	if err := app.Update(*lease); err != nil {
+		return fmt.Errorf("changing rent: %w", err)
+	}
+	return nil
+}
+
 // ListSite enters a new, unqiue, leaseable Site.
 func (app App) ListSite(s Site) error {
 	s.Number = strings.TrimSpace(s.Number)
@@ -283,4 +307,18 @@ func (t Term) String() string {
 
 func (t Term) End() time.Time {
 	return t.Start.Add(time.Hour * 24 * time.Duration(t.Days))
+}
+
+type LeaseComparitor struct {
+	Tenant string
+	Site   string
+	Term   Term
+}
+
+func (l Lease) Cmp() LeaseComparitor {
+	return LeaseComparitor{
+		Tenant: l.Tenant,
+		Site:   l.Site,
+		Term:   l.Term,
+	}
 }

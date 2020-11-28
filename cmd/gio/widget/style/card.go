@@ -41,7 +41,7 @@ func (c Card) Layout(gtx C, th *material.Theme) D {
 										Thickness: unit.Dp(1),
 										Length:    unit.Px(float32(gtx.Constraints.Max.X)),
 										Axis:      layout.Horizontal,
-										Color:     color.RGBA{A: 100},
+										Color:     color.NRGBA{A: 100},
 									}.Layout(gtx)
 								},
 							)
@@ -66,7 +66,7 @@ func (c Card) Layout(gtx C, th *material.Theme) D {
 				layout.Expanded(func(gtx C) D {
 					return util.DrawRect(
 						gtx,
-						color.RGBA{R: 255, G: 255, B: 255, A: 255},
+						color.NRGBA{R: 255, G: 255, B: 255, A: 255},
 						gtx.Constraints.Min,
 						unit.Dp(4),
 					)

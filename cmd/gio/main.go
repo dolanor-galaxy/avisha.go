@@ -164,7 +164,7 @@ func (ui *UI) Layout(gtx C) D {
 					return layout.Stack{}.Layout(
 						gtx,
 						layout.Expanded(func(gtx C) D {
-							return util.DrawRect(gtx, color.RGBA{R: 250, G: 250, B: 250, A: 255}, gtx.Constraints.Max, unit.Dp(0))
+							return util.DrawRect(gtx, color.NRGBA{R: 250, G: 250, B: 250, A: 255}, gtx.Constraints.Max, unit.Dp(0))
 						}),
 						layout.Stacked(func(gtx C) D {
 							return layout.UniformInset(unit.Dp(10)).Layout(

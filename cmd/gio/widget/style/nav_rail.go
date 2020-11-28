@@ -54,7 +54,7 @@ func (r *NavRail) Layout(gtx C) D {
 		},
 	}.Add(gtx.Ops)
 	clip.Rect{Max: cs.Max}.Add(gtx.Ops)
-	paint.ColorOp{Color: color.RGBA{A: 100}}.Add(gtx.Ops)
+	paint.ColorOp{Color: color.NRGBA{A: 100}}.Add(gtx.Ops)
 	paint.PaintOp{}.Add(gtx.Ops)
 	stack.Pop()
 	cs.Max.X -= gtx.Px(unit.Dp(1))
