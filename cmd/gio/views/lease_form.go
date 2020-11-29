@@ -79,9 +79,6 @@ func (l *LeaseForm) Update(gtx C) {
 	if l.Cancel.Clicked() {
 		l.Route.Back()
 	}
-	l.Tenant.Disabled = !l.creating
-	l.Site.Disabled = !l.creating
-	l.Date.Disabled = !l.creating
 }
 
 func (l *LeaseForm) Layout(gtx C) D {
@@ -154,20 +151,32 @@ func (l *LeaseForm) Layout(gtx C) D {
 					}.Layout(
 						gtx,
 						layout.Flexed(1, func(gtx C) D {
+							if !l.creating {
+								gtx.Queue = nil
+							}
 							return l.Tenant.Layout(gtx, l.Th.Primary(), "Tenant")
 						}),
 						layout.Rigid(func(gtx C) D {
 							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
 						}),
 						layout.Flexed(1, func(gtx C) D {
+							if !l.creating {
+								gtx.Queue = nil
+							}
 							return l.Site.Layout(gtx, l.Th.Primary(), "Site")
 						}),
 					)
 				}),
 				layout.Rigid(func(gtx C) D {
+					if !l.creating {
+						gtx.Queue = nil
+					}
 					return l.Date.Layout(gtx, l.Th.Primary(), "Start Date")
 				}),
 				layout.Rigid(func(gtx C) D {
+					if !l.creating {
+						gtx.Queue = nil
+					}
 					return l.Days.Layout(gtx, l.Th.Primary(), "Duration (days)")
 				}),
 				layout.Rigid(func(gtx C) D {
