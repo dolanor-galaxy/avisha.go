@@ -24,16 +24,19 @@ import (
 )
 
 func main() {
-	db, ok := os.LookupEnv("avisha_db")
-	if !ok {
-		db = "target/db.json"
-	}
-	handle, err := storm.Open(db)
+	db, err := storm.Open(func() string {
+		db, ok := os.LookupEnv("avisha_db")
+		if !ok {
+			db = "target/db.json"
+		}
+		return db
+	}())
 	if err != nil {
 		log.Fatalf("error: opening database: %v", err)
 	}
+	defer db.Close()
 	api := avisha.App{
-		DB:       handle,
+		DB:       db,
 		Notifier: &notify.Console{},
 	}
 	w := app.NewWindow(app.Title("Avisha"))
