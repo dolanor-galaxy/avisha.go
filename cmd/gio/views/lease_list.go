@@ -87,10 +87,10 @@ func (l *Lease) Layout(gtx C) D {
 				return style.Card{
 					Content: []layout.Widget{
 						func(gtx C) D {
-							return material.Label(l.Th.Primary(), unit.Dp(20), lease.Tenant).Layout(gtx)
+							return material.Label(l.Th.Primary(), unit.Dp(20), "todo").Layout(gtx)
 						},
 						func(gtx C) D {
-							return material.Label(l.Th.Primary(), unit.Dp(20), lease.Site).Layout(gtx)
+							return material.Label(l.Th.Primary(), unit.Dp(20), "todo").Layout(gtx)
 						},
 						func(gtx C) D {
 							return material.Label(l.Th.Primary(), unit.Dp(20), lease.Term.String()).Layout(gtx)

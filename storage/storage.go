@@ -1,14 +1,20 @@
 package storage
 
+// IDer can generate unique identifiers.
+type IDer interface {
+	NextID() uint
+}
+
 // Entity is a unique object.
 type Entity interface {
-	ID() string
+	ID() uint
 }
 
 // Storage is any object that can store and query entities.
 type Storage interface {
 	Storer
 	Queryer
+	IDer
 }
 
 // Storer provides persistence for entities.

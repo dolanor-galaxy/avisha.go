@@ -11,6 +11,7 @@ import (
 
 // Tenant is a unique entity that can Lease one or more Sites.
 type Tenant struct {
+	Id      uint
 	Name    string
 	Contact string
 }
@@ -18,6 +19,7 @@ type Tenant struct {
 // Site is a unique lot of land with a dwelling that can be Leased by at most
 // one Tenant at any given time.
 type Site struct {
+	Id       uint
 	Number   string
 	Dwelling Dwelling
 }
@@ -68,10 +70,12 @@ func (t Term) Overlaps(other Term) bool {
 // Services consumed are tracked accordingly, typically involving Rent and
 // Utilities.
 type Lease struct {
-	Tenant string
-	Site   string
-	Term   Term
-	Rent   Currency
+	Id     uint
+	Tenant uint
+	Site   uint
+
+	Term Term
+	Rent Currency
 
 	// Rent and Utility services.
 	Services map[string]Service
@@ -107,14 +111,14 @@ type App struct {
 func (app App) SendInvoice(t Tenant, s Site) error {
 	containsSite := func(ent storage.Entity) bool {
 		if lease, ok := ent.(Lease); ok {
-			return lease.Site == s.Number
+			return lease.Site == s.Id
 		}
 		return false
 	}
 
 	containsTenant := func(ent storage.Entity) bool {
 		if lease, ok := ent.(Lease); ok {
-			return lease.Tenant == t.Name
+			return lease.Tenant == t.Id
 		}
 		return false
 	}
@@ -146,8 +150,8 @@ func (app App) SendInvoice(t Tenant, s Site) error {
 
 // CreateLease creates a new lease.
 func (app App) CreateLease(
-	tenant string,
-	site string,
+	tenant uint,
+	site uint,
 	term Term,
 	rent Currency,
 ) error {
@@ -167,7 +171,7 @@ func (app App) CreateLease(
 
 	tenantExists := func(ent storage.Entity) bool {
 		if t, ok := ent.(*Tenant); ok {
-			if t.Name == tenant {
+			if t.Id == tenant {
 				return true
 			}
 		}
@@ -176,7 +180,7 @@ func (app App) CreateLease(
 
 	siteExists := func(ent storage.Entity) bool {
 		if s, ok := ent.(*Site); ok {
-			if s.Number == site {
+			if s.Id == site {
 				return true
 			}
 		}
@@ -184,11 +188,11 @@ func (app App) CreateLease(
 	}
 
 	if _, ok := app.Query(tenantExists); !ok {
-		return fmt.Errorf("tenant %s does not exist", tenant)
+		return fmt.Errorf("tenant %d does not exist", tenant)
 	}
 
 	if _, ok := app.Query(siteExists); !ok {
-		return fmt.Errorf("site %s does not exist", site)
+		return fmt.Errorf("site %d does not exist", site)
 	}
 
 	if _, ok := app.Query(containsSite, matchesTerm); ok {
@@ -215,25 +219,49 @@ func (app App) CreateLease(
 
 // ChangeRent updates the weekly rent for a given lease.
 func (app App) ChangeRent(
-	tenant string,
-	site string,
+	tenantID uint,
+	siteID uint,
 	term Term,
 	rent Currency,
 ) error {
-	l, ok := app.Query(func(ent storage.Entity) bool {
-		if l, ok := ent.(*Lease); ok {
-			return l.Term == term
-		}
-		return false
-	})
-	if !ok {
-		return fmt.Errorf("no lease exists for tenant %s and site %s during %s", tenant, site, term)
-	}
-	lease := l.(*Lease)
-	lease.Rent = rent
-	if err := app.Update(*lease); err != nil {
-		return fmt.Errorf("changing rent: %w", err)
-	}
+	// var (
+	// 	lease  *Lease
+	// 	tenant *Tenant
+	// 	site   *Site
+	// )
+
+	// app.Get(0, func(ent storage.Entity) bool {
+	// 	if t, ok := ent.(*Tenant); ok && t.Id == tenantID {
+	// 		tenant = t
+	// 		return true
+	// 	}
+	// 	return false
+	// })
+
+	// app.Get(0, func(ent storage.Entity) bool {
+	// 	if s, ok := ent.(*Site); ok && s.Id == siteID {
+	// 		site = s
+	// 		return true
+	// 	}
+	// 	return false
+	// })
+
+	// app.Get(0, func(ent storage.Entity) bool {
+	// 	if l, ok := ent.(*Lease); ok && l.Term == term {
+	// 		lease = l
+	// 		return true
+	// 	}
+	// 	return false
+	// })
+
+	// // if !ok {
+	// // 	return fmt.Errorf("no lease exists for tenant %s and site %s during %s", tenantID, site, term)
+	// // }
+
+	// lease.Rent = rent
+	// if err := app.Update(*lease); err != nil {
+	// 	return fmt.Errorf("changing rent: %w", err)
+	// }
 	return nil
 }
 
@@ -276,6 +304,8 @@ func (app App) RegisterTenant(t Tenant) error {
 		return fmt.Errorf("%s already exists", t.Name)
 	}
 
+	t.Id = app.NextID()
+
 	if err := app.Create(t); err != nil {
 		return fmt.Errorf("saving tenant: %w", err)
 	}
@@ -284,18 +314,18 @@ func (app App) RegisterTenant(t Tenant) error {
 }
 
 // ID specifies the unique identifier.
-func (t Tenant) ID() string {
-	return t.Name
+func (t Tenant) ID() uint {
+	return t.Id
 }
 
 // ID specifies the unique identifier.
-func (s Site) ID() string {
-	return s.Number
+func (s Site) ID() uint {
+	return s.Id
 }
 
 // ID specifies the unique identifier.
-func (l Lease) ID() string {
-	return fmt.Sprintf("%s-%s", l.Tenant, l.Site)
+func (l Lease) ID() uint {
+	return l.Id
 }
 
 func (t Term) String() string {
@@ -311,8 +341,8 @@ func (t Term) End() time.Time {
 
 // LeaseComparitor can be used for comparison between lease entities.
 type LeaseComparitor struct {
-	Tenant string
-	Site   string
+	Tenant uint
+	Site   uint
 	Term   Term
 }
 

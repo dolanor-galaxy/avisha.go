@@ -46,7 +46,7 @@ func (f *TenantForm) Context() (list []layout.Widget) {
 			return layout.UniformInset(unit.Dp(10)).Layout(
 				gtx,
 				func(gtx C) D {
-					label := material.Label(f.Th.Primary(), unit.Dp(24), f.tenant.ID())
+					label := material.Label(f.Th.Primary(), unit.Dp(24), f.tenant.Name)
 					label.Alignment = text.Middle
 					label.Color = f.Th.Primary().Color.InvText
 					return label.Layout(gtx)

@@ -44,7 +44,7 @@ func (l *SiteForm) Context() (list []layout.Widget) {
 			return layout.UniformInset(unit.Dp(10)).Layout(
 				gtx,
 				func(gtx C) D {
-					label := material.Label(l.Th.Primary(), unit.Dp(24), l.site.ID())
+					label := material.Label(l.Th.Primary(), unit.Dp(24), l.site.Number)
 					label.Alignment = text.Middle
 					label.Color = l.Th.Primary().Color.InvText
 					return label.Layout(gtx)

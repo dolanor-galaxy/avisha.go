@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 )
 
 // File storage.
@@ -27,6 +28,7 @@ type File struct {
 
 // Data to serialize.
 type Data struct {
+	ID uint
 	// One bucket per type: "[type-name][entity-id]value".
 	Buckets map[string]map[string]json.RawMessage
 	// Order to iterate buckets.
@@ -141,10 +143,10 @@ func (f *File) Save(ent Entity) error {
 			if err != nil {
 				return fmt.Errorf("serializing entity: %w", err)
 			}
-			_, ok := f.Buckets[T][ent.ID()]
-			f.Buckets[T][ent.ID()] = v
+			_, ok := f.Buckets[T][strconv.Itoa(int(ent.ID()))]
+			f.Buckets[T][strconv.Itoa(int(ent.ID()))] = v
 			if !ok {
-				f.ValueOrder[T] = append(f.ValueOrder[T], ent.ID())
+				f.ValueOrder[T] = append(f.ValueOrder[T], strconv.Itoa(int(ent.ID())))
 			}
 			break
 		}
@@ -156,11 +158,18 @@ func (f *File) Save(ent Entity) error {
 func (f *File) Delete(ent Entity) error {
 	for T := range f.Types {
 		if T == reflect.TypeOf(ent).Name() {
-			delete(f.Buckets[T], ent.ID())
+			delete(f.Buckets[T], strconv.Itoa(int(ent.ID())))
 			break
 		}
 	}
 	return f.save()
+}
+
+// NextID returns the next unique identifier.
+// ID is unique accross all entities.
+func (f *File) NextID() uint {
+	f.Data.ID++
+	return f.Data.ID
 }
 
 func (f *File) save() error {

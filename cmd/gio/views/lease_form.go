@@ -22,9 +22,12 @@ import (
 // LeaseForm performs data mutations on a Lease entity.
 type LeaseForm struct {
 	nav.Route
-	App   *avisha.App
-	Th    *style.Theme
-	lease *avisha.Lease
+	App *avisha.App
+	Th  *style.Theme
+
+	lease  *avisha.Lease
+	site   *avisha.Site
+	tenant *avisha.Tenant
 
 	Tenant materials.TextField
 	Site   materials.TextField
@@ -47,8 +50,28 @@ func (l *LeaseForm) Receive(data interface{}) {
 	if lease, ok := data.(*avisha.Lease); ok && lease != nil {
 		l.lease = lease
 		l.creating = lease.Cmp() == (avisha.Lease{}).Cmp()
-		l.Tenant.SetText(l.lease.Tenant)
-		l.Site.SetText(l.lease.Site)
+		l.tenant = func() (t *avisha.Tenant) {
+			l.App.Query(func(ent storage.Entity) bool {
+				t, ok = ent.(*avisha.Tenant)
+				return ok && t.Id == lease.Tenant
+			})
+			if t == nil {
+				t = &avisha.Tenant{}
+			}
+			return t
+		}()
+		l.site = func() (s *avisha.Site) {
+			l.App.Query(func(ent storage.Entity) bool {
+				s, ok = ent.(*avisha.Site)
+				return ok && s.Id == lease.Site
+			})
+			if s == nil {
+				s = &avisha.Site{}
+			}
+			return s
+		}()
+		l.Tenant.SetText(l.tenant.Name)
+		l.Site.SetText(l.site.Number)
 		l.Days.SetText(strconv.Itoa(l.lease.Term.Days))
 		l.Rent.SetText(strconv.Itoa(int(l.lease.Rent)))
 		start := lease.Term.Start
@@ -62,7 +85,7 @@ func (l *LeaseForm) Context() (list []layout.Widget) {
 			return layout.UniformInset(unit.Dp(10)).Layout(
 				gtx,
 				func(gtx C) D {
-					label := material.Label(l.Th.Primary(), unit.Dp(24), l.lease.ID())
+					label := material.Label(l.Th.Primary(), unit.Dp(24), fmt.Sprintf("%s-%s", l.tenant.Name, l.site.Number))
 					label.Alignment = text.Middle
 					label.Color = l.Th.Color.InvText
 					return label.Layout(gtx)
@@ -85,8 +108,9 @@ func (l *LeaseForm) Layout(gtx C) D {
 	l.Update(gtx)
 	l.Tenant.Validator = func(text string) string {
 		if _, ok := l.App.Query(func(ent storage.Entity) bool {
-			if tenant, ok := ent.(*avisha.Tenant); ok {
-				return tenant.Name == text
+			if t, ok := ent.(*avisha.Tenant); ok && t.Name == text {
+				l.tenant = t
+				return true
 			}
 			return false
 		}); !ok {
@@ -96,8 +120,9 @@ func (l *LeaseForm) Layout(gtx C) D {
 	}
 	l.Site.Validator = func(text string) string {
 		if _, ok := l.App.Query(func(ent storage.Entity) bool {
-			if site, ok := ent.(*avisha.Site); ok {
-				return site.Number == text
+			if s, ok := ent.(*avisha.Site); ok && s.Number == text {
+				l.site = s
+				return true
 			}
 			return false
 		}); !ok {
@@ -273,8 +298,8 @@ func (l *LeaseForm) submit() {
 	}
 	if l.creating {
 		if err := l.App.CreateLease(
-			l.Tenant.Text(),
-			l.Site.Text(),
+			l.tenant.Id,
+			l.site.Id,
 			l.lease.Term,
 			l.lease.Rent,
 		); err != nil {
@@ -284,8 +309,8 @@ func (l *LeaseForm) submit() {
 		l.Route.Back()
 	} else {
 		if err := l.App.ChangeRent(
-			l.Tenant.Text(),
-			l.Site.Text(),
+			l.tenant.Id,
+			l.site.Id,
 			l.lease.Term,
 			l.lease.Rent,
 		); err != nil {
