@@ -13,10 +13,9 @@ import (
 	"gioui.org/widget/material"
 	"git.sr.ht/~whereswaldon/materials"
 	"github.com/jackmordaunt/avisha-fn"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
-	"github.com/jackmordaunt/avisha-fn/storage"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
 
 // LeaseForm performs data mutations on a Lease entity.
@@ -50,26 +49,26 @@ func (l *LeaseForm) Receive(data interface{}) {
 	if lease, ok := data.(*avisha.Lease); ok && lease != nil {
 		l.lease = lease
 		l.creating = lease.Cmp() == (avisha.Lease{}).Cmp()
-		l.tenant = func() (t *avisha.Tenant) {
-			l.App.Query(func(ent storage.Entity) bool {
-				t, ok = ent.(*avisha.Tenant)
-				return ok && t.Id == lease.Tenant
-			})
-			if t == nil {
-				t = &avisha.Tenant{}
-			}
-			return t
-		}()
-		l.site = func() (s *avisha.Site) {
-			l.App.Query(func(ent storage.Entity) bool {
-				s, ok = ent.(*avisha.Site)
-				return ok && s.Id == lease.Site
-			})
-			if s == nil {
-				s = &avisha.Site{}
-			}
-			return s
-		}()
+		// l.tenant = func() (t *avisha.Tenant) {
+		// 	l.App.Query(func(ent storage.Entity) bool {
+		// 		t, ok = ent.(*avisha.Tenant)
+		// 		return ok && t.Id == lease.Tenant
+		// 	})
+		// 	if t == nil {
+		// 		t = &avisha.Tenant{}
+		// 	}
+		// 	return t
+		// }()
+		// l.site = func() (s *avisha.Site) {
+		// 	l.App.Query(func(ent storage.Entity) bool {
+		// 		s, ok = ent.(*avisha.Site)
+		// 		return ok && s.Id == lease.Site
+		// 	})
+		// 	if s == nil {
+		// 		s = &avisha.Site{}
+		// 	}
+		// 	return s
+		// }()
 		l.Tenant.SetText(l.tenant.Name)
 		l.Site.SetText(l.site.Number)
 		l.Days.SetText(strconv.Itoa(l.lease.Term.Days))
@@ -107,27 +106,27 @@ func (l *LeaseForm) Update(gtx C) {
 func (l *LeaseForm) Layout(gtx C) D {
 	l.Update(gtx)
 	l.Tenant.Validator = func(text string) string {
-		if _, ok := l.App.Query(func(ent storage.Entity) bool {
-			if t, ok := ent.(*avisha.Tenant); ok && t.Name == text {
-				l.tenant = t
-				return true
-			}
-			return false
-		}); !ok {
-			return fmt.Sprintf("tenant %q does not exist", text)
-		}
+		// if _, ok := l.App.Query(func(ent storage.Entity) bool {
+		// 	if t, ok := ent.(*avisha.Tenant); ok && t.Name == text {
+		// 		l.tenant = t
+		// 		return true
+		// 	}
+		// 	return false
+		// }); !ok {
+		// 	return fmt.Sprintf("tenant %q does not exist", text)
+		// }
 		return ""
 	}
 	l.Site.Validator = func(text string) string {
-		if _, ok := l.App.Query(func(ent storage.Entity) bool {
-			if s, ok := ent.(*avisha.Site); ok && s.Number == text {
-				l.site = s
-				return true
-			}
-			return false
-		}); !ok {
-			return fmt.Sprintf("site %q does not exist", text)
-		}
+		// if _, ok := l.App.Query(func(ent storage.Entity) bool {
+		// 	if s, ok := ent.(*avisha.Site); ok && s.Number == text {
+		// 		l.site = s
+		// 		return true
+		// 	}
+		// 	return false
+		// }); !ok {
+		// 	return fmt.Sprintf("site %q does not exist", text)
+		// }
 		return ""
 	}
 	l.Date.Validator = func(text string) string {

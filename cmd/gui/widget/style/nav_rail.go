@@ -11,7 +11,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
 )
 
 // NavRail implements material.io navigation rail.

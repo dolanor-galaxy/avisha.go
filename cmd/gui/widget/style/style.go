@@ -8,8 +8,8 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/util"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/util"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
 )
 
 type (

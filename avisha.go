@@ -2,11 +2,10 @@ package avisha
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
+	"github.com/asdine/storm/v3"
 	"github.com/jackmordaunt/avisha-fn/notify"
-	"github.com/jackmordaunt/avisha-fn/storage"
 )
 
 // Tenant is a unique entity that can Lease one or more Sites.
@@ -103,48 +102,48 @@ func (s Service) Balance() int {
 
 // App implements use cases.
 type App struct {
-	storage.Storage
+	*storm.DB
 	notify.Notifier
 }
 
 // SendInvoice sends the utility service invoice for the given Lease.
 func (app App) SendInvoice(t Tenant, s Site) error {
-	containsSite := func(ent storage.Entity) bool {
-		if lease, ok := ent.(Lease); ok {
-			return lease.Site == s.Id
-		}
-		return false
-	}
+	// containsSite := func(ent storage.Entity) bool {
+	// 	if lease, ok := ent.(Lease); ok {
+	// 		return lease.Site == s.Id
+	// 	}
+	// 	return false
+	// }
 
-	containsTenant := func(ent storage.Entity) bool {
-		if lease, ok := ent.(Lease); ok {
-			return lease.Tenant == t.Id
-		}
-		return false
-	}
+	// containsTenant := func(ent storage.Entity) bool {
+	// 	if lease, ok := ent.(Lease); ok {
+	// 		return lease.Tenant == t.Id
+	// 	}
+	// 	return false
+	// }
 
-	if entity, ok := app.Query(containsSite, containsTenant); ok {
-		if lease, ok := entity.(Lease); ok {
+	// if entity, ok := app.Query(containsSite, containsTenant); ok {
+	// 	if lease, ok := entity.(Lease); ok {
 
-			// Note: Instead of any actual invoice rendering we will just render
-			// utility balance owed.
-			if utilities, ok := lease.Services["utility"]; ok {
-				var (
-					balance = utilities.Balance()
-					dollars = balance % 100
-					cents   = balance - (dollars * 100)
-				)
+	// 		// Note: Instead of any actual invoice rendering we will just render
+	// 		// utility balance owed.
+	// 		if utilities, ok := lease.Services["utility"]; ok {
+	// 			var (
+	// 				balance = utilities.Balance()
+	// 				dollars = balance % 100
+	// 				cents   = balance - (dollars * 100)
+	// 			)
 
-				if balance < 0 {
-					invoice := fmt.Sprintf("you owe $%2d.%2d in utilities", dollars, cents)
-					if err := app.Notify(t.Contact, invoice); err != nil {
-						return fmt.Errorf("sending invoice: %w", err)
-					}
-				}
-			}
+	// 			if balance < 0 {
+	// 				invoice := fmt.Sprintf("you owe $%2d.%2d in utilities", dollars, cents)
+	// 				if err := app.Notify(t.Contact, invoice); err != nil {
+	// 					return fmt.Errorf("sending invoice: %w", err)
+	// 				}
+	// 			}
+	// 		}
 
-		}
-	}
+	// 	}
+	// }
 	return nil
 }
 
@@ -155,64 +154,64 @@ func (app App) CreateLease(
 	term Term,
 	rent Currency,
 ) error {
-	containsSite := func(ent storage.Entity) bool {
-		if lease, ok := ent.(*Lease); ok {
-			return lease.Site == site
-		}
-		return false
-	}
+	// containsSite := func(ent storage.Entity) bool {
+	// 	if lease, ok := ent.(*Lease); ok {
+	// 		return lease.Site == site
+	// 	}
+	// 	return false
+	// }
 
-	matchesTerm := func(ent storage.Entity) bool {
-		if lease, ok := ent.(*Lease); ok {
-			return lease.Term == term
-		}
-		return false
-	}
+	// matchesTerm := func(ent storage.Entity) bool {
+	// 	if lease, ok := ent.(*Lease); ok {
+	// 		return lease.Term == term
+	// 	}
+	// 	return false
+	// }
 
-	tenantExists := func(ent storage.Entity) bool {
-		if t, ok := ent.(*Tenant); ok {
-			if t.Id == tenant {
-				return true
-			}
-		}
-		return false
-	}
+	// tenantExists := func(ent storage.Entity) bool {
+	// 	if t, ok := ent.(*Tenant); ok {
+	// 		if t.Id == tenant {
+	// 			return true
+	// 		}
+	// 	}
+	// 	return false
+	// }
 
-	siteExists := func(ent storage.Entity) bool {
-		if s, ok := ent.(*Site); ok {
-			if s.Id == site {
-				return true
-			}
-		}
-		return false
-	}
+	// siteExists := func(ent storage.Entity) bool {
+	// 	if s, ok := ent.(*Site); ok {
+	// 		if s.Id == site {
+	// 			return true
+	// 		}
+	// 	}
+	// 	return false
+	// }
 
-	if _, ok := app.Query(tenantExists); !ok {
-		return fmt.Errorf("tenant %d does not exist", tenant)
-	}
+	// if _, ok := app.Query(tenantExists); !ok {
+	// 	return fmt.Errorf("tenant %d does not exist", tenant)
+	// }
 
-	if _, ok := app.Query(siteExists); !ok {
-		return fmt.Errorf("site %d does not exist", site)
-	}
+	// if _, ok := app.Query(siteExists); !ok {
+	// 	return fmt.Errorf("site %d does not exist", site)
+	// }
 
-	if _, ok := app.Query(containsSite, matchesTerm); ok {
-		return fmt.Errorf("lease conflict: site already leased during this term")
-	}
+	// if _, ok := app.Query(containsSite, matchesTerm); ok {
+	// 	return fmt.Errorf("lease conflict: site already leased during this term")
+	// }
 
-	lease := Lease{
-		Tenant: tenant,
-		Site:   site,
-		Term:   term,
-		Rent:   rent,
-		Services: map[string]Service{
-			"rent":    {},
-			"utility": {},
-		},
-	}
+	// lease := Lease{
+	// 	Tenant: tenant,
+	// 	Site:   site,
+	// 	Term:   term,
+	// 	Rent:   rent,
+	// 	Services: map[string]Service{
+	// 		"rent":    {},
+	// 		"utility": {},
+	// 	},
+	// }
 
-	if err := app.Create(lease); err != nil {
-		return fmt.Errorf("saving lease: %w", err)
-	}
+	// if err := app.Create(lease); err != nil {
+	// 	return fmt.Errorf("saving lease: %w", err)
+	// }
 
 	return nil
 }
@@ -267,48 +266,48 @@ func (app App) ChangeRent(
 
 // ListSite enters a new, unqiue, leaseable Site.
 func (app App) ListSite(s Site) error {
-	s.Number = strings.TrimSpace(s.Number)
+	// s.Number = strings.TrimSpace(s.Number)
 
-	exists := func(ent storage.Entity) bool {
-		if site, ok := ent.(*Site); ok {
-			return site.Number == s.Number
-		}
-		return false
-	}
+	// exists := func(ent storage.Entity) bool {
+	// 	if site, ok := ent.(*Site); ok {
+	// 		return site.Number == s.Number
+	// 	}
+	// 	return false
+	// }
 
-	if _, ok := app.Query(exists); ok {
-		return fmt.Errorf("%s already exists", s.Number)
-	}
+	// if _, ok := app.Query(exists); ok {
+	// 	return fmt.Errorf("%s already exists", s.Number)
+	// }
 
-	if err := app.Create(s); err != nil {
-		return fmt.Errorf("saving site: %w", err)
-	}
+	// if err := app.Create(s); err != nil {
+	// 	return fmt.Errorf("saving site: %w", err)
+	// }
 
 	return nil
 }
 
 // RegisterTenant enters a new, unique Tenant.
 func (app App) RegisterTenant(t Tenant) error {
-	exists := func(ent storage.Entity) bool {
-		if tenant, ok := ent.(*Tenant); ok {
-			return tenant.Name == t.Name
-		}
-		return false
-	}
+	// exists := func(ent storage.Entity) bool {
+	// 	if tenant, ok := ent.(*Tenant); ok {
+	// 		return tenant.Name == t.Name
+	// 	}
+	// 	return false
+	// }
 
-	if len(t.Name) < 1 {
-		return fmt.Errorf("name required")
-	}
+	// if len(t.Name) < 1 {
+	// 	return fmt.Errorf("name required")
+	// }
 
-	if _, ok := app.Query(exists); ok {
-		return fmt.Errorf("%s already exists", t.Name)
-	}
+	// if _, ok := app.Query(exists); ok {
+	// 	return fmt.Errorf("%s already exists", t.Name)
+	// }
 
-	t.Id = app.NextID()
+	// t.Id = app.NextID()
 
-	if err := app.Create(t); err != nil {
-		return fmt.Errorf("saving tenant: %w", err)
-	}
+	// if err := app.Create(t); err != nil {
+	// 	return fmt.Errorf("saving tenant: %w", err)
+	// }
 
 	return nil
 }

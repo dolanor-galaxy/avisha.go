@@ -8,12 +8,10 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"github.com/jackmordaunt/avisha-fn"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/icons"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
-
-	"github.com/jackmordaunt/avisha-fn/storage"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/icons"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
 
 type Lease struct {
@@ -64,13 +62,13 @@ func (l *Lease) Layout(gtx C) D {
 	var (
 		leases []*avisha.Lease
 	)
-	l.App.List(func(ent storage.Entity) bool {
-		l, ok := ent.(*avisha.Lease)
-		if ok {
-			leases = append(leases, l)
-		}
-		return ok
-	})
+	// l.App.List(func(ent storage.Entity) bool {
+	// 	l, ok := ent.(*avisha.Lease)
+	// 	if ok {
+	// 		leases = append(leases, l)
+	// 	}
+	// 	return ok
+	// })
 	return l.list.Layout(gtx, len(leases), func(gtx C, index int) D {
 		var (
 			lease  = leases[index]

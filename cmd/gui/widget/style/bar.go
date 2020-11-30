@@ -4,7 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/util"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/util"
 )
 
 // TopBar renders a title and the provided actions.

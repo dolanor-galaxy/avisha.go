@@ -4,7 +4,7 @@ import (
 	"unsafe"
 
 	"gioui.org/layout"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
 )
 
 type (

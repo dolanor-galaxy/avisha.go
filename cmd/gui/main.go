@@ -6,16 +6,16 @@ import (
 	"log"
 	"os"
 
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/icons"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/util"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
+	"github.com/asdine/storm/v3"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/icons"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/util"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 
 	"gioui.org/unit"
 	"github.com/jackmordaunt/avisha-fn"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/views"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/views"
 	"github.com/jackmordaunt/avisha-fn/notify"
-	"github.com/jackmordaunt/avisha-fn/storage"
 
 	"gioui.org/app"
 	"gioui.org/io/system"
@@ -28,13 +28,12 @@ func main() {
 	if !ok {
 		db = "target/db.json"
 	}
+	handle, err := storm.Open(db)
+	if err != nil {
+		log.Fatalf("error: opening database: %v", err)
+	}
 	api := avisha.App{
-		Storage: storage.FileStorage(db).
-			With(&avisha.Tenant{}).
-			With(&avisha.Site{}).
-			With(&avisha.Lease{}).
-			Format(true).
-			MustLoad(),
+		DB:       handle,
 		Notifier: &notify.Console{},
 	}
 	w := app.NewWindow(app.Title("Avisha"))

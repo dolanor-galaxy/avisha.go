@@ -8,12 +8,10 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"github.com/jackmordaunt/avisha-fn"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/icons"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
-
-	"github.com/jackmordaunt/avisha-fn/storage"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/icons"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
 
 type Sites struct {
@@ -64,13 +62,13 @@ func (s *Sites) Layout(gtx C) D {
 	var (
 		sites []*avisha.Site
 	)
-	s.App.List(func(ent storage.Entity) bool {
-		site, ok := ent.(*avisha.Site)
-		if ok {
-			sites = append(sites, site)
-		}
-		return ok
-	})
+	// s.App.List(func(ent storage.Entity) bool {
+	// 	site, ok := ent.(*avisha.Site)
+	// 	if ok {
+	// 		sites = append(sites, site)
+	// 	}
+	// 	return ok
+	// })
 	return s.list.Layout(gtx, len(sites), func(gtx C, index int) D {
 		var (
 			site   = sites[index]

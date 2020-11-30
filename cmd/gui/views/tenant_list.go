@@ -8,12 +8,10 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"github.com/jackmordaunt/avisha-fn"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/icons"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
-
-	"github.com/jackmordaunt/avisha-fn/storage"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/icons"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
 
 // Tenants displays a list of Tenants and provides controls for editing them.
@@ -65,13 +63,13 @@ func (t *Tenants) Layout(gtx C) D {
 	var (
 		tenants []*avisha.Tenant
 	)
-	t.App.List(func(ent storage.Entity) bool {
-		t, ok := ent.(*avisha.Tenant)
-		if ok {
-			tenants = append(tenants, t)
-		}
-		return ok
-	})
+	// t.App.List(func(ent storage.Entity) bool {
+	// 	t, ok := ent.(*avisha.Tenant)
+	// 	if ok {
+	// 		tenants = append(tenants, t)
+	// 	}
+	// 	return ok
+	// })
 	return t.list.Layout(gtx, len(tenants), func(gtx C, index int) D {
 		var (
 			tenant = tenants[index]
