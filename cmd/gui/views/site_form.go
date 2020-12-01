@@ -110,13 +110,21 @@ func (l *SiteForm) Layout(gtx C) D {
 }
 
 func (l *SiteForm) submit() error {
-	site := avisha.Site{
-		Number: l.Number.Text(),
-		// Dwelling: l.Dwelling.Text(),
-		Dwelling: avisha.Cabin,
-	}
-	if err := l.App.ListSite(site); err != nil {
-		return fmt.Errorf("listing site: %w", err)
+	if l.site == nil {
+		if err := l.App.ListSite(&avisha.Site{
+			Number:   l.Number.Text(),
+			Dwelling: avisha.Cabin,
+		}); err != nil {
+			return fmt.Errorf("listing site: %w", err)
+		}
+	} else {
+		if err := l.App.Update(&avisha.Site{
+			ID:       l.site.ID,
+			Number:   l.Number.Text(),
+			Dwelling: avisha.Cabin,
+		}); err != nil {
+			return fmt.Errorf("updating site: %w", err)
+		}
 	}
 	return nil
 }

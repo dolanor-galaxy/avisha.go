@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"sync"
 	"unsafe"
 
@@ -62,13 +63,9 @@ func (s *Sites) Layout(gtx C) D {
 	var (
 		sites []*avisha.Site
 	)
-	// s.App.List(func(ent storage.Entity) bool {
-	// 	site, ok := ent.(*avisha.Site)
-	// 	if ok {
-	// 		sites = append(sites, site)
-	// 	}
-	// 	return ok
-	// })
+	if err := s.App.All(&sites); err != nil {
+		fmt.Printf("error: loading sites: %v\n", err)
+	}
 	return s.list.Layout(gtx, len(sites), func(gtx C, index int) D {
 		var (
 			site   = sites[index]
