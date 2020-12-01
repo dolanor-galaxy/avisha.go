@@ -50,7 +50,7 @@ func (t *Tenants) Update(gtx C) {
 		}
 	}
 	if t.RegisterTenant.Clicked() {
-		t.Route.To(RouteTenantForm, &avisha.Tenant{})
+		t.Route.To(RouteTenantForm, nil)
 	}
 }
 

@@ -57,14 +57,20 @@ func (f *TenantForm) Context() (list []layout.Widget) {
 }
 
 func (f *TenantForm) Update(gtx C) {
+	clear := func() {
+		f.Receive(&avisha.Tenant{})
+		f.tenant = nil
+	}
 	if f.Submit.Clicked() {
 		if err := f.submit(); err != nil {
 			// give error to app or render under field.
 			log.Printf("submitting tenant form: %v", err)
 		}
+		clear()
 		f.Route.Back()
 	}
 	if f.Cancel.Clicked() {
+		clear()
 		f.Route.Back()
 	}
 }
@@ -116,7 +122,7 @@ func (f *TenantForm) Layout(gtx C) D {
 
 func (f *TenantForm) submit() error {
 	if f.tenant == nil {
-		if err := f.App.RegisterTenant(avisha.Tenant{
+		if err := f.App.RegisterTenant(&avisha.Tenant{
 			Name:    f.Name.Text(),
 			Contact: f.Contact.Text(),
 		}); err != nil {
