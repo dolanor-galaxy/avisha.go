@@ -11,14 +11,15 @@ import (
 	"gioui.org/widget/material"
 	"git.sr.ht/~whereswaldon/materials"
 	"github.com/jackmordaunt/avisha-fn"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
 
 type SiteForm struct {
 	nav.Route
-	*avisha.App
-	*material.Theme
+	App  *avisha.App
+	Th   *style.Theme
 	site *avisha.Site
 
 	Number materials.TextField
@@ -43,9 +44,9 @@ func (l *SiteForm) Context() (list []layout.Widget) {
 			return layout.UniformInset(unit.Dp(10)).Layout(
 				gtx,
 				func(gtx C) D {
-					label := material.Label(l.Theme, unit.Dp(24), l.site.ID())
+					label := material.Label(l.Th.Primary(), unit.Dp(24), l.site.Number)
 					label.Alignment = text.Middle
-					label.Color = l.Theme.Color.InvText
+					label.Color = l.Th.Primary().Color.InvText
 					return label.Layout(gtx)
 				})
 		})
@@ -54,14 +55,20 @@ func (l *SiteForm) Context() (list []layout.Widget) {
 }
 
 func (l *SiteForm) Update(gtx C) {
+	clear := func() {
+		l.Receive(&avisha.Site{})
+		l.site = nil
+	}
 	if l.Submit.Clicked() {
 		if err := l.submit(); err != nil {
 			// give error to app or render under field.
 			log.Printf("listing site form: %v", err)
 		}
+		clear()
 		l.Route.Back()
 	}
 	if l.Cancel.Clicked() {
+		clear()
 		l.Route.Back()
 	}
 }
@@ -79,7 +86,7 @@ func (l *SiteForm) Layout(gtx C) D {
 				gtx,
 				layout.Rigid(func(gtx C) D {
 					l.Number.SingleLine = true
-					return l.Number.Layout(gtx, l.Theme, "Number")
+					return l.Number.Layout(gtx, l.Th.Primary(), "Number")
 				}),
 			)
 		}),
@@ -94,13 +101,13 @@ func (l *SiteForm) Layout(gtx C) D {
 					}.Layout(
 						gtx,
 						layout.Rigid(func(gtx C) D {
-							return material.Button(l.Theme, &l.Cancel, "Cancel").Layout(gtx)
+							return material.Button(l.Th.Secondary(), &l.Cancel, "Cancel").Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
 						}),
 						layout.Rigid(func(gtx C) D {
-							return material.Button(l.Theme, &l.Submit, "Submit").Layout(gtx)
+							return material.Button(l.Th.Primary(), &l.Submit, "Submit").Layout(gtx)
 						}),
 					)
 				})
@@ -109,13 +116,21 @@ func (l *SiteForm) Layout(gtx C) D {
 }
 
 func (l *SiteForm) submit() error {
-	site := avisha.Site{
-		Number: l.Number.Text(),
-		// Dwelling: l.Dwelling.Text(),
-		Dwelling: avisha.Cabin,
-	}
-	if err := l.App.ListSite(site); err != nil {
-		return fmt.Errorf("listing site: %w", err)
+	if l.site == nil {
+		if err := l.App.ListSite(&avisha.Site{
+			Number:   l.Number.Text(),
+			Dwelling: avisha.Cabin,
+		}); err != nil {
+			return fmt.Errorf("listing site: %w", err)
+		}
+	} else {
+		if err := l.App.Update(&avisha.Site{
+			ID:       l.site.ID,
+			Number:   l.Number.Text(),
+			Dwelling: avisha.Cabin,
+		}); err != nil {
+			return fmt.Errorf("updating site: %w", err)
+		}
 	}
 	return nil
 }

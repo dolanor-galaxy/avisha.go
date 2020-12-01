@@ -4,7 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/util"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/util"
 )
 
 // TopBar renders a title and the provided actions.
@@ -13,28 +13,28 @@ type TopBar struct {
 	Height unit.Value
 }
 
-func (bar TopBar) Layout(gtx Ctx, title string, actions ...layout.Widget) Dims {
+func (bar TopBar) Layout(gtx C, title string, actions ...layout.Widget) D {
 	gtx.Constraints.Max.Y = gtx.Px(bar.Height)
 	return layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx Ctx) Dims {
+		layout.Expanded(func(gtx C) D {
 			return util.Rect{
 				Color: bar.Color.Primary,
 				Size:  gtx.Constraints.Max,
 			}.Layout(gtx)
 		}),
-		layout.Stacked(func(gtx Ctx) Dims {
+		layout.Stacked(func(gtx C) D {
 			items := []layout.FlexChild{
-				layout.Rigid(func(gtx Ctx) Dims {
+				layout.Rigid(func(gtx C) D {
 					return layout.UniformInset(unit.Dp(10)).Layout(
 						gtx,
-						func(gtx Ctx) Dims {
+						func(gtx C) D {
 							title := material.Label(bar.Theme, unit.Dp(24), title)
 							title.Color = bar.Theme.Color.InvText
 							return title.Layout(gtx)
 						})
 				}),
-				layout.Flexed(1, func(gtx Ctx) Dims {
-					return Dims{Size: gtx.Constraints.Min}
+				layout.Flexed(1, func(gtx C) D {
+					return D{Size: gtx.Constraints.Min}
 				}),
 			}
 			// TODO: handle overflow (when actions don't fit the bar).

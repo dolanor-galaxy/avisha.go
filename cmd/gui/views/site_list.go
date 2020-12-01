@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"sync"
 	"unsafe"
 
@@ -8,17 +9,16 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"github.com/jackmordaunt/avisha-fn"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/icons"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
-	"github.com/jackmordaunt/avisha-fn/storage"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/icons"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
 
 type Sites struct {
 	nav.Route
-	*avisha.App
-	*material.Theme
+	App    *avisha.App
+	Th     *style.Theme
 	list   layout.List
 	states States
 	once   sync.Once
@@ -34,7 +34,7 @@ func (s *Sites) Context() []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
 			return material.IconButton(
-				s.Theme,
+				s.Th.Primary(),
 				&s.RegisterSite,
 				icons.Add,
 			).Layout(gtx)
@@ -49,7 +49,7 @@ func (s *Sites) Update(gtx C) {
 		}
 	}
 	if s.RegisterSite.Clicked() {
-		s.Route.To(RouteSiteForm, &avisha.Site{})
+		s.Route.To(RouteSiteForm, nil)
 	}
 }
 
@@ -63,13 +63,9 @@ func (s *Sites) Layout(gtx C) D {
 	var (
 		sites []*avisha.Site
 	)
-	s.App.List(func(ent storage.Entity) bool {
-		site, ok := ent.(*avisha.Site)
-		if ok {
-			sites = append(sites, site)
-		}
-		return ok
-	})
+	if err := s.App.All(&sites); err != nil {
+		fmt.Printf("error: loading sites: %v\n", err)
+	}
 	return s.list.Layout(gtx, len(sites), func(gtx C, index int) D {
 		var (
 			site   = sites[index]
@@ -78,13 +74,13 @@ func (s *Sites) Layout(gtx C) D {
 		)
 		return style.ListItem(
 			gtx,
-			s.Theme,
+			s.Th.Primary(),
 			&state.Item,
 			&state.Hover,
 			active,
 			func(gtx C) D {
 				return material.Label(
-					s.Theme,
+					s.Th.Primary(),
 					unit.Dp(20),
 					site.Number,
 				).Layout(gtx)

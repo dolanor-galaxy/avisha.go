@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"sync"
 	"unsafe"
 
@@ -8,18 +9,17 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"github.com/jackmordaunt/avisha-fn"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/icons"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/nav"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget"
-	"github.com/jackmordaunt/avisha-fn/cmd/gio/widget/style"
-	"github.com/jackmordaunt/avisha-fn/storage"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/icons"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
 
 // Tenants displays a list of Tenants and provides controls for editing them.
 type Tenants struct {
 	nav.Route
-	*avisha.App
-	*material.Theme
+	App    *avisha.App
+	Th     *style.Theme
 	list   layout.List
 	states States
 	once   sync.Once
@@ -35,7 +35,7 @@ func (t *Tenants) Context() []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
 			return material.IconButton(
-				t.Theme,
+				t.Th.Primary(),
 				&t.RegisterTenant,
 				icons.Add,
 			).Layout(gtx)
@@ -50,7 +50,7 @@ func (t *Tenants) Update(gtx C) {
 		}
 	}
 	if t.RegisterTenant.Clicked() {
-		t.Route.To(RouteTenantForm, &avisha.Tenant{})
+		t.Route.To(RouteTenantForm, nil)
 	}
 }
 
@@ -64,13 +64,9 @@ func (t *Tenants) Layout(gtx C) D {
 	var (
 		tenants []*avisha.Tenant
 	)
-	t.App.List(func(ent storage.Entity) bool {
-		t, ok := ent.(*avisha.Tenant)
-		if ok {
-			tenants = append(tenants, t)
-		}
-		return ok
-	})
+	if err := t.App.DB.All(&tenants); err != nil {
+		fmt.Printf("reading tenants: %s\n", err)
+	}
 	return t.list.Layout(gtx, len(tenants), func(gtx C, index int) D {
 		var (
 			tenant = tenants[index]
@@ -79,13 +75,13 @@ func (t *Tenants) Layout(gtx C) D {
 		)
 		return style.ListItem(
 			gtx,
-			t.Theme,
+			t.Th.Primary(),
 			&state.Item,
 			&state.Hover,
 			active,
 			func(gtx C) D {
 				return material.Label(
-					t.Theme,
+					t.Th.Primary(),
 					unit.Dp(20),
 					tenant.Name,
 				).Layout(gtx)

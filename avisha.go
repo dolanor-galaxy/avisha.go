@@ -2,23 +2,24 @@ package avisha
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
+	"github.com/asdine/storm/v3"
 	"github.com/jackmordaunt/avisha-fn/notify"
-	"github.com/jackmordaunt/avisha-fn/storage"
 )
 
 // Tenant is a unique entity that can Lease one or more Sites.
 type Tenant struct {
-	Name    string
+	ID      int    `storm:"id,increment"`
+	Name    string `storm:"unique"`
 	Contact string
 }
 
 // Site is a unique lot of land with a dwelling that can be Leased by at most
 // one Tenant at any given time.
 type Site struct {
-	Number   string
+	ID       int    `storm:"id,increment"`
+	Number   string `storm:"unique"`
 	Dwelling Dwelling
 }
 
@@ -68,10 +69,12 @@ func (t Term) Overlaps(other Term) bool {
 // Services consumed are tracked accordingly, typically involving Rent and
 // Utilities.
 type Lease struct {
-	Tenant string
-	Site   string
-	Term   Term
-	Rent   Currency
+	ID     int `storm:"id,increment" `
+	Tenant int
+	Site   int
+
+	Term Term
+	Rent Currency
 
 	// Rent and Utility services.
 	Services map[string]Service
@@ -99,177 +102,59 @@ func (s Service) Balance() int {
 
 // App implements use cases.
 type App struct {
-	storage.Storage
+	*storm.DB
 	notify.Notifier
 }
 
-// SendInvoice sends the utility service invoice for the given Lease.
-func (app App) SendInvoice(t Tenant, s Site) error {
-	containsSite := func(ent storage.Entity) bool {
-		if lease, ok := ent.(Lease); ok {
-			return lease.Site == s.Number
-		}
-		return false
-	}
-
-	containsTenant := func(ent storage.Entity) bool {
-		if lease, ok := ent.(Lease); ok {
-			return lease.Tenant == t.Name
-		}
-		return false
-	}
-
-	if entity, ok := app.Query(containsSite, containsTenant); ok {
-		if lease, ok := entity.(Lease); ok {
-
-			// Note: Instead of any actual invoice rendering we will just render
-			// utility balance owed.
-			if utilities, ok := lease.Services["utility"]; ok {
-				var (
-					balance = utilities.Balance()
-					dollars = balance % 100
-					cents   = balance - (dollars * 100)
-				)
-
-				if balance < 0 {
-					invoice := fmt.Sprintf("you owe $%2d.%2d in utilities", dollars, cents)
-					if err := app.Notify(t.Contact, invoice); err != nil {
-						return fmt.Errorf("sending invoice: %w", err)
-					}
-				}
-			}
-
-		}
-	}
-	return nil
-}
-
 // CreateLease creates a new lease.
-func (app App) CreateLease(
-	tenant string,
-	site string,
-	term Term,
-	rent Currency,
-) error {
-	containsSite := func(ent storage.Entity) bool {
-		if lease, ok := ent.(*Lease); ok {
-			return lease.Site == site
-		}
-		return false
+func (app App) CreateLease(l *Lease) error {
+	if l.Tenant == 0 {
+		return fmt.Errorf("lease must have a valid tenant")
 	}
-
-	matchesTerm := func(ent storage.Entity) bool {
-		if lease, ok := ent.(*Lease); ok {
-			return lease.Term == term
-		}
-		return false
+	if l.Site == 0 {
+		return fmt.Errorf("lease must have a valid site")
 	}
-
-	tenantExists := func(ent storage.Entity) bool {
-		if t, ok := ent.(*Tenant); ok {
-			if t.Name == tenant {
-				return true
-			}
-		}
-		return false
-	}
-
-	siteExists := func(ent storage.Entity) bool {
-		if s, ok := ent.(*Site); ok {
-			if s.Number == site {
-				return true
-			}
-		}
-		return false
-	}
-
-	if _, ok := app.Query(tenantExists); !ok {
-		return fmt.Errorf("tenant %s does not exist", tenant)
-	}
-
-	if _, ok := app.Query(siteExists); !ok {
-		return fmt.Errorf("site %s does not exist", site)
-	}
-
-	if _, ok := app.Query(containsSite, matchesTerm); ok {
-		return fmt.Errorf("lease conflict: site already leased during this term")
-	}
-
-	lease := Lease{
-		Tenant: tenant,
-		Site:   site,
-		Term:   term,
-		Rent:   rent,
-		Services: map[string]Service{
-			"rent":    {},
-			"utility": {},
-		},
-	}
-
-	if err := app.Create(lease); err != nil {
-		return fmt.Errorf("saving lease: %w", err)
-	}
-
-	return nil
+	return app.Save(l)
 }
 
 // ListSite enters a new, unqiue, leaseable Site.
-func (app App) ListSite(s Site) error {
-	s.Number = strings.TrimSpace(s.Number)
-
-	exists := func(ent storage.Entity) bool {
-		if site, ok := ent.(*Site); ok {
-			return site.Number == s.Number
-		}
-		return false
+func (app App) ListSite(s *Site) error {
+	if len(s.Number) < 1 {
+		return fmt.Errorf("number required")
 	}
-
-	if _, ok := app.Query(exists); ok {
-		return fmt.Errorf("%s already exists", s.Number)
-	}
-
-	if err := app.Create(s); err != nil {
-		return fmt.Errorf("saving site: %w", err)
-	}
-
-	return nil
+	return app.Save(s)
 }
 
 // RegisterTenant enters a new, unique Tenant.
-func (app App) RegisterTenant(t Tenant) error {
-	exists := func(ent storage.Entity) bool {
-		if tenant, ok := ent.(*Tenant); ok {
-			return tenant.Name == t.Name
-		}
-		return false
-	}
-
+func (app App) RegisterTenant(t *Tenant) error {
 	if len(t.Name) < 1 {
 		return fmt.Errorf("name required")
 	}
+	return app.Save(t)
+}
 
-	if _, ok := app.Query(exists); ok {
-		return fmt.Errorf("%s already exists", t.Name)
+func (t Term) String() string {
+	format := func(t time.Time) string {
+		return fmt.Sprintf("%02d/%02d/%04d", t.Day(), t.Month(), t.Year())
 	}
+	return fmt.Sprintf("%s - %s", format(t.Start), format(t.End()))
+}
 
-	if err := app.Create(t); err != nil {
-		return fmt.Errorf("saving tenant: %w", err)
+func (t Term) End() time.Time {
+	return t.Start.Add(time.Hour * 24 * time.Duration(t.Days))
+}
+
+// LeaseComparitor can be used for comparison between lease entities.
+type LeaseComparitor struct {
+	Tenant int
+	Site   int
+	Term   Term
+}
+
+func (l Lease) Cmp() LeaseComparitor {
+	return LeaseComparitor{
+		Tenant: l.Tenant,
+		Site:   l.Site,
+		Term:   l.Term,
 	}
-
-	return nil
-}
-
-// ID specifies the unique identifier.
-func (t Tenant) ID() string {
-	return t.Name
-}
-
-// ID specifies the unique identifier.
-func (s Site) ID() string {
-	return s.Number
-}
-
-// ID specifies the unique identifier.
-func (l Lease) ID() string {
-	return fmt.Sprintf("%s-%s", l.Tenant, l.Site)
 }
