@@ -49,7 +49,7 @@ func (s *Sites) Update(gtx C) {
 		}
 	}
 	if s.RegisterSite.Clicked() {
-		s.Route.To(RouteSiteForm, &avisha.Site{})
+		s.Route.To(RouteSiteForm, nil)
 	}
 }
 

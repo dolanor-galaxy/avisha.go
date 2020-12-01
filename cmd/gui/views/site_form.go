@@ -55,14 +55,20 @@ func (l *SiteForm) Context() (list []layout.Widget) {
 }
 
 func (l *SiteForm) Update(gtx C) {
+	clear := func() {
+		l.Receive(&avisha.Site{})
+		l.site = nil
+	}
 	if l.Submit.Clicked() {
 		if err := l.submit(); err != nil {
 			// give error to app or render under field.
 			log.Printf("listing site form: %v", err)
 		}
+		clear()
 		l.Route.Back()
 	}
 	if l.Cancel.Clicked() {
+		clear()
 		l.Route.Back()
 	}
 }
