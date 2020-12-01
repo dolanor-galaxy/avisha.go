@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/asdine/storm/v3"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/icons"
@@ -24,13 +25,29 @@ import (
 )
 
 func main() {
-	db, err := storm.Open(func() string {
-		db, ok := os.LookupEnv("avisha_db")
-		if !ok {
-			db = "target/db.json"
+	db, err := func() (*storm.DB, error) {
+		db, err := storm.Open(func() string {
+			db, ok := os.LookupEnv("avisha_db")
+			if !ok {
+				db = filepath.Join("target", "db.json")
+				_ = os.Mkdir(filepath.Dir(db), 0777)
+			}
+			return db
+		}())
+		if err != nil {
+			return nil, err
 		}
-		return db
-	}())
+		if err := db.Init(&avisha.Lease{}); err != nil {
+			return nil, err
+		}
+		if err := db.Init(&avisha.Site{}); err != nil {
+			return nil, err
+		}
+		if err := db.Init(&avisha.Tenant{}); err != nil {
+			return nil, err
+		}
+		return db, nil
+	}()
 	if err != nil {
 		log.Fatalf("error: opening database: %v", err)
 	}
