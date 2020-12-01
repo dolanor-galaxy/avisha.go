@@ -115,12 +115,29 @@ func (f *TenantForm) Layout(gtx C) D {
 }
 
 func (f *TenantForm) submit() error {
-	t := avisha.Tenant{
-		Name:    f.Name.Text(),
-		Contact: f.Contact.Text(),
-	}
-	if err := f.App.RegisterTenant(t); err != nil {
-		return fmt.Errorf("registering tenant: %w", err)
+	if f.tenant == nil {
+		if err := f.App.RegisterTenant(avisha.Tenant{
+			Name:    f.Name.Text(),
+			Contact: f.Contact.Text(),
+		}); err != nil {
+			return fmt.Errorf("registering tenant: %w", err)
+		}
+	} else {
+		if err := f.App.Update(&avisha.Tenant{
+			ID:      f.tenant.ID,
+			Name:    f.Name.Text(),
+			Contact: f.Contact.Text(),
+		}); err != nil {
+			return fmt.Errorf("updating tenant: %w", err)
+		}
+		// Allow for zero value contact field.
+		if err := f.App.UpdateField(
+			&avisha.Tenant{ID: f.tenant.ID},
+			"Contact",
+			f.Contact.Text(),
+		); err != nil {
+			return fmt.Errorf("updating tenant: %w", err)
+		}
 	}
 	return nil
 }
