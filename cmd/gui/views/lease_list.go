@@ -1,6 +1,7 @@
 package views
 
 import (
+	"log"
 	"sync"
 	"unsafe"
 
@@ -48,7 +49,7 @@ func (l *Lease) Update(gtx C) {
 		}
 	}
 	if l.CreateLease.Clicked() {
-		l.Route.To(RouteLeaseForm, &avisha.Lease{})
+		l.Route.To(RouteLeaseForm, nil)
 	}
 }
 
@@ -62,13 +63,9 @@ func (l *Lease) Layout(gtx C) D {
 	var (
 		leases []*avisha.Lease
 	)
-	// l.App.List(func(ent storage.Entity) bool {
-	// 	l, ok := ent.(*avisha.Lease)
-	// 	if ok {
-	// 		leases = append(leases, l)
-	// 	}
-	// 	return ok
-	// })
+	if err := l.App.All(&leases); err != nil {
+		log.Printf("loading leases: %v", err)
+	}
 	return l.list.Layout(gtx, len(leases), func(gtx C, index int) D {
 		var (
 			lease  = leases[index]
