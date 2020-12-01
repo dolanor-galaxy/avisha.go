@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"sync"
 	"unsafe"
 
@@ -63,13 +64,9 @@ func (t *Tenants) Layout(gtx C) D {
 	var (
 		tenants []*avisha.Tenant
 	)
-	// t.App.List(func(ent storage.Entity) bool {
-	// 	t, ok := ent.(*avisha.Tenant)
-	// 	if ok {
-	// 		tenants = append(tenants, t)
-	// 	}
-	// 	return ok
-	// })
+	if err := t.App.DB.All(&tenants); err != nil {
+		fmt.Printf("reading tenants: %s\n", err)
+	}
 	return t.list.Layout(gtx, len(tenants), func(gtx C, index int) D {
 		var (
 			tenant = tenants[index]
