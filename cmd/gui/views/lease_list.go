@@ -120,6 +120,14 @@ func (l *Lease) Layout(gtx C) D {
 							)
 						},
 						func(gtx C) D {
+							u := lease.Services["utilities"]
+							return style.ServiceLabel(l.Th, "Utilities", float64(u.Balance())).Layout(gtx)
+						},
+						func(gtx C) D {
+							u := lease.Services["rent"]
+							return style.ServiceLabel(l.Th, "Rent", float64(u.Balance())).Layout(gtx)
+						},
+						func(gtx C) D {
 							lb := material.Label(
 								l.Th.Primary(),
 								unit.Dp(15),
