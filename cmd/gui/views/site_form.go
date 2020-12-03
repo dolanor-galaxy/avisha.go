@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"log"
+	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -17,14 +18,20 @@ import (
 )
 
 type SiteForm struct {
+	// Page state.
 	nav.Route
-	App  *avisha.App
-	Th   *style.Theme
+	App *avisha.App
+	Th  *style.Theme
+
+	// Entity data.
 	site *avisha.Site
 
+	// Form field.
 	Number materials.TextField
-	Submit widget.Clickable
-	Cancel widget.Clickable
+
+	// Actions.
+	SubmitBtn widget.Clickable
+	CancelBtn widget.Clickable
 }
 
 func (l *SiteForm) Title() string {
@@ -54,21 +61,36 @@ func (l *SiteForm) Context() (list []layout.Widget) {
 	return list
 }
 
+// Clear the form fields.
+func (l *SiteForm) Clear() {
+	l.Number.Clear()
+	l.site = nil
+}
+
 func (l *SiteForm) Update(gtx C) {
-	clear := func() {
-		l.Receive(&avisha.Site{})
-		l.site = nil
-	}
-	if l.Submit.Clicked() {
-		if err := l.submit(); err != nil {
-			// give error to app or render under field.
-			log.Printf("listing site form: %v", err)
+	if l.SubmitBtn.Clicked() {
+		if s, ok := l.Submit(); ok {
+			if err := func() error {
+				if create := s.ID == 0; create {
+					if err := l.App.ListSite(&s); err != nil {
+						return fmt.Errorf("listing site: %w", err)
+					}
+				} else {
+					if err := l.App.Update(&s); err != nil {
+						return fmt.Errorf("updating site: %w", err)
+					}
+				}
+				return nil
+			}(); err != nil {
+				log.Printf("%v", err)
+			} else {
+				l.Clear()
+				l.Route.Back()
+			}
 		}
-		clear()
-		l.Route.Back()
 	}
-	if l.Cancel.Clicked() {
-		clear()
+	if l.CancelBtn.Clicked() {
+		l.Clear()
 		l.Route.Back()
 	}
 }
@@ -101,13 +123,13 @@ func (l *SiteForm) Layout(gtx C) D {
 					}.Layout(
 						gtx,
 						layout.Rigid(func(gtx C) D {
-							return material.Button(l.Th.Secondary(), &l.Cancel, "Cancel").Layout(gtx)
+							return material.Button(l.Th.Secondary(), &l.CancelBtn, "Cancel").Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
 						}),
 						layout.Rigid(func(gtx C) D {
-							return material.Button(l.Th.Primary(), &l.Submit, "Submit").Layout(gtx)
+							return material.Button(l.Th.Primary(), &l.SubmitBtn, "Submit").Layout(gtx)
 						}),
 					)
 				})
@@ -115,22 +137,17 @@ func (l *SiteForm) Layout(gtx C) D {
 	)
 }
 
-func (l *SiteForm) submit() error {
-	if l.site == nil {
-		if err := l.App.ListSite(&avisha.Site{
-			Number:   l.Number.Text(),
-			Dwelling: avisha.Cabin,
-		}); err != nil {
-			return fmt.Errorf("listing site: %w", err)
-		}
-	} else {
-		if err := l.App.Update(&avisha.Site{
-			ID:       l.site.ID,
-			Number:   l.Number.Text(),
-			Dwelling: avisha.Cabin,
-		}); err != nil {
-			return fmt.Errorf("updating site: %w", err)
-		}
+// Submit validates form data and returns a boolean to indicate validity.
+func (l *SiteForm) Submit() (s avisha.Site, ok bool) {
+	ok = true
+	if l.site != nil {
+		s.ID = l.site.ID
 	}
-	return nil
+	if n := l.Number.Text(); strings.TrimSpace(n) == "" {
+		l.Number.SetError("required")
+		ok = false
+	} else {
+		s.Number = n
+	}
+	return s, ok
 }
