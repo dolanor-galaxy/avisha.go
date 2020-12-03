@@ -159,7 +159,7 @@ func (f *TenantForm) Submit() (tenant avisha.Tenant, ok bool) {
 	}
 	if name, err := f.validateName(); err != nil {
 		f.Name.SetError(err.Error())
-		defer func() { ok = false }()
+		ok = false
 	} else {
 		tenant.Name = name
 	}

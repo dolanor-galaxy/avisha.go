@@ -177,31 +177,31 @@ func (l *LeaseForm) Submit() (lease avisha.Lease, ok bool) {
 	}
 	if t, err := l.validateTenant(); err != nil {
 		l.Tenant.SetError(err.Error())
-		defer func() { ok = false }()
+		ok = false
 	} else {
 		lease.Tenant = t.ID
 	}
 	if s, err := l.validateSite(); err != nil {
 		l.Site.SetError(err.Error())
-		defer func() { ok = false }()
+		ok = false
 	} else {
 		lease.Site = s.ID
 	}
 	if date, err := l.validateDate(); err != nil {
 		l.Date.SetError(err.Error())
-		defer func() { ok = false }()
+		ok = false
 	} else {
 		lease.Term.Start = date
 	}
 	if days, err := l.validateDays(); err != nil {
 		l.Days.SetError(err.Error())
-		defer func() { ok = false }()
+		ok = false
 	} else {
 		lease.Term.Days = days
 	}
 	if rent, err := l.validateRent(); err != nil {
 		l.Rent.SetError(err.Error())
-		defer func() { ok = false }()
+		ok = false
 	} else {
 		lease.Rent = rent
 	}
