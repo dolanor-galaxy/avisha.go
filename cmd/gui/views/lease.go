@@ -84,7 +84,7 @@ func (p *LeasePage) Update(gtx C) {
 						return fmt.Errorf("creating lease: %w", err)
 					}
 				} else {
-					if err := p.App.Update(lease); err != nil {
+					if err := p.App.Update(&lease); err != nil {
 						return fmt.Errorf("updating lease: %w", err)
 					}
 				}
