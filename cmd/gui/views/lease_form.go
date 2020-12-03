@@ -50,56 +50,46 @@ func (l *LeaseForm) Clear() {
 	l.lease = nil
 }
 
+func (l *LeaseForm) Update(gtx C) {
+	for range l.Tenant.Events() {
+		if _, err := l.validateTenant(); err != nil {
+			l.Tenant.SetError(err.Error())
+		} else {
+			l.Tenant.ClearError()
+		}
+	}
+	for range l.Site.Events() {
+		if _, err := l.validateSite(); err != nil {
+			l.Site.SetError(err.Error())
+		} else {
+			l.Site.ClearError()
+		}
+	}
+	for range l.Date.Events() {
+		if _, err := l.validateDate(); err != nil {
+			l.Date.SetError(err.Error())
+		} else {
+			l.Date.ClearError()
+		}
+	}
+	for range l.Days.Events() {
+		if _, err := l.validateDays(); err != nil {
+			l.Days.SetError(err.Error())
+		} else {
+			l.Days.ClearError()
+		}
+	}
+	for range l.Rent.Events() {
+		if _, err := l.validateRent(); err != nil {
+			l.Rent.SetError(err.Error())
+		} else {
+			l.Rent.ClearError()
+		}
+	}
+}
+
 func (l *LeaseForm) Layout(gtx C, th *style.Theme) D {
-	l.Tenant.Validator = func(text string) string {
-		if l.TenantFinder == nil {
-			return ""
-		}
-		if _, exists := l.TenantFinder(text); !exists {
-			return "not found"
-		}
-		return ""
-	}
-	l.Site.Validator = func(text string) string {
-		if l.SiteFinder == nil {
-			return ""
-		}
-		if _, exists := l.SiteFinder(text); !exists {
-			return "not found"
-		}
-		return ""
-	}
-	l.Date.Validator = func(text string) string {
-		parts := strings.Split(text, "/")
-		if len(parts) != 3 {
-			return "format must be dd/mm/yyy"
-		}
-		for ii, part := range parts {
-			if _, err := strconv.Atoi(part); err != nil {
-				switch ii {
-				case 0:
-					return "day must be a number"
-				case 1:
-					return "month must be a number"
-				case 2:
-					return "year must be a number"
-				}
-			}
-		}
-		return ""
-	}
-	l.Days.Validator = func(text string) string {
-		if _, err := strconv.Atoi(text); err != nil {
-			return "must be a number"
-		}
-		return ""
-	}
-	l.Rent.Validator = func(text string) string {
-		if _, err := strconv.Atoi(text); err != nil {
-			return "must be a number"
-		}
-		return ""
-	}
+	l.Update(gtx)
 	return layout.Flex{
 		Axis: layout.Vertical,
 	}.Layout(
@@ -180,81 +170,101 @@ func (l *LeaseForm) Layout(gtx C, th *style.Theme) D {
 }
 
 // Submit validates the input data and returns a boolean indicating validity.
-//
-// FIXME: figure out why errors wont display when submitting an empty form.
-func (l *LeaseForm) Submit() (*avisha.Lease, bool) {
-	var (
-		err     error
-		ok      bool
-		invalid = true
-		lease   = &avisha.Lease{
-			ID: func() int {
-				if l.lease != nil {
-					return l.lease.ID
-				}
-				return 0
-			}(),
-		}
-	)
-	lease.Term.Start, err = func() (time.Time, error) {
-		s := l.Date.Text()
-		parts := strings.Split(s, "/")
-		if len(parts) != 3 {
-			return time.Time{}, fmt.Errorf("invalid format: must be dd/mm/yyyy")
-		}
-		year, err := strconv.Atoi(parts[2])
-		if err != nil {
-			return time.Time{}, fmt.Errorf("year not a number: %s", parts[2])
-		}
-		month, err := strconv.Atoi(parts[1])
-		if err != nil {
-			return time.Time{}, fmt.Errorf("month not a number: %s", parts[2])
-		}
-		day, err := strconv.Atoi(parts[0])
-		if err != nil {
-			return time.Time{}, fmt.Errorf("day not a number: %s", parts[2])
-		}
-		return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local), nil
-	}()
-	if err != nil {
+func (l *LeaseForm) Submit() (lease avisha.Lease, ok bool) {
+	if l.lease != nil {
+		lease.ID = l.lease.ID
+	}
+	if t, err := l.validateTenant(); err != nil {
+		l.Tenant.SetError(err.Error())
+		defer func() { ok = false }()
+	} else {
+		lease.Tenant = t.ID
+	}
+	if s, err := l.validateSite(); err != nil {
+		l.Site.SetError(err.Error())
+		defer func() { ok = false }()
+	} else {
+		lease.Site = s.ID
+	}
+	if date, err := l.validateDate(); err != nil {
 		l.Date.SetError(err.Error())
+		defer func() { ok = false }()
+	} else {
+		lease.Term.Start = date
 	}
-	lease.Term.Days, err = strconv.Atoi(l.Days.Text())
-	if err != nil {
-		l.Days.SetError("days not a number")
+	if days, err := l.validateDays(); err != nil {
+		l.Days.SetError(err.Error())
+		defer func() { ok = false }()
+	} else {
+		lease.Term.Days = days
 	}
-	lease.Rent, err = func() (uint, error) {
-		n, err := strconv.Atoi(l.Rent.Text())
-		return uint(n), err
-	}()
-	if err != nil {
-		l.Rent.SetError("rent not a number")
+	if rent, err := l.validateRent(); err != nil {
+		l.Rent.SetError(err.Error())
+		defer func() { ok = false }()
+	} else {
+		lease.Rent = rent
 	}
-	lease.Tenant, ok = func() (id int, ok bool) {
-		if find := l.TenantFinder; find != nil {
-			if t, ok := find(l.Tenant.Text()); ok {
-				return t.ID, true
-			} else {
-				l.Tenant.SetError("not found")
-			}
+	return lease, ok
+}
+
+func (l *LeaseForm) validateTenant() (t avisha.Tenant, err error) {
+	if find := l.TenantFinder; find != nil {
+		if t, ok := find(l.Tenant.Text()); ok {
+			return t, nil
+		} else {
+			return t, fmt.Errorf("not found")
 		}
-		return 0, false
-	}()
-	if ok {
-		invalid = false
 	}
-	lease.Site, ok = func() (site int, ok bool) {
-		if find := l.SiteFinder; find != nil {
-			if s, ok := find(l.Site.Text()); ok {
-				return s.ID, true
-			} else {
-				l.Site.SetError("not found")
-			}
+	return t, nil
+}
+
+func (l *LeaseForm) validateSite() (s avisha.Site, err error) {
+	if find := l.SiteFinder; find != nil {
+		if s, ok := find(l.Site.Text()); ok {
+			return s, nil
+		} else {
+			return s, fmt.Errorf("not found")
 		}
-		return 0, false
-	}()
-	if ok {
-		invalid = false
 	}
-	return lease, !invalid && err == nil
+	return s, nil
+}
+
+func (l *LeaseForm) validateDate() (date time.Time, err error) {
+	s := l.Date.Text()
+	parts := strings.Split(s, "/")
+	if len(parts) != 3 {
+		return date, fmt.Errorf("must be dd/mm/yyyy")
+	}
+	year, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return date, fmt.Errorf("year not a number: %s", parts[2])
+	}
+	month, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return date, fmt.Errorf("month not a number: %s", parts[2])
+	}
+	day, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return date, fmt.Errorf("day not a number: %s", parts[2])
+	}
+	return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local), nil
+}
+
+func (l *LeaseForm) validateDays() (days int, err error) {
+	n, err := strconv.Atoi(l.Days.Text())
+	if err != nil {
+		return days, fmt.Errorf("days must be a number")
+	}
+	return n, nil
+}
+
+func (l *LeaseForm) validateRent() (rent uint, err error) {
+	n, err := strconv.Atoi(l.Rent.Text())
+	if err != nil {
+		return rent, fmt.Errorf("rent must be a number")
+	}
+	if n < 0 {
+		return rent, fmt.Errorf("must be a positive number")
+	}
+	return uint(n), nil
 }

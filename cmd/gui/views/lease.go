@@ -80,7 +80,7 @@ func (p *LeasePage) Update(gtx C) {
 		if lease, ok := p.Form.Submit(); ok {
 			if err := func() error {
 				if lease.ID == 0 {
-					if err := p.App.CreateLease(lease); err != nil {
+					if err := p.App.CreateLease(&lease); err != nil {
 						return fmt.Errorf("creating lease: %w", err)
 					}
 				} else {
