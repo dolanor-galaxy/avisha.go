@@ -18,7 +18,7 @@ const (
 	RouteLease      Route = "lease"
 	RouteTenants    Route = "tenants"
 	RouteSites      Route = "sites"
-	RouteLeaseForm  Route = "lease-form"
+	RouteLeasePage  Route = "lease-page"
 	RouteTenantForm Route = "tenant-form"
 	RouteSiteForm   Route = "site-form"
 )

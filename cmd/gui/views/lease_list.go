@@ -16,7 +16,7 @@ import (
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
 
-type Lease struct {
+type LeaseList struct {
 	nav.Route
 	App    *avisha.App
 	Th     *style.Theme
@@ -27,11 +27,11 @@ type Lease struct {
 	CreateLease widget.Clickable
 }
 
-func (l *Lease) Title() string {
+func (l *LeaseList) Title() string {
 	return "Leases"
 }
 
-func (l *Lease) Context() []layout.Widget {
+func (l *LeaseList) Context() []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
 			return material.IconButton(
@@ -43,18 +43,18 @@ func (l *Lease) Context() []layout.Widget {
 	}
 }
 
-func (l *Lease) Update(gtx C) {
+func (l *LeaseList) Update(gtx C) {
 	for _, state := range l.states.List() {
 		if state.Item.Clicked() {
-			l.Route.To(RouteLeaseForm, (*avisha.Lease)(state.Data))
+			l.Route.To(RouteLeasePage, (*avisha.Lease)(state.Data))
 		}
 	}
 	if l.CreateLease.Clicked() {
-		l.Route.To(RouteLeaseForm, nil)
+		l.Route.To(RouteLeasePage, nil)
 	}
 }
 
-func (l *Lease) Layout(gtx C) D {
+func (l *LeaseList) Layout(gtx C) D {
 	l.once.Do(func() {
 		l.list.Axis = layout.Vertical
 		l.list.ScrollToEnd = false
