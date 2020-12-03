@@ -171,6 +171,7 @@ func (l *LeaseForm) Layout(gtx C, th *style.Theme) D {
 
 // Submit validates the input data and returns a boolean indicating validity.
 func (l *LeaseForm) Submit() (lease avisha.Lease, ok bool) {
+	ok = true
 	if l.lease != nil {
 		lease.ID = l.lease.ID
 	}
