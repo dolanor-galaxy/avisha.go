@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"log"
+	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -17,15 +18,21 @@ import (
 )
 
 type TenantForm struct {
+	// Page data.
 	nav.Route
-	App    *avisha.App
-	Th     *style.Theme
+	App *avisha.App
+	Th  *style.Theme
+
+	// Entity data.
 	tenant *avisha.Tenant
 
+	// Form fields.
 	Name    materials.TextField
 	Contact materials.TextField
-	Submit  widget.Clickable
-	Cancel  widget.Clickable
+
+	// Actions.
+	SubmitBtn widget.Clickable
+	CancelBtn widget.Clickable
 }
 
 func (f *TenantForm) Title() string {
@@ -56,21 +63,45 @@ func (f *TenantForm) Context() (list []layout.Widget) {
 	return list
 }
 
+// Clear the form fields.
+func (f *TenantForm) Clear() {
+	f.Name.Clear()
+	f.Contact.Clear()
+	f.tenant = nil
+}
+
 func (f *TenantForm) Update(gtx C) {
-	clear := func() {
-		f.Receive(&avisha.Tenant{})
-		f.tenant = nil
-	}
-	if f.Submit.Clicked() {
-		if err := f.submit(); err != nil {
-			// give error to app or render under field.
-			log.Printf("submitting tenant form: %v", err)
+	if f.SubmitBtn.Clicked() {
+		if t, ok := f.Submit(); ok {
+			if err := func() error {
+				if create := t.ID == 0; create {
+					if err := f.App.RegisterTenant(&t); err != nil {
+						return fmt.Errorf("registering tenant: %w", err)
+					}
+				} else {
+					if err := f.App.Update(&t); err != nil {
+						return fmt.Errorf("updating tenant: %w", err)
+					}
+					// Allow for zero value contact field.
+					if err := f.App.UpdateField(
+						&avisha.Tenant{ID: f.tenant.ID},
+						"Contact",
+						t.Contact,
+					); err != nil {
+						return fmt.Errorf("updating tenant: %w", err)
+					}
+				}
+				return nil
+			}(); err != nil {
+				log.Printf("%v", err)
+			} else {
+				f.Clear()
+				f.Route.Back()
+			}
 		}
-		clear()
-		f.Route.Back()
 	}
-	if f.Cancel.Clicked() {
-		clear()
+	if f.CancelBtn.Clicked() {
+		f.Clear()
 		f.Route.Back()
 	}
 }
@@ -105,13 +136,13 @@ func (f *TenantForm) Layout(gtx C) D {
 					}.Layout(
 						gtx,
 						layout.Rigid(func(gtx C) D {
-							return material.Button(f.Th.Secondary(), &f.Cancel, "Cancel").Layout(gtx)
+							return material.Button(f.Th.Secondary(), &f.CancelBtn, "Cancel").Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
 						}),
 						layout.Rigid(func(gtx C) D {
-							return material.Button(f.Th.Primary(), &f.Submit, "Submit").Layout(gtx)
+							return material.Button(f.Th.Primary(), &f.SubmitBtn, "Submit").Layout(gtx)
 						}),
 					)
 				},
@@ -120,30 +151,26 @@ func (f *TenantForm) Layout(gtx C) D {
 	)
 }
 
-func (f *TenantForm) submit() error {
-	if f.tenant == nil {
-		if err := f.App.RegisterTenant(&avisha.Tenant{
-			Name:    f.Name.Text(),
-			Contact: f.Contact.Text(),
-		}); err != nil {
-			return fmt.Errorf("registering tenant: %w", err)
-		}
-	} else {
-		if err := f.App.Update(&avisha.Tenant{
-			ID:      f.tenant.ID,
-			Name:    f.Name.Text(),
-			Contact: f.Contact.Text(),
-		}); err != nil {
-			return fmt.Errorf("updating tenant: %w", err)
-		}
-		// Allow for zero value contact field.
-		if err := f.App.UpdateField(
-			&avisha.Tenant{ID: f.tenant.ID},
-			"Contact",
-			f.Contact.Text(),
-		); err != nil {
-			return fmt.Errorf("updating tenant: %w", err)
-		}
+// Submit validates the input adata and returns a boolean indicating validity.
+func (f *TenantForm) Submit() (tenant avisha.Tenant, ok bool) {
+	ok = true
+	if f.tenant != nil {
+		tenant.ID = f.tenant.ID
 	}
-	return nil
+	if name, err := f.validateName(); err != nil {
+		f.Name.SetError(err.Error())
+		defer func() { ok = false }()
+	} else {
+		tenant.Name = name
+	}
+	tenant.Contact = f.Contact.Text()
+	return tenant, ok
+}
+
+func (f *TenantForm) validateName() (string, error) {
+	name := f.Name.Text()
+	if strings.TrimSpace(name) == "" {
+		return "", fmt.Errorf("required")
+	}
+	return name, nil
 }
