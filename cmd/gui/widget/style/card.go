@@ -4,6 +4,7 @@ import (
 	"image/color"
 
 	"gioui.org/layout"
+	"gioui.org/op"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/util"
@@ -17,7 +18,23 @@ type Card struct {
 }
 
 func (c Card) Layout(gtx C, th *material.Theme) D {
-	var items = make([]layout.FlexChild, len(c.Content))
+	var (
+		items   = make([]layout.FlexChild, len(c.Content))
+		calls   = make([]op.CallOp, len(c.Content))
+		dimlist = make([]D, len(c.Content))
+		width   = 0
+	)
+	// First pass calculates max width of the card so we can size the divs later.
+	for ii := range c.Content {
+		macro := op.Record(gtx.Ops)
+		dims := c.Content[ii](gtx)
+		call := macro.Stop()
+		if dims.Size.X > width {
+			width = dims.Size.X
+		}
+		calls[ii] = call
+		dimlist[ii] = dims
+	}
 	for ii := range c.Content {
 		ii := ii
 		items[ii] = layout.Rigid(func(gtx C) D {
@@ -29,7 +46,7 @@ func (c Card) Layout(gtx C, th *material.Theme) D {
 					}.Layout(
 						gtx,
 						layout.Rigid(func(gtx C) D {
-							if ii == 0 {
+							if skipFirst := ii == 0; skipFirst {
 								return D{}
 							}
 							return layout.Inset{
@@ -39,7 +56,7 @@ func (c Card) Layout(gtx C, th *material.Theme) D {
 								func(gtx C) D {
 									return widget.Div{
 										Thickness: unit.Dp(1),
-										Length:    unit.Px(float32(gtx.Constraints.Max.X)),
+										Length:    unit.Px(float32(width)),
 										Axis:      layout.Horizontal,
 										Color:     color.NRGBA{A: 100},
 									}.Layout(gtx)
@@ -47,7 +64,9 @@ func (c Card) Layout(gtx C, th *material.Theme) D {
 							)
 						}),
 						layout.Rigid(func(gtx C) D {
-							return c.Content[ii](gtx)
+							// return c.Content[ii](gtx)
+							calls[ii].Add(gtx.Ops)
+							return dimlist[ii]
 						}),
 					)
 				},
