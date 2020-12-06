@@ -19,9 +19,11 @@ func (l *ServiceLabelStyle) Layout(gtx C) D {
 	var (
 		balance = math.Abs(l.Balance)
 		sign    = ""
+		color   = l.Th.Success().Color.Primary
 	)
 	if l.Balance < 0 {
 		sign = "-"
+		color = l.Th.Danger().Color.Primary
 	}
 	return layout.Flex{
 		Axis:      layout.Horizontal,
@@ -32,11 +34,8 @@ func (l *ServiceLabelStyle) Layout(gtx C) D {
 			return material.Label(l.Th.Primary(), l.Th.TextSize, l.Name).Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			lb := material.Label(l.Th.Danger(), l.Th.TextSize, fmt.Sprintf(" %s$%.2f", sign, balance))
-			lb.Color = l.Th.Success().Color.Primary
-			if balance < 0 {
-				lb.Color = l.Th.Danger().Color.Primary
-			}
+			lb := material.Label(l.Th.Primary(), l.Th.TextSize, fmt.Sprintf(" %s$%.2f", sign, balance))
+			lb.Color = color
 			return lb.Layout(gtx)
 		}),
 	)
