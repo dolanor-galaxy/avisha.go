@@ -56,6 +56,8 @@ type Receiver interface {
 // to the previous view.
 //
 // TODO(jfm): more principled approach would be better.
+// If the View interface took a router object the page could simply call Pop on
+// the router instance.
 const RouteBack = "back"
 
 func (r *Router) Pop() {
