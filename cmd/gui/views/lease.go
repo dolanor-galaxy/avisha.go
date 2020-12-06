@@ -232,11 +232,22 @@ func (p *LeasePage) Update(gtx C) {
 
 func (p *LeasePage) Layout(gtx C) D {
 	max := gtx.Px(unit.Dp(700))
-	// IMPROVEMENT: render different contexts under tabs?
+	// @Improvement: render different contexts under tabs?
+	// @Improvement: abstract the breakpoint code; that is the decisions around
+	// layout changes based on viewport size. In this case, the layout changes
+	// when viewport exceeds 700dp.
 	p.Update(gtx)
 	return p.list.Layout(gtx, 1, func(gtx C, _ int) D {
+		cs := &gtx.Constraints
+		if cs.Max.Y > max {
+			cs.Max.Y = max
+		}
 		return layout.UniformInset(unit.Dp(20)).Layout(gtx, func(gtx C) D {
-			return CenteredHorizontal(gtx, func(gtx C) D {
+			container := CenteredHorizontal
+			if gtx.Constraints.Max.X > max {
+				container = Centered
+			}
+			return container(gtx, func(gtx C) D {
 				cs := &gtx.Constraints
 				if cs.Max.X > max {
 					cs.Max.X = max
