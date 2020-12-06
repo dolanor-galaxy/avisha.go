@@ -36,7 +36,7 @@ type Div struct {
 }
 
 func (d Div) Layout(gtx C) D {
-	// Draw a line as a very line.
+	// Draw a line as a very thin rectangle.
 	var sz image.Point
 	switch d.Axis {
 	case layout.Horizontal:
