@@ -63,10 +63,9 @@ func main() {
 		Th:     th,
 		Router: nav.Router{
 			Routes: map[string]nav.View{
-				views.RouteLease:   &views.LeaseList{App: &api, Th: th},
-				views.RouteTenants: &views.Tenants{App: &api, Th: th},
-				views.RouteSites:   &views.Sites{App: &api, Th: th},
-				// views.RouteLeasePage:  &views.LeaseForm{App: &api, Th: th},
+				views.RouteLease:      &views.LeaseList{App: &api, Th: th},
+				views.RouteTenants:    &views.Tenants{App: &api, Th: th},
+				views.RouteSites:      &views.Sites{App: &api, Th: th},
 				views.RouteLeasePage:  &views.LeasePage{App: &api, Th: th},
 				views.RouteTenantForm: &views.TenantForm{App: &api, Th: th},
 				views.RouteSiteForm:   &views.SiteForm{App: &api, Th: th},
