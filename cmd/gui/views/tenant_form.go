@@ -108,47 +108,49 @@ func (f *TenantForm) Update(gtx C) {
 
 func (f *TenantForm) Layout(gtx C) D {
 	f.Update(gtx)
-	return layout.Flex{
-		Axis: layout.Vertical,
-	}.Layout(
-		gtx,
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{
-				Axis: layout.Vertical,
-			}.Layout(
-				gtx,
-				layout.Rigid(func(gtx C) D {
-					return f.Name.Layout(gtx, f.Th.Primary(), "Name")
-				}),
-				layout.Rigid(func(gtx C) D {
-					return f.Contact.Layout(gtx, f.Th.Primary(), "Contact")
-				}),
-			)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{
-				Top: unit.Dp(10),
-			}.Layout(
-				gtx,
-				func(gtx C) D {
-					return layout.Flex{
-						Axis: layout.Horizontal,
-					}.Layout(
-						gtx,
-						layout.Rigid(func(gtx C) D {
-							return material.Button(f.Th.Secondary(), &f.CancelBtn, "Cancel").Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
-						}),
-						layout.Rigid(func(gtx C) D {
-							return material.Button(f.Th.Primary(), &f.SubmitBtn, "Submit").Layout(gtx)
-						}),
-					)
-				},
-			)
-		}),
-	)
+	return layout.UniformInset(unit.Dp(20)).Layout(gtx, func(gtx C) D {
+		return layout.Flex{
+			Axis: layout.Vertical,
+		}.Layout(
+			gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{
+					Axis: layout.Vertical,
+				}.Layout(
+					gtx,
+					layout.Rigid(func(gtx C) D {
+						return f.Name.Layout(gtx, f.Th.Primary(), "Name")
+					}),
+					layout.Rigid(func(gtx C) D {
+						return f.Contact.Layout(gtx, f.Th.Primary(), "Contact")
+					}),
+				)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{
+					Top: unit.Dp(10),
+				}.Layout(
+					gtx,
+					func(gtx C) D {
+						return layout.Flex{
+							Axis: layout.Horizontal,
+						}.Layout(
+							gtx,
+							layout.Rigid(func(gtx C) D {
+								return material.Button(f.Th.Secondary(), &f.CancelBtn, "Cancel").Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
+							}),
+							layout.Rigid(func(gtx C) D {
+								return material.Button(f.Th.Primary(), &f.SubmitBtn, "Submit").Layout(gtx)
+							}),
+						)
+					},
+				)
+			}),
+		)
+	})
 }
 
 // Submit validates the input adata and returns a boolean indicating validity.

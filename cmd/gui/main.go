@@ -111,6 +111,7 @@ type UI struct {
 	Th     *style.Theme
 	Router nav.Router
 	Rail   style.NavRail
+	Modal  layout.Widget
 }
 
 func (ui *UI) Loop() error {
@@ -183,21 +184,22 @@ func (ui *UI) Layout(gtx C) D {
 					return layout.Stack{}.Layout(
 						gtx,
 						layout.Expanded(func(gtx C) D {
-							return util.DrawRect(gtx, color.NRGBA{R: 250, G: 250, B: 250, A: 255}, gtx.Constraints.Max, unit.Dp(0))
+							return util.DrawRect(
+								gtx,
+								color.NRGBA{R: 240, G: 240, B: 240, A: 255},
+								gtx.Constraints.Max,
+								unit.Dp(0))
 						}),
 						layout.Stacked(func(gtx C) D {
-							return layout.UniformInset(unit.Dp(10)).Layout(
-								gtx,
-								func(gtx C) D {
-									return ui.Router.Layout(gtx)
-								},
-							)
+							return ui.Router.Layout(gtx)
+						}),
+						layout.Expanded(func(gtx C) D {
+							if ui.Modal == nil {
+								return D{}
+							}
+							return ui.Modal(gtx)
 						}),
 					)
-					// FIXME: nested lists do not scroll: how to scroll both list and page?
-					// return p.List.Layout(gtx, 1, func(gtx C, _ int) D {
-					// 	return p.Router.Layout(gtx)
-					// })
 				}),
 			)
 		}),

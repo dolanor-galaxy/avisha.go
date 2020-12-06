@@ -52,6 +52,12 @@ type Receiver interface {
 	Receive(data interface{})
 }
 
+// Modaler is to be rendered atop everything else.
+// This lets a view specify something to render globally.
+type Modaler interface {
+	Modal(gtx C) D
+}
+
 // RouteBack is a special route that tells the Router to route
 // to the previous view.
 //
@@ -99,7 +105,18 @@ func (r *Router) Update(gtx C) {
 // Layout the active route.
 func (r *Router) Layout(gtx C) D {
 	r.Update(gtx)
-	return r.Active().Layout(gtx)
+	return layout.Stack{}.Layout(
+		gtx,
+		layout.Stacked(func(gtx C) D {
+			return r.Active().Layout(gtx)
+		}),
+		layout.Expanded(func(gtx C) D {
+			if m, ok := r.Active().(Modaler); ok {
+				return m.Modal(gtx)
+			}
+			return D{}
+		}),
+	)
 }
 
 func (r *Router) Name() string {
