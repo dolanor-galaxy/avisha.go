@@ -16,6 +16,8 @@ import (
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
 
+// TODO: Cap width for list items for desktop view and pack into columns?
+// TODO: Add search and filters
 type LeaseList struct {
 	nav.Route
 	App    *avisha.App

@@ -87,6 +87,16 @@ type Service struct {
 	Debits  []Currency
 }
 
+// Credit record a credit of currency.
+func (s *Service) Credit(amount Currency) {
+	s.Credits = append(s.Credits, amount)
+}
+
+// Debit records a debit of currency.
+func (s *Service) Debit(amount Currency) {
+	s.Debits = append(s.Debits, amount)
+}
+
 // Balance calculates the Balance of the Service.
 func (s Service) Balance() int {
 	credits := 0
@@ -131,6 +141,36 @@ func (app App) RegisterTenant(t *Tenant) error {
 		return fmt.Errorf("name required")
 	}
 	return app.Save(t)
+}
+
+// PayService records a payment for some service on a lease.
+func (app App) PayService(leaseID int, service string, amount uint) error {
+	var l Lease
+	if err := app.One("ID", leaseID, &l); err != nil {
+		return fmt.Errorf("finding lease: %w", err)
+	}
+	if l.Services == nil {
+		l.Services = make(map[string]Service)
+	}
+	s := l.Services[service]
+	s.Credit(amount)
+	l.Services[service] = s
+	return app.Save(&l)
+}
+
+// BillService records a debt for some service on a lease.
+func (app App) BillService(leaseID int, service string, amount uint) error {
+	var l Lease
+	if err := app.One("ID", leaseID, &l); err != nil {
+		return fmt.Errorf("finding lease: %w", err)
+	}
+	if l.Services == nil {
+		l.Services = make(map[string]Service)
+	}
+	s := l.Services[service]
+	s.Debit(amount)
+	l.Services[service] = s
+	return app.Save(&l)
 }
 
 func (t Term) String() string {
