@@ -128,26 +128,12 @@ type Container struct {
 	layout.List
 }
 
-// @Todo: implement scrolling. Using list is tricky because it simulates an
+// @Todo Implement scrolling. Using list is tricky because it simulates an
 // infinite Y max.
+// @Todo Research good UX for big resolutions.
 func (c Container) Layout(gtx C, w layout.Widget) D {
-	c.List.Axis = layout.Vertical
 	breakpoint := gtx.Px(c.BreakPoint)
-	// if c.Scroll {
-	// 	return c.List.Layout(gtx, 1, func(gtx C, _ int) D {
-	// 		return Centered(gtx, func(gtx C) D {
-	// 			cs := &gtx.Constraints
-	// 			if c.Constrain && cs.Max.X > breakpoint {
-	// 				cs.Max.X = breakpoint
-	// 			}
-	// 			if c.Constrain && cs.Max.Y > breakpoint {
-	// 				cs.Max.Y = breakpoint
-	// 			}
-	// 			return w(gtx)
-	// 		})
-	// 	})
-	// }
-	return Centered(gtx, func(gtx C) D {
+	return CenteredHorizontal(gtx, func(gtx C) D {
 		cs := &gtx.Constraints
 		if c.Constrain && cs.Max.X > breakpoint {
 			cs.Max.X = breakpoint
