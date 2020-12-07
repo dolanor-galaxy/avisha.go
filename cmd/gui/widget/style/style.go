@@ -135,8 +135,11 @@ func (c Container) Layout(gtx C, w layout.Widget) D {
 	breakpoint := gtx.Px(c.BreakPoint)
 	return CenteredHorizontal(gtx, func(gtx C) D {
 		cs := &gtx.Constraints
-		if c.Constrain && cs.Max.X > breakpoint {
-			cs.Max.X = breakpoint
+		if cs.Max.X > breakpoint && breakpoint > 0 {
+			if c.Constrain {
+				cs.Max.X = breakpoint
+			}
+			return CenteredVertical(gtx, w)
 		}
 		return w(gtx)
 	})
