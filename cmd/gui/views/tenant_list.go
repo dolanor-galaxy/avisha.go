@@ -67,26 +67,30 @@ func (t *Tenants) Layout(gtx C) D {
 		tenants []*avisha.Tenant
 	)
 	if err := t.App.DB.All(&tenants); err != nil {
-		fmt.Printf("reading tenants: %s\n", err)
+		fmt.Printf("error: loading tenants: %s\n", err)
 	}
-	return t.list.Layout(gtx, len(tenants), func(gtx C, index int) D {
-		var (
-			tenant = tenants[index]
-			state  = t.states.Next(unsafe.Pointer(tenant))
-			active = false
-		)
-		return style.ListItem(
-			gtx,
-			t.Th.Primary(),
-			&state.Item,
-			&state.Hover,
-			active,
-			func(gtx C) D {
-				return material.Label(
-					t.Th.Primary(),
-					unit.Dp(20),
-					tenant.Name,
-				).Layout(gtx)
-			})
+	return style.Container{
+		BreakPoint: unit.Dp(0),
+	}.Layout(gtx, func(gtx C) D {
+		return t.list.Layout(gtx, len(tenants), func(gtx C, index int) D {
+			var (
+				tenant = tenants[index]
+				state  = t.states.Next(unsafe.Pointer(tenant))
+				active = false
+			)
+			return style.ListItem(
+				gtx,
+				t.Th.Primary(),
+				&state.Item,
+				&state.Hover,
+				active,
+				func(gtx C) D {
+					return material.Label(
+						t.Th.Primary(),
+						unit.Dp(20),
+						tenant.Name,
+					).Layout(gtx)
+				})
+		})
 	})
 }
