@@ -15,15 +15,18 @@ import (
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
 
+// Sites shows all active sites that can be leased to a tenant.
 type Sites struct {
 	nav.Route
-	App    *avisha.App
-	Th     *style.Theme
+
+	App *avisha.App
+	Th  *style.Theme
+
+	RegisterSite widget.Clickable
+
 	list   layout.List
 	states States
 	once   sync.Once
-
-	RegisterSite widget.Clickable
 }
 
 func (s *Sites) Title() string {
