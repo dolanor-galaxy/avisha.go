@@ -18,13 +18,15 @@ import (
 // Tenants displays a list of Tenants and provides controls for editing them.
 type Tenants struct {
 	nav.Route
-	App    *avisha.App
-	Th     *style.Theme
+
+	App *avisha.App
+	Th  *style.Theme
+
+	RegisterTenant widget.Clickable
+
 	list   layout.List
 	states States
 	once   sync.Once
-
-	RegisterTenant widget.Clickable
 }
 
 func (t *Tenants) Title() string {
