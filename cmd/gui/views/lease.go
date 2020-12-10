@@ -52,7 +52,7 @@ func (p *LeasePage) Receive(data interface{}) {
 		return s, err == nil
 	}
 	if lease, ok := data.(*avisha.Lease); ok && lease != nil {
-		// IMPROVEMENT: use one source of lease data.
+		// @Improvement: use one source of lease data.
 		// Note: this just copies the data; one copy goes to the form, and one
 		// to the page.
 		p.lease = *lease
