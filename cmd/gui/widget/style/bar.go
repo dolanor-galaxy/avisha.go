@@ -37,12 +37,12 @@ func (bar TopBar) Layout(gtx C, title string, actions ...layout.Widget) D {
 					return D{Size: gtx.Constraints.Min}
 				}),
 			}
-			// TODO: handle overflow (when actions don't fit the bar).
+			// @Todo: handle overflow (when actions don't fit the bar).
 			// - Detect overflow (dim calcs probably)
 			// - Render icon button
 			// - Display a list of overflowed actions when clicked
 			//
-			// TODO: auto centering of action content.
+			// @Todo: auto centering of action content.
 			// Atm insets are hard-coded, thus actions have to know the bar height
 			// and if bar height changes then actions would need to change.
 			for _, action := range actions {

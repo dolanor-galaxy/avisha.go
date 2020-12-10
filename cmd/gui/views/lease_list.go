@@ -16,8 +16,8 @@ import (
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
 
-// TODO: Cap width for list items for desktop view and pack into columns?
-// TODO: Add search and filters
+// @Todo: Cap width for list items for desktop view and pack into columns?
+// @Todo: Add search and filters
 type LeaseList struct {
 	nav.Route
 	App    *avisha.App
@@ -77,7 +77,7 @@ func (l *LeaseList) Layout(gtx C) D {
 			tenant avisha.Tenant
 			site   avisha.Site
 		)
-		// TODO: handle data loading errors by
+		// @Todo: handle data loading errors by
 		// - Displaying a message to the user that something went wrong.
 		// - Logging error (it's a system bug, not a user error) to service.
 		// - Generate bug report?

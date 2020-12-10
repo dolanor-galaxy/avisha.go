@@ -40,7 +40,7 @@ func (page *LeasePage) Title() string {
 	return "Lease"
 }
 
-// TODO: route back on error?
+// @Todo: route back on error?
 func (p *LeasePage) Receive(data interface{}) {
 	p.lease = avisha.Lease{}
 	p.Form.TenantFinder = func(name string) (t avisha.Tenant, ok bool) {

@@ -61,7 +61,7 @@ type Modaler interface {
 // RouteBack is a special route that tells the Router to route
 // to the previous view.
 //
-// TODO(jfm): more principled approach would be better.
+// @Todo(jfm): more principled approach would be better.
 // If the View interface took a router object the page could simply call Pop on
 // the router instance.
 const RouteBack = "back"
