@@ -215,10 +215,11 @@ func (p *LeasePage) Update(gtx C) {
 		}
 	}
 	if p.Dialog.Cancel.Clicked() {
+		p.Dialog.Input.Clear()
 		p.modal = nil
 	}
 	if p.modal != nil {
-		// IMPROVEMENT: implies that modal must be rendering a dialog; thus any
+		// @Improvement: implies that modal must be rendering a dialog; thus any
 		// other modal content will call focus on the dialog.
 		// 1. does this matter?
 		// 2. best way to make this dep explicit?
