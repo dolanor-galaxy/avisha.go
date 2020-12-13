@@ -52,6 +52,9 @@ func main() {
 		if err := db.Init(&avisha.Tenant{}); err != nil {
 			return nil, err
 		}
+		if err := db.Init(&avisha.UtilityInvoice{}); err != nil {
+			return nil, err
+		}
 		return db, nil
 	}()
 	if err != nil {

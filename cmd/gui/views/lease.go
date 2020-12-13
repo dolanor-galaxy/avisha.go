@@ -30,7 +30,8 @@ type LeasePage struct {
 	PayRent     widget.Clickable
 	BillRent    widget.Clickable
 
-	Dialog style.Dialog
+	Dialog               style.Dialog
+	UtilitiesInvoiceForm UtilitiesInvoiceForm
 
 	modal layout.Widget
 	lease avisha.Lease
@@ -71,6 +72,7 @@ func (p *LeasePage) Receive(data interface{}) {
 		p.Form.Rent.SetText(strconv.Itoa(int(p.Form.lease.Rent)))
 		start := lease.Term.Start
 		p.Form.Date.SetText(fmt.Sprintf("%d/%d/%d", start.Day(), start.Month(), start.Year()))
+		p.UtilitiesInvoiceForm.Clear()
 	}
 }
 
@@ -146,10 +148,7 @@ func (p *LeasePage) Update(gtx C) {
 		p.Dialog.Context = "bill-utilities"
 		p.modal = func(gtx C) D {
 			return style.ModalDialog(gtx, p.Th, unit.Dp(700), "Bill Utilities", func(gtx C) D {
-				p.Dialog.Input.Prefix = func(gtx C) D {
-					return material.Label(p.Th.Primary(), p.Th.TextSize, "$").Layout(gtx)
-				}
-				return p.Dialog.Layout(gtx, p.Th.Primary(), "Amount")
+				return p.UtilitiesInvoiceForm.Layout(gtx, p.Th)
 			})
 		}
 	}
@@ -216,6 +215,27 @@ func (p *LeasePage) Update(gtx C) {
 	}
 	if p.Dialog.Cancel.Clicked() {
 		p.Dialog.Input.Clear()
+		p.modal = nil
+	}
+	if p.UtilitiesInvoiceForm.SubmitBtn.Clicked() {
+		if inv, ok := p.UtilitiesInvoiceForm.Submit(); ok {
+			inv.Lease = p.lease.ID
+			if err := p.App.Save(&inv); err != nil {
+				log.Printf("saving invoice: %v", err)
+			}
+			if err := p.App.BillService(
+				p.lease.ID,
+				"utilities",
+				uint(inv.UnitCost*uint(inv.UnitsConsumed)),
+			); err != nil {
+				log.Printf("billing service: %v", err)
+			}
+		}
+		p.UtilitiesInvoiceForm.Clear()
+		p.modal = nil
+	}
+	if p.UtilitiesInvoiceForm.CancelBtn.Clicked() {
+		p.UtilitiesInvoiceForm.Clear()
 		p.modal = nil
 	}
 	if p.modal != nil {

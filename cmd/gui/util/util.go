@@ -14,6 +14,7 @@ import (
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
+	"github.com/jackmordaunt/avisha-fn"
 )
 
 type (
@@ -75,4 +76,15 @@ func ParseDate(s string) (date time.Time, err error) {
 		return date, fmt.Errorf("day not a number: %s", parts[2])
 	}
 	return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local), nil
+}
+
+type UtililityInvoiceDocument struct {
+	Lease  avisha.Lease
+	Tenant avisha.Tenant
+	Site   avisha.Site
+	avisha.UtilityInvoice
+}
+
+func (doc *UtililityInvoiceDocument) Render() ([]byte, error) {
+	return nil, nil
 }
