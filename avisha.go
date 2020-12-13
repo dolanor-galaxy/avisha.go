@@ -186,7 +186,10 @@ func (app App) PayService(leaseID int, service string, amount uint) error {
 	s := l.Services[service]
 	s.Ledger.Credit(amount)
 	l.Services[service] = s
-	return app.Save(&l)
+	if err := app.markInvoices(leaseID, s); err != nil {
+		return fmt.Errorf("marking invoices: %w", err)
+	}
+	return app.Update(&l)
 }
 
 // BillService records a debt for some service on a lease.
@@ -201,7 +204,43 @@ func (app App) BillService(leaseID int, service string, amount uint) error {
 	s := l.Services[service]
 	s.Ledger.Debit(amount)
 	l.Services[service] = s
-	return app.Save(&l)
+	if err := app.markInvoices(leaseID, s); err != nil {
+		return fmt.Errorf("marking invoices: %w", err)
+	}
+	return app.Update(&l)
+}
+
+// markInvoices marks invoices for a given service as paid, starting from oldest
+// first.
+func (app App) markInvoices(leaseID int, service Service) error {
+	var (
+		total    int
+		invoices []*UtilityInvoice
+	)
+	if err := app.Select(q.Eq("Lease", leaseID)).OrderBy("ID").Find(&invoices); err != nil {
+		return fmt.Errorf("loading invoices: %w", err)
+	}
+	for _, credit := range service.Ledger.Credits {
+		total += int(credit)
+	}
+	// Pay all the invoices we can, marking them paid as of now if they weren't
+	// marked already.
+	//
+	// @Fix this is kinda hacky. Think about how payments and invoices should
+	// interact.
+	for _, inv := range invoices {
+		if total < int(inv.Bill) {
+			break
+		}
+		if inv.Paid == (time.Time{}) {
+			inv.Paid = time.Now()
+		}
+		if err := app.Update(inv); err != nil {
+			return fmt.Errorf("update: %w", err)
+		}
+		total -= int(inv.Bill)
+	}
+	return nil
 }
 
 func (t Term) String() string {
