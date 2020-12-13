@@ -69,28 +69,24 @@ func (s *Sites) Layout(gtx C) D {
 	if err := s.App.All(&sites); err != nil {
 		fmt.Printf("error: loading sites: %v\n", err)
 	}
-	return style.Container{
-		BreakPoint: unit.Dp(0),
-	}.Layout(gtx, func(gtx C) D {
-		return s.list.Layout(gtx, len(sites), func(gtx C, index int) D {
-			var (
-				site   = sites[index]
-				state  = s.states.Next(unsafe.Pointer(site))
-				active = false
-			)
-			return style.ListItem(
-				gtx,
-				s.Th.Primary(),
-				&state.Item,
-				&state.Hover,
-				active,
-				func(gtx C) D {
-					return material.Label(
-						s.Th.Primary(),
-						unit.Dp(20),
-						site.Number,
-					).Layout(gtx)
-				})
-		})
+	return s.list.Layout(gtx, len(sites), func(gtx C, index int) D {
+		var (
+			site   = sites[index]
+			state  = s.states.Next(unsafe.Pointer(site))
+			active = false
+		)
+		return style.ListItem(
+			gtx,
+			s.Th.Primary(),
+			&state.Item,
+			&state.Hover,
+			active,
+			func(gtx C) D {
+				return material.Label(
+					s.Th.Primary(),
+					unit.Dp(20),
+					site.Number,
+				).Layout(gtx)
+			})
 	})
 }

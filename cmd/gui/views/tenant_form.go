@@ -108,53 +108,51 @@ func (f *TenantForm) Update(gtx C) {
 
 func (f *TenantForm) Layout(gtx C) D {
 	f.Update(gtx)
+	if breakpoint := gtx.Px(unit.Dp(700)); gtx.Constraints.Max.X > breakpoint {
+		gtx.Constraints.Max.X = breakpoint
+	}
 	return layout.UniformInset(unit.Dp(20)).Layout(gtx, func(gtx C) D {
-		return style.Container{
-			BreakPoint: unit.Dp(700),
-			Constrain:  true,
-		}.Layout(gtx, func(gtx C) D {
-			return layout.Flex{
-				Axis: layout.Vertical,
-			}.Layout(
-				gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{
-						Axis: layout.Vertical,
-					}.Layout(
-						gtx,
-						layout.Rigid(func(gtx C) D {
-							return f.Name.Layout(gtx, f.Th.Primary(), "Name")
-						}),
-						layout.Rigid(func(gtx C) D {
-							return f.Contact.Layout(gtx, f.Th.Primary(), "Contact")
-						}),
-					)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Top: unit.Dp(10),
-					}.Layout(
-						gtx,
-						func(gtx C) D {
-							return layout.Flex{
-								Axis: layout.Horizontal,
-							}.Layout(
-								gtx,
-								layout.Rigid(func(gtx C) D {
-									return material.Button(f.Th.Secondary(), &f.CancelBtn, "Cancel").Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
-								}),
-								layout.Rigid(func(gtx C) D {
-									return material.Button(f.Th.Primary(), &f.SubmitBtn, "Submit").Layout(gtx)
-								}),
-							)
-						},
-					)
-				}),
-			)
-		})
+		return layout.Flex{
+			Axis: layout.Vertical,
+		}.Layout(
+			gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{
+					Axis: layout.Vertical,
+				}.Layout(
+					gtx,
+					layout.Rigid(func(gtx C) D {
+						return f.Name.Layout(gtx, f.Th.Primary(), "Name")
+					}),
+					layout.Rigid(func(gtx C) D {
+						return f.Contact.Layout(gtx, f.Th.Primary(), "Contact")
+					}),
+				)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{
+					Top: unit.Dp(10),
+				}.Layout(
+					gtx,
+					func(gtx C) D {
+						return layout.Flex{
+							Axis: layout.Horizontal,
+						}.Layout(
+							gtx,
+							layout.Rigid(func(gtx C) D {
+								return material.Button(f.Th.Secondary(), &f.CancelBtn, "Cancel").Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
+							}),
+							layout.Rigid(func(gtx C) D {
+								return material.Button(f.Th.Primary(), &f.SubmitBtn, "Submit").Layout(gtx)
+							}),
+						)
+					},
+				)
+			}),
+		)
 	})
 }
 
