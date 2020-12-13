@@ -56,7 +56,7 @@ func main() {
 		DB:       db,
 		Notifier: &notify.Console{},
 	}
-	w := app.NewWindow(app.Title("Avisha"))
+	w := app.NewWindow(app.Title("Avisha"), app.MinSize(unit.Dp(400), unit.Dp(400)))
 	th := style.NewTheme(style.BootstrapPalette)
 	ui := &UI{
 		Window: w,
