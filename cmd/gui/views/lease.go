@@ -474,7 +474,7 @@ func (p *LeasePage) LayoutInvoiceList(gtx C) D {
 										invoice.Issued.Year()),
 								).Layout(gtx)
 							}),
-							layout.Flexed(1, func(gtx C) D {
+							layout.Rigid(func(gtx C) D {
 								var (
 									badge = "PAID"
 									c     = p.Th.Success().Color.Primary
