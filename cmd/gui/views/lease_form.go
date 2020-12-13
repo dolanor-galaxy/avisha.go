@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"strconv"
-	"strings"
 	"time"
 
 	"gioui.org/layout"
@@ -12,6 +11,7 @@ import (
 	"gioui.org/widget/material"
 	"git.sr.ht/~whereswaldon/materials"
 	"github.com/jackmordaunt/avisha-fn"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/util"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
@@ -231,24 +231,7 @@ func (l *LeaseForm) validateSite() (s avisha.Site, err error) {
 }
 
 func (l *LeaseForm) validateDate() (date time.Time, err error) {
-	s := l.Date.Text()
-	parts := strings.Split(s, "/")
-	if len(parts) != 3 {
-		return date, fmt.Errorf("must be dd/mm/yyyy")
-	}
-	year, err := strconv.Atoi(parts[2])
-	if err != nil {
-		return date, fmt.Errorf("year not a number: %s", parts[2])
-	}
-	month, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return date, fmt.Errorf("month not a number: %s", parts[2])
-	}
-	day, err := strconv.Atoi(parts[0])
-	if err != nil {
-		return date, fmt.Errorf("day not a number: %s", parts[2])
-	}
-	return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local), nil
+	return util.ParseDate(l.Date.Text())
 }
 
 func (l *LeaseForm) validateDays() (days int, err error) {

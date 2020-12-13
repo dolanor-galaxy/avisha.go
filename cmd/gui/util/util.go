@@ -1,8 +1,12 @@
 package util
 
 import (
+	"fmt"
 	"image"
 	"image/color"
+	"strconv"
+	"strings"
+	"time"
 
 	"gioui.org/f32"
 	"gioui.org/layout"
@@ -50,4 +54,25 @@ func DrawRect(gtx C, background color.NRGBA, size image.Point, radii unit.Value)
 	}
 	paint.PaintOp{}.Add(gtx.Ops)
 	return layout.Dimensions{Size: size}
+}
+
+// ParseDate parses a time object from a textual dd/mm/yyyy format.
+func ParseDate(s string) (date time.Time, err error) {
+	parts := strings.Split(s, "/")
+	if len(parts) != 3 {
+		return date, fmt.Errorf("must be dd/mm/yyyy")
+	}
+	year, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return date, fmt.Errorf("year not a number: %s", parts[2])
+	}
+	month, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return date, fmt.Errorf("month not a number: %s", parts[2])
+	}
+	day, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return date, fmt.Errorf("day not a number: %s", parts[2])
+	}
+	return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local), nil
 }
