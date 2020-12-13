@@ -214,18 +214,3 @@ func (t Term) String() string {
 func (t Term) End() time.Time {
 	return t.Start.Add(time.Hour * 24 * time.Duration(t.Days))
 }
-
-// LeaseComparitor can be used for comparison between lease entities.
-type LeaseComparitor struct {
-	Tenant int
-	Site   int
-	Term   Term
-}
-
-func (l Lease) Cmp() LeaseComparitor {
-	return LeaseComparitor{
-		Tenant: l.Tenant,
-		Site:   l.Site,
-		Term:   l.Term,
-	}
-}
