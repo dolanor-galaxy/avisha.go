@@ -1,7 +1,9 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"image"
 	"image/color"
 	"strconv"
@@ -108,13 +110,34 @@ func FieldRequired(s string) (string, error) {
 	return s, nil
 }
 
-type UtililityInvoiceDocument struct {
+// FlexStrategy renders flexed with the given weight if the axis matches.
+// Otherwise the widget is rendered rigid and weight is ignored.
+func FlexStrategy(weight float32, flex, actual layout.Axis, w layout.Widget) layout.FlexChild {
+	if flex == actual {
+		return layout.Flexed(weight, w)
+	}
+	return layout.Rigid(w)
+}
+
+// UtilityInvoiceDocument renders utility invoices to an html document.
+type UtilityInvoiceDocument struct {
 	Lease  avisha.Lease
 	Tenant avisha.Tenant
 	Site   avisha.Site
 	avisha.UtilityInvoice
 }
 
-func (doc *UtililityInvoiceDocument) Render() ([]byte, error) {
-	return nil, nil
+// Render the document into a buffer.
+func (doc *UtilityInvoiceDocument) Render() (*bytes.Buffer, error) {
+	tmpl, err := template.
+		New("utility-invoice-document").
+		Parse(strings.TrimSpace(`@Todo write up invoice template!`))
+	if err != nil {
+		return nil, fmt.Errorf("parsing template: %w", err)
+	}
+	by := new(bytes.Buffer)
+	if err := tmpl.Execute(by, doc); err != nil {
+		return nil, fmt.Errorf("executing template: %w", err)
+	}
+	return by, nil
 }

@@ -6,13 +6,18 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
+	"unsafe"
 
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
+	"github.com/asdine/storm/v3"
+	"github.com/asdine/storm/v3/q"
 	"github.com/jackmordaunt/avisha-fn"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/util"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
@@ -35,6 +40,9 @@ type LeasePage struct {
 
 	modal layout.Widget
 	lease avisha.Lease
+
+	states      States
+	invoiceList layout.List
 }
 
 func (page *LeasePage) Title() string {
@@ -237,144 +245,256 @@ func (p *LeasePage) Update(gtx C) {
 	}
 }
 
+// @Todo Make navigation independent of the details form.
+// It doesn't make that much sense to navigate back on form cancel in this
+// context.
+// @Todo Make details form read-only until edit button is clicked.
 func (p *LeasePage) Layout(gtx C) D {
 	// @Improvement: render different contexts under tabs?
 	p.Update(gtx)
-	return layout.UniformInset(unit.Dp(20)).Layout(gtx, func(gtx C) D {
-		return style.Container{
-			BreakPoint: unit.Dp(700),
-			Constrain:  true,
-			// Scroll:     true,
-		}.Layout(gtx, func(gtx C) D {
-			return layout.Stack{}.Layout(
-				gtx,
-				layout.Stacked(func(gtx C) D {
-					return layout.Flex{
-						Axis: layout.Vertical,
-					}.Layout(
-						gtx,
-						layout.Rigid(func(gtx C) D {
-							if p.lease.ID == 0 {
-								return D{}
-							}
-							return layout.Flex{
-								Axis: layout.Vertical,
-							}.Layout(
-								gtx,
-								layout.Rigid(func(gtx C) D {
-									return material.Label(p.Th.Primary(), unit.Dp(20), "Services").Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									return D{Size: image.Point{Y: gtx.Px(unit.Dp(10))}}
-								}),
-								layout.Rigid(func(gtx C) D {
-									return p.LayoutServices(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									return D{Size: image.Point{Y: gtx.Px(unit.Dp(10))}}
-								}),
-							)
-						}),
-						layout.Rigid(func(gtx C) D {
-							return material.Label(p.Th.Primary(), unit.Dp(20), "Details").Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							return D{Size: image.Point{Y: gtx.Px(unit.Dp(10))}}
-						}),
-						layout.Rigid(func(gtx C) D {
-							return p.Form.Layout(gtx, p.Th)
-						}),
-					)
-				}),
-			)
-		})
-	})
+	var (
+		cs    = &gtx.Constraints
+		inset = layout.UniformInset(unit.Dp(10))
+		axis  = layout.Vertical
+	)
+	if breakpoint := gtx.Px(unit.Dp(800)); cs.Max.X > breakpoint {
+		if p.lease.ID > 0 {
+			axis = layout.Horizontal
+		} else {
+			// Cap the form's max width on expanded view.
+			cs.Max.X = breakpoint
+		}
+	}
+	return layout.Flex{
+		Axis:      axis,
+		Alignment: layout.Start,
+	}.Layout(
+		gtx,
+		util.FlexStrategy(1, layout.Horizontal, axis, func(gtx C) D {
+			if p.lease.ID == 0 {
+				return D{}
+			}
+			return inset.Layout(gtx, func(gtx C) D {
+				return p.LayoutServices(gtx)
+			})
+		}),
+		util.FlexStrategy(1, layout.Horizontal, axis, func(gtx C) D {
+			return inset.Layout(gtx, func(gtx C) D {
+				return p.LayoutDetails(gtx)
+			})
+		}),
+		util.FlexStrategy(1, layout.Horizontal, axis, func(gtx C) D {
+			if p.lease.ID == 0 {
+				return D{}
+			}
+			return inset.Layout(gtx, func(gtx C) D {
+				return p.LayoutInvoiceList(gtx)
+			})
+		}),
+	)
+}
+
+// LayoutDetails lays the details form.
+func (p *LeasePage) LayoutDetails(gtx C) D {
+	return layout.Flex{
+		Axis: layout.Vertical,
+	}.Layout(
+		gtx,
+		layout.Rigid(func(gtx C) D {
+			return material.Label(p.Th.Primary(), unit.Dp(20), "Details").Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return D{Size: image.Point{Y: gtx.Px(unit.Dp(10))}}
+		}),
+		layout.Rigid(func(gtx C) D {
+			return p.Form.Layout(gtx, p.Th)
+		}),
+	)
 }
 
 // LayoutServices lays the service widgets in flex.
 func (p *LeasePage) LayoutServices(gtx C) D {
+	var (
+		cs   = &gtx.Constraints
+		axis = layout.Horizontal
+	)
+	if breakpoint := gtx.Px(unit.Dp(350)); cs.Max.X < breakpoint {
+		axis = layout.Vertical
+	}
 	return layout.Flex{
-		Axis:      layout.Horizontal,
-		Alignment: layout.Middle,
-		Spacing:   layout.SpaceBetween,
+		Axis: layout.Vertical,
 	}.Layout(
 		gtx,
-		layout.Flexed(1, func(gtx C) D {
-			return style.Card{
-				Content: []layout.Widget{
-					func(gtx C) D {
-						return material.H6(p.Th.Primary(), "Utilities").Layout(gtx)
-					},
-					func(gtx C) D {
-						balance := 0
-						if service, ok := p.lease.Services["utilities"]; ok {
-							balance = service.Balance()
-						}
-						return style.ServiceLabel(p.Th, "Balance", float64(balance)).Layout(gtx)
-					},
-					func(gtx C) D {
-						return layout.Flex{
-							Axis:      layout.Horizontal,
-							Alignment: layout.Middle,
-						}.Layout(
-							gtx,
-							layout.Flexed(1, func(gtx C) D {
-								b := material.Button(p.Th.Success(), &p.PayUtility, "Pay")
-								b.Inset = layout.UniformInset(unit.Dp(5))
-								return b.Layout(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
-							}),
-							layout.Flexed(1, func(gtx C) D {
-								b := material.Button(p.Th.Danger(), &p.BillUtility, "Bill")
-								b.Inset = layout.UniformInset(unit.Dp(5))
-								return b.Layout(gtx)
-							}),
-						)
-					},
-				},
-			}.Layout(gtx, p.Th.Primary())
+		layout.Rigid(func(gtx C) D {
+			return material.Label(p.Th.Primary(), unit.Dp(20), "Services").Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
+			return D{Size: image.Point{X: gtx.Px(unit.Dp(10)), Y: gtx.Px(unit.Dp(10))}}
 		}),
-		layout.Flexed(1, func(gtx C) D {
-			return style.Card{
-				Content: []layout.Widget{
-					func(gtx C) D {
-						return material.H6(p.Th.Primary(), "Rent").Layout(gtx)
-					},
-					func(gtx C) D {
-						balance := 0
-						if service, ok := p.lease.Services["rent"]; ok {
-							balance = service.Balance()
-						}
-						return style.ServiceLabel(p.Th, "Balance", float64(balance)).Layout(gtx)
-					},
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{
+				Axis:      axis,
+				Spacing:   layout.SpaceBetween,
+				Alignment: layout.Start,
+			}.Layout(
+				gtx,
+				util.FlexStrategy(1, layout.Horizontal, axis, func(gtx C) D {
+					return style.Card{
+						Content: []layout.Widget{
+							func(gtx C) D {
+								return material.H6(p.Th.Primary(), "Utilities").Layout(gtx)
+							},
+							func(gtx C) D {
+								balance := 0
+								if service, ok := p.lease.Services["utilities"]; ok {
+									balance = service.Balance()
+								}
+								return style.ServiceLabel(p.Th, "Balance", float64(balance)).Layout(gtx)
+							},
+							func(gtx C) D {
+								return layout.Flex{
+									Axis:      layout.Horizontal,
+									Alignment: layout.Middle,
+								}.Layout(
+									gtx,
+									layout.Flexed(1, func(gtx C) D {
+										b := material.Button(p.Th.Success(), &p.PayUtility, "Pay")
+										b.Inset = layout.UniformInset(unit.Dp(5))
+										return b.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
+									}),
+									layout.Flexed(1, func(gtx C) D {
+										b := material.Button(p.Th.Danger(), &p.BillUtility, "Bill")
+										b.Inset = layout.UniformInset(unit.Dp(5))
+										return b.Layout(gtx)
+									}),
+								)
+							},
+						},
+					}.Layout(gtx, p.Th.Primary())
+				}),
+				layout.Rigid(func(gtx C) D {
+					return D{Size: image.Point{X: gtx.Px(unit.Dp(10)), Y: gtx.Px(unit.Dp(10))}}
+				}),
+				util.FlexStrategy(1, layout.Horizontal, axis, func(gtx C) D {
+					return style.Card{
+						Content: []layout.Widget{
+							func(gtx C) D {
+								return material.H6(p.Th.Primary(), "Rent").Layout(gtx)
+							},
+							func(gtx C) D {
+								balance := 0
+								if service, ok := p.lease.Services["rent"]; ok {
+									balance = service.Balance()
+								}
+								return style.ServiceLabel(p.Th, "Balance", float64(balance)).Layout(gtx)
+							},
+							func(gtx C) D {
+								return layout.Flex{
+									Axis:      layout.Horizontal,
+									Alignment: layout.Middle,
+								}.Layout(
+									gtx,
+									layout.Flexed(1, func(gtx C) D {
+										b := material.Button(p.Th.Success(), &p.PayRent, "Pay")
+										b.Inset = layout.UniformInset(unit.Dp(5))
+										return b.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
+									}),
+									layout.Flexed(1, func(gtx C) D {
+										b := material.Button(p.Th.Danger(), &p.BillRent, "Bill")
+										b.Inset = layout.UniformInset(unit.Dp(5))
+										return b.Layout(gtx)
+									}),
+								)
+							},
+						},
+					}.Layout(gtx, p.Th.Primary())
+				}),
+			)
+		}),
+	)
+}
+
+// LayoutInvoiceList renders a list of invoices issued for the lease.
+func (p *LeasePage) LayoutInvoiceList(gtx C) D {
+	p.invoiceList.Axis = layout.Vertical
+	p.invoiceList.ScrollToEnd = false
+	p.states.Begin()
+	var (
+		invoices []*avisha.UtilityInvoice
+	)
+	if err := p.App.Select(q.Eq("Lease", p.lease.ID)).OrderBy("ID", "Paid").Reverse().Find(&invoices); err != nil {
+		if err != storm.ErrNotFound {
+			log.Printf("loading invoices: %v", err)
+		}
+	}
+	return layout.Flex{
+		Axis: layout.Vertical,
+	}.Layout(
+		gtx,
+		layout.Rigid(func(gtx C) D {
+			return material.Label(p.Th.Primary(), unit.Dp(20), "Invoices").Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return D{Size: image.Point{X: gtx.Px(unit.Dp(10)), Y: gtx.Px(unit.Dp(10))}}
+		}),
+		layout.Rigid(func(gtx C) D {
+			return p.invoiceList.Layout(gtx, len(invoices), func(gtx C, ii int) D {
+				var (
+					invoice = invoices[ii]
+					state   = p.states.Next(unsafe.Pointer(invoice))
+					active  = false
+				)
+				return style.ListItem(
+					gtx,
+					p.Th.Primary(),
+					&state.Item,
+					&state.Hover,
+					active,
 					func(gtx C) D {
 						return layout.Flex{
-							Axis:      layout.Horizontal,
-							Alignment: layout.Middle,
+							Axis: layout.Horizontal,
 						}.Layout(
 							gtx,
-							layout.Flexed(1, func(gtx C) D {
-								b := material.Button(p.Th.Success(), &p.PayRent, "Pay")
-								b.Inset = layout.UniformInset(unit.Dp(5))
-								return b.Layout(gtx)
+							layout.Flexed(3, func(gtx C) D {
+								return material.Label(
+									p.Th.Primary(),
+									unit.Dp(14),
+									fmt.Sprintf(
+										"#%d $%d (%d %s %d)",
+										invoice.ID,
+										invoice.Bill,
+										invoice.Issued.Day(),
+										invoice.Issued.Month(),
+										invoice.Issued.Year()),
+								).Layout(gtx)
 							}),
-							layout.Rigid(func(gtx C) D {
-								return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
-							}),
 							layout.Flexed(1, func(gtx C) D {
-								b := material.Button(p.Th.Danger(), &p.BillRent, "Bill")
-								b.Inset = layout.UniformInset(unit.Dp(5))
-								return b.Layout(gtx)
+								var (
+									badge = "PAID"
+									c     = p.Th.Success().Color.Primary
+								)
+								if invoice.Paid == (time.Time{}) {
+									badge = "NOT PAID"
+									c = p.Th.Danger().Color.Primary
+								}
+								lb := material.Label(
+									p.Th.Primary(),
+									unit.Dp(14),
+									badge,
+								)
+								lb.Color = c
+								return lb.Layout(gtx)
 							}),
 						)
 					},
-				},
-			}.Layout(gtx, p.Th.Primary())
+				)
+			})
 		}),
 	)
 }
