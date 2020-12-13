@@ -29,7 +29,7 @@ func main() {
 		db, err := storm.Open(func() string {
 			db, ok := os.LookupEnv("avisha_db")
 			if !ok {
-				db = filepath.Join("target", "db.json")
+				db = filepath.Join("target", "avisha.db")
 				_ = os.Mkdir(filepath.Dir(db), 0777)
 			}
 			return db
