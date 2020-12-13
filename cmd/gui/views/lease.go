@@ -3,12 +3,16 @@ package views
 import (
 	"fmt"
 	"image"
+	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 	"unsafe"
 
+	"gioui.org/app"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -20,6 +24,7 @@ import (
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/util"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
+	"github.com/skratchdot/open-golang/open"
 )
 
 // LeasePage contains actions for interacting with a lease including data entry
@@ -41,8 +46,8 @@ type LeasePage struct {
 	modal layout.Widget
 	lease avisha.Lease
 
-	states      States
-	invoiceList layout.List
+	invoiceStates States
+	invoiceList   layout.List
 
 	scroll layout.List
 }
@@ -238,6 +243,45 @@ func (p *LeasePage) Update(gtx C) {
 		p.UtilitiesInvoiceForm.Clear()
 		p.modal = nil
 	}
+	for _, state := range p.invoiceStates.List() {
+		var (
+			invoice = (*avisha.UtilityInvoice)(state.Data)
+		)
+		// @Todo Do io async to avoid blocking ui.
+		if state.Item.Clicked() {
+			if err := func() error {
+				doc := util.UtilityInvoiceDocument{
+					Invoice: *invoice,
+				}
+				buffer, err := doc.Render()
+				if err != nil {
+					return fmt.Errorf("rendering invoice document: %w", err)
+				}
+				dir, err := app.DataDir()
+				if err != nil {
+					return fmt.Errorf("locating data directory: %w", err)
+				}
+				dir = filepath.Join(dir, "invoices")
+				if err := os.MkdirAll(dir, 0777); err != nil && !os.IsNotExist(err) {
+					return fmt.Errorf("preparing directory: %w", err)
+				}
+				path := filepath.Join(dir, fmt.Sprintf("%d.html", invoice.ID))
+				if err := ioutil.WriteFile(
+					path,
+					buffer.Bytes(),
+					0777,
+				); err != nil {
+					return fmt.Errorf("writing invoice to disk: %w", err)
+				}
+				if err := open.Run(path); err != nil {
+					return fmt.Errorf("opening invoice: %w", err)
+				}
+				return nil
+			}(); err != nil {
+				log.Printf("%v", err)
+			}
+		}
+	}
 	if p.modal != nil {
 		// @Improvement: implies that modal must be rendering a dialog; thus any
 		// other modal content will call focus on the dialog.
@@ -429,7 +473,7 @@ func (p *LeasePage) LayoutServices(gtx C) D {
 func (p *LeasePage) LayoutInvoiceList(gtx C) D {
 	p.invoiceList.Axis = layout.Vertical
 	p.invoiceList.ScrollToEnd = false
-	p.states.Begin()
+	p.invoiceStates.Begin()
 	var (
 		invoices []*avisha.UtilityInvoice
 	)
@@ -452,7 +496,7 @@ func (p *LeasePage) LayoutInvoiceList(gtx C) D {
 			return p.invoiceList.Layout(gtx, len(invoices), func(gtx C, ii int) D {
 				var (
 					invoice = invoices[ii]
-					state   = p.states.Next(unsafe.Pointer(invoice))
+					state   = p.invoiceStates.Next(unsafe.Pointer(invoice))
 					active  = false
 				)
 				return style.ListItem(
