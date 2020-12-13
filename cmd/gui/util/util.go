@@ -121,17 +121,17 @@ func FlexStrategy(weight float32, flex, actual layout.Axis, w layout.Widget) lay
 
 // UtilityInvoiceDocument renders utility invoices to an html document.
 type UtilityInvoiceDocument struct {
-	Lease  avisha.Lease
-	Tenant avisha.Tenant
-	Site   avisha.Site
-	avisha.UtilityInvoice
+	Invoice avisha.UtilityInvoice
+	Lease   avisha.Lease
+	Tenant  avisha.Tenant
+	Site    avisha.Site
 }
 
 // Render the document into a buffer.
-func (doc *UtilityInvoiceDocument) Render() (*bytes.Buffer, error) {
+func (doc UtilityInvoiceDocument) Render() (*bytes.Buffer, error) {
 	tmpl, err := template.
 		New("utility-invoice-document").
-		Parse(strings.TrimSpace(`@Todo write up invoice template!`))
+		Parse(strings.TrimSpace(UtilityInvoiceTemplateLiteral))
 	if err != nil {
 		return nil, fmt.Errorf("parsing template: %w", err)
 	}
@@ -141,3 +141,14 @@ func (doc *UtilityInvoiceDocument) Render() (*bytes.Buffer, error) {
 	}
 	return by, nil
 }
+
+var UtilityInvoiceTemplateLiteral = `
+<html>
+	<head>
+		<title>Invoice {{.Invoice.ID}}</title>
+	</head>
+	<body>
+		<h1>Invoice {{.Invoice.ID}}</h1>
+	</body>
+</html>
+`
