@@ -29,8 +29,14 @@ func main() {
 		db, err := storm.Open(func() string {
 			db, ok := os.LookupEnv("avisha_db")
 			if !ok {
-				db = filepath.Join("target", "avisha.db")
-				_ = os.Mkdir(filepath.Dir(db), 0777)
+				db, err := app.DataDir()
+				if err != nil {
+					log.Printf("error: finding data dir: defaulting to cwd\n")
+					db := filepath.Join("target", "avisha.db")
+					_ = os.Mkdir(filepath.Dir(db), 0777)
+					return db
+				}
+				return filepath.Join(db, "avisha.db")
 			}
 			return db
 		}())
