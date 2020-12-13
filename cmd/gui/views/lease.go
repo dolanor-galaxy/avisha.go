@@ -258,90 +258,7 @@ func (p *LeasePage) Layout(gtx C) D {
 									return D{Size: image.Point{Y: gtx.Px(unit.Dp(10))}}
 								}),
 								layout.Rigid(func(gtx C) D {
-									return layout.Flex{
-										Axis:      layout.Horizontal,
-										Alignment: layout.Middle,
-										Spacing:   layout.SpaceBetween,
-									}.Layout(
-										gtx,
-										layout.Flexed(1, func(gtx C) D {
-											return style.Card{
-												Content: []layout.Widget{
-													func(gtx C) D {
-														return material.H6(p.Th.Primary(), "Utilities").Layout(gtx)
-													},
-													func(gtx C) D {
-														balance := 0
-														if service, ok := p.lease.Services["utilities"]; ok {
-															balance = service.Balance()
-														}
-														return style.ServiceLabel(p.Th, "Balance", float64(balance)).Layout(gtx)
-													},
-													func(gtx C) D {
-														return layout.Flex{
-															Axis:      layout.Horizontal,
-															Alignment: layout.Middle,
-														}.Layout(
-															gtx,
-															layout.Flexed(1, func(gtx C) D {
-																b := material.Button(p.Th.Success(), &p.PayUtility, "Pay")
-																b.Inset = layout.UniformInset(unit.Dp(5))
-																return b.Layout(gtx)
-															}),
-															layout.Rigid(func(gtx C) D {
-																return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
-															}),
-															layout.Flexed(1, func(gtx C) D {
-																b := material.Button(p.Th.Danger(), &p.BillUtility, "Bill")
-																b.Inset = layout.UniformInset(unit.Dp(5))
-																return b.Layout(gtx)
-															}),
-														)
-													},
-												},
-											}.Layout(gtx, p.Th.Primary())
-										}),
-										layout.Rigid(func(gtx C) D {
-											return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
-										}),
-										layout.Flexed(1, func(gtx C) D {
-											return style.Card{
-												Content: []layout.Widget{
-													func(gtx C) D {
-														return material.H6(p.Th.Primary(), "Rent").Layout(gtx)
-													},
-													func(gtx C) D {
-														balance := 0
-														if service, ok := p.lease.Services["rent"]; ok {
-															balance = service.Balance()
-														}
-														return style.ServiceLabel(p.Th, "Balance", float64(balance)).Layout(gtx)
-													},
-													func(gtx C) D {
-														return layout.Flex{
-															Axis:      layout.Horizontal,
-															Alignment: layout.Middle,
-														}.Layout(
-															gtx,
-															layout.Flexed(1, func(gtx C) D {
-																b := material.Button(p.Th.Success(), &p.PayRent, "Pay")
-																b.Inset = layout.UniformInset(unit.Dp(5))
-																return b.Layout(gtx)
-															}),
-															layout.Rigid(func(gtx C) D {
-																return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
-															}),
-															layout.Flexed(1, func(gtx C) D {
-																b := material.Button(p.Th.Danger(), &p.BillRent, "Bill")
-																b.Inset = layout.UniformInset(unit.Dp(5))
-																return b.Layout(gtx)
-															}),
-														)
-													},
-												},
-											}.Layout(gtx, p.Th.Primary())
-										}),
-									)
+									return p.LayoutServices(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return D{Size: image.Point{Y: gtx.Px(unit.Dp(10))}}
@@ -362,4 +279,92 @@ func (p *LeasePage) Layout(gtx C) D {
 			)
 		})
 	})
+}
+
+// LayoutServices lays the service widgets in flex.
+func (p *LeasePage) LayoutServices(gtx C) D {
+	return layout.Flex{
+		Axis:      layout.Horizontal,
+		Alignment: layout.Middle,
+		Spacing:   layout.SpaceBetween,
+	}.Layout(
+		gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return style.Card{
+				Content: []layout.Widget{
+					func(gtx C) D {
+						return material.H6(p.Th.Primary(), "Utilities").Layout(gtx)
+					},
+					func(gtx C) D {
+						balance := 0
+						if service, ok := p.lease.Services["utilities"]; ok {
+							balance = service.Balance()
+						}
+						return style.ServiceLabel(p.Th, "Balance", float64(balance)).Layout(gtx)
+					},
+					func(gtx C) D {
+						return layout.Flex{
+							Axis:      layout.Horizontal,
+							Alignment: layout.Middle,
+						}.Layout(
+							gtx,
+							layout.Flexed(1, func(gtx C) D {
+								b := material.Button(p.Th.Success(), &p.PayUtility, "Pay")
+								b.Inset = layout.UniformInset(unit.Dp(5))
+								return b.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
+							}),
+							layout.Flexed(1, func(gtx C) D {
+								b := material.Button(p.Th.Danger(), &p.BillUtility, "Bill")
+								b.Inset = layout.UniformInset(unit.Dp(5))
+								return b.Layout(gtx)
+							}),
+						)
+					},
+				},
+			}.Layout(gtx, p.Th.Primary())
+		}),
+		layout.Rigid(func(gtx C) D {
+			return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return style.Card{
+				Content: []layout.Widget{
+					func(gtx C) D {
+						return material.H6(p.Th.Primary(), "Rent").Layout(gtx)
+					},
+					func(gtx C) D {
+						balance := 0
+						if service, ok := p.lease.Services["rent"]; ok {
+							balance = service.Balance()
+						}
+						return style.ServiceLabel(p.Th, "Balance", float64(balance)).Layout(gtx)
+					},
+					func(gtx C) D {
+						return layout.Flex{
+							Axis:      layout.Horizontal,
+							Alignment: layout.Middle,
+						}.Layout(
+							gtx,
+							layout.Flexed(1, func(gtx C) D {
+								b := material.Button(p.Th.Success(), &p.PayRent, "Pay")
+								b.Inset = layout.UniformInset(unit.Dp(5))
+								return b.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
+							}),
+							layout.Flexed(1, func(gtx C) D {
+								b := material.Button(p.Th.Danger(), &p.BillRent, "Bill")
+								b.Inset = layout.UniformInset(unit.Dp(5))
+								return b.Layout(gtx)
+							}),
+						)
+					},
+				},
+			}.Layout(gtx, p.Th.Primary())
+		}),
+	)
 }
