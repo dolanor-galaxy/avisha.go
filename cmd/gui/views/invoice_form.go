@@ -88,7 +88,7 @@ func (f *UtilitiesInvoiceForm) Clear() {
 	f.IssueDate.Clear()
 	t := time.Now()
 	f.IssueDate.SetText(fmt.Sprintf("%d/%d/%d", t.Day(), t.Month(), t.Year()))
-	// @Todo load unit cost from storage.
+	// @Todo load unit cost default value from storage.
 	f.UnitCost.Clear()
 	f.UnitCost.SetText("1")
 	f.DueDate.Clear()
@@ -152,6 +152,7 @@ func (f *UtilitiesInvoiceForm) Submit() (invoice avisha.UtilityInvoice, ok bool)
 	} else {
 		invoice.Due = dueDate
 	}
+	invoice.Bill = (invoice.UnitCost * uint(invoice.UnitsConsumed))
 	return invoice, ok
 }
 
