@@ -43,6 +43,8 @@ type LeasePage struct {
 
 	states      States
 	invoiceList layout.List
+
+	scroll layout.List
 }
 
 func (page *LeasePage) Title() string {
@@ -250,7 +252,8 @@ func (p *LeasePage) Update(gtx C) {
 // context.
 // @Todo Make details form read-only until edit button is clicked.
 func (p *LeasePage) Layout(gtx C) D {
-	// @Improvement: render different contexts under tabs?
+	p.scroll.Axis = layout.Vertical
+	p.scroll.ScrollToEnd = false
 	p.Update(gtx)
 	var (
 		cs    = &gtx.Constraints
@@ -265,33 +268,35 @@ func (p *LeasePage) Layout(gtx C) D {
 			cs.Max.X = breakpoint
 		}
 	}
-	return layout.Flex{
-		Axis:      axis,
-		Alignment: layout.Start,
-	}.Layout(
-		gtx,
-		util.FlexStrategy(1, layout.Horizontal, axis, func(gtx C) D {
-			if p.lease.ID == 0 {
-				return D{}
-			}
-			return inset.Layout(gtx, func(gtx C) D {
-				return p.LayoutServices(gtx)
-			})
-		}),
-		util.FlexStrategy(1, layout.Horizontal, axis, func(gtx C) D {
-			return inset.Layout(gtx, func(gtx C) D {
-				return p.LayoutDetails(gtx)
-			})
-		}),
-		util.FlexStrategy(1, layout.Horizontal, axis, func(gtx C) D {
-			if p.lease.ID == 0 {
-				return D{}
-			}
-			return inset.Layout(gtx, func(gtx C) D {
-				return p.LayoutInvoiceList(gtx)
-			})
-		}),
-	)
+	return p.scroll.Layout(gtx, 1, func(gtx C, ii int) D {
+		return layout.Flex{
+			Axis:      axis,
+			Alignment: layout.Start,
+		}.Layout(
+			gtx,
+			util.FlexStrategy(1, layout.Horizontal, axis, func(gtx C) D {
+				if p.lease.ID == 0 {
+					return D{}
+				}
+				return inset.Layout(gtx, func(gtx C) D {
+					return p.LayoutServices(gtx)
+				})
+			}),
+			util.FlexStrategy(1, layout.Horizontal, axis, func(gtx C) D {
+				return inset.Layout(gtx, func(gtx C) D {
+					return p.LayoutDetails(gtx)
+				})
+			}),
+			util.FlexStrategy(1, layout.Horizontal, axis, func(gtx C) D {
+				if p.lease.ID == 0 {
+					return D{}
+				}
+				return inset.Layout(gtx, func(gtx C) D {
+					return p.LayoutInvoiceList(gtx)
+				})
+			}),
+		)
+	})
 }
 
 // LayoutDetails lays the details form.
