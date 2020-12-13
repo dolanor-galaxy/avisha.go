@@ -76,38 +76,68 @@ type Lease struct {
 	Term Term
 	Rent Currency
 
-	// Rent and Utility services.
+	// Services is a map of named services like rent and utilities.
 	Services map[string]Service
 }
 
 // Service is a billable for a lease.
-// Typically Rent and Utilities are a services.
 type Service struct {
+	Ledger Ledger
+	// Invoices []Invoice
+}
+
+func (s Service) Balance() int {
+	return s.Ledger.Balance()
+}
+
+// Ledger maintains a balance of currency.
+type Ledger struct {
 	Credits []Currency
 	Debits  []Currency
 }
 
 // Credit record a credit of currency.
-func (s *Service) Credit(amount Currency) {
-	s.Credits = append(s.Credits, amount)
+func (l *Ledger) Credit(amount Currency) {
+	l.Credits = append(l.Credits, amount)
 }
 
 // Debit records a debit of currency.
-func (s *Service) Debit(amount Currency) {
-	s.Debits = append(s.Debits, amount)
+func (l *Ledger) Debit(amount Currency) {
+	l.Debits = append(l.Debits, amount)
 }
 
 // Balance calculates the Balance of the Service.
-func (s Service) Balance() int {
+func (l Ledger) Balance() int {
 	credits := 0
-	for _, c := range s.Credits {
+	for _, c := range l.Credits {
 		credits += int(c)
 	}
 	debits := 0
-	for _, d := range s.Debits {
+	for _, d := range l.Debits {
 		debits += int(d)
 	}
 	return credits - debits
+}
+
+// Invoice is a document requesting payment for a service.
+type Invoice struct {
+	// Entities involved.
+	// Lease  Lease
+	// Tenant Tenant
+	// Site   Site
+
+	// Bill is the amount of currency due.
+	// @Note Calculation of unit cost for utilities occurs prior to this point.
+	// @Note May expand into something like a list of named deliverables.
+	Bill Currency
+
+	// Description of the service being invoiced.
+	Description string
+
+	// Important dates.
+	Issued time.Time
+	Due    time.Time
+	Paid   time.Time
 }
 
 // App implements use cases.
@@ -153,7 +183,7 @@ func (app App) PayService(leaseID int, service string, amount uint) error {
 		l.Services = make(map[string]Service)
 	}
 	s := l.Services[service]
-	s.Credit(amount)
+	s.Ledger.Credit(amount)
 	l.Services[service] = s
 	return app.Save(&l)
 }
@@ -168,7 +198,7 @@ func (app App) BillService(leaseID int, service string, amount uint) error {
 		l.Services = make(map[string]Service)
 	}
 	s := l.Services[service]
-	s.Debit(amount)
+	s.Ledger.Debit(amount)
 	l.Services[service] = s
 	return app.Save(&l)
 }
