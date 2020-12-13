@@ -175,38 +175,28 @@ func (p *LeasePage) Update(gtx C) {
 		}
 	}
 	for range p.Dialog.Input.Events() {
-		n, err := strconv.Atoi(p.Dialog.Input.Text())
+		_, err := util.ParseUint(p.Dialog.Input.Text())
 		if err != nil {
-			p.Dialog.Input.SetError("must be a valid number")
-		} else if n < 1 {
-			p.Dialog.Input.SetError("must be an amount greater than 0")
+			p.Dialog.Input.SetError(err.Error())
 		} else {
 			p.Dialog.Input.ClearError()
 		}
 	}
 	if p.Dialog.Ok.Clicked() {
-		n, err := func() (int, error) {
-			n, err := strconv.Atoi(p.Dialog.Input.Text())
-			if err != nil {
-				return 0, fmt.Errorf("must be a valid number")
-			} else if n < 1 {
-				return 0, fmt.Errorf("must be an amount greater than 0")
-			}
-			return n, nil
-		}()
-		if err != nil {
+		if n, err := util.ParseUint(p.Dialog.Input.Text()); err != nil {
 			p.Dialog.Input.SetError(err.Error())
 		} else {
 			p.Dialog.Input.Clear()
+			// @Improvment Can we avoid stringly typed api?
 			parts := strings.Split(p.Dialog.Context, "-")
 			mode, service := parts[0], parts[1]
 			switch mode {
 			case "pay":
-				if err := p.App.PayService(p.lease.ID, service, uint(n)); err != nil {
+				if err := p.App.PayService(p.lease.ID, service, n); err != nil {
 					log.Printf("paying service: %v", err)
 				}
 			case "bill":
-				if err := p.App.BillService(p.lease.ID, service, uint(n)); err != nil {
+				if err := p.App.BillService(p.lease.ID, service, n); err != nil {
 					log.Printf("billing service: %v", err)
 				}
 			}

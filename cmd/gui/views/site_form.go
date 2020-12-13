@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"log"
-	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -13,6 +12,7 @@ import (
 	"git.sr.ht/~whereswaldon/materials"
 	"github.com/jackmordaunt/avisha-fn"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/util"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
@@ -150,8 +150,8 @@ func (l *SiteForm) Submit() (s avisha.Site, ok bool) {
 	if l.site != nil {
 		s.ID = l.site.ID
 	}
-	if n := l.Number.Text(); strings.TrimSpace(n) == "" {
-		l.Number.SetError("required")
+	if n, err := util.FieldRequired(l.Number.Text()); err != nil {
+		l.Number.SetError(err.Error())
 		ok = false
 	} else {
 		s.Number = n

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"log"
-	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -13,6 +12,7 @@ import (
 	"git.sr.ht/~whereswaldon/materials"
 	"github.com/jackmordaunt/avisha-fn"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha-fn/cmd/gui/util"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
 	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
 )
@@ -175,9 +175,5 @@ func (f *TenantForm) Submit() (tenant avisha.Tenant, ok bool) {
 }
 
 func (f *TenantForm) validateName() (string, error) {
-	name := f.Name.Text()
-	if strings.TrimSpace(name) == "" {
-		return "", fmt.Errorf("required")
-	}
-	return name, nil
+	return util.FieldRequired(f.Name.Text())
 }

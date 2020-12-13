@@ -78,6 +78,36 @@ func ParseDate(s string) (date time.Time, err error) {
 	return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local), nil
 }
 
+// @Todo Consider package api for these form utility functions.
+
+// ParseInt parses an integer from digit characters.
+func ParseInt(s string) (int, error) {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, fmt.Errorf("must be a valid number")
+	}
+	return n, nil
+}
+
+// ParseInt parses an unsigned integer from digit characters.
+func ParseUint(s string) (uint, error) {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, fmt.Errorf("must be a valid number")
+	} else if n < 1 {
+		return 0, fmt.Errorf("must be an amount greater than 0")
+	}
+	return uint(n), nil
+}
+
+// FieldRequired ensures that a string is not empty.
+func FieldRequired(s string) (string, error) {
+	if strings.TrimSpace(s) == "" {
+		return "", fmt.Errorf("required")
+	}
+	return s, nil
+}
+
 type UtililityInvoiceDocument struct {
 	Lease  avisha.Lease
 	Tenant avisha.Tenant

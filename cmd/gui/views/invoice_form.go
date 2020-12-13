@@ -9,7 +9,6 @@ package views
 import (
 	"fmt"
 	"image"
-	"strconv"
 	"time"
 
 	"gioui.org/layout"
@@ -157,19 +156,11 @@ func (f *UtilitiesInvoiceForm) Submit() (invoice avisha.UtilityInvoice, ok bool)
 }
 
 func (f *UtilitiesInvoiceForm) validateUnitCost() (int, error) {
-	n, err := strconv.Atoi(f.UnitCost.Text())
-	if err != nil {
-		return n, fmt.Errorf("not a number")
-	}
-	return n, nil
+	return util.ParseInt(f.UnitCost.Text())
 }
 
 func (f *UtilitiesInvoiceForm) validateUnitsConsumed() (int, error) {
-	n, err := strconv.Atoi(f.UnitsConsumed.Text())
-	if err != nil {
-		return n, fmt.Errorf("not a number")
-	}
-	return n, nil
+	return util.ParseInt(f.UnitsConsumed.Text())
 }
 
 func (f *UtilitiesInvoiceForm) validateIssueDate() (time.Time, error) {
