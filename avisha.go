@@ -8,9 +8,11 @@ import (
 	"github.com/jackmordaunt/avisha-fn/notify"
 )
 
+type ID = int
+
 // Tenant is a unique entity that can Lease one or more Sites.
 type Tenant struct {
-	ID      int    `storm:"id,increment"`
+	ID      ID     `storm:"id,increment"`
 	Name    string `storm:"unique"`
 	Contact string
 }
@@ -18,7 +20,7 @@ type Tenant struct {
 // Site is a unique lot of land with a dwelling that can be Leased by at most
 // one Tenant at any given time.
 type Site struct {
-	ID       int    `storm:"id,increment"`
+	ID       ID     `storm:"id,increment"`
 	Number   string `storm:"unique"`
 	Dwelling Dwelling
 }
@@ -69,7 +71,7 @@ func (t Term) Overlaps(other Term) bool {
 // Services consumed are tracked accordingly, typically involving Rent and
 // Utilities.
 type Lease struct {
-	ID     int `storm:"id,increment" `
+	ID     ID `storm:"id,increment" `
 	Tenant int
 	Site   int
 
@@ -83,7 +85,6 @@ type Lease struct {
 // Service is a billable for a lease.
 type Service struct {
 	Ledger Ledger
-	// Invoices []Invoice
 }
 
 func (s Service) Balance() int {
@@ -121,23 +122,23 @@ func (l Ledger) Balance() int {
 
 // Invoice is a document requesting payment for a service.
 type Invoice struct {
-	// Entities involved.
-	// Lease  Lease
-	// Tenant Tenant
-	// Site   Site
-
+	ID    ID `storm:"id,increment"`
+	Lease int
 	// Bill is the amount of currency due.
-	// @Note Calculation of unit cost for utilities occurs prior to this point.
-	// @Note May expand into something like a list of named deliverables.
 	Bill Currency
-
-	// Description of the service being invoiced.
-	Description string
-
 	// Important dates.
 	Issued time.Time
 	Due    time.Time
 	Paid   time.Time
+}
+
+// UtilityInvoice is a document requesting payment for utility consumption.
+type UtilityInvoice struct {
+	Invoice `storm:"inline"`
+	// UnitCost is the cost per unit of power.
+	UnitCost Currency
+	// UnitsConsumed is the amount of units to charge for.
+	UnitsConsumed int
 }
 
 // App implements use cases.
