@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 	"log"
 	"os"
@@ -129,8 +128,6 @@ func (ui *UI) Loop() error {
 		switch event := (<-ui.Events()).(type) {
 		case system.DestroyEvent:
 			return event.Err
-		case system.ClipboardEvent:
-			fmt.Printf("clipboard: %v\n", event.Text)
 		case *system.CommandEvent:
 			if event.Type == system.CommandBack {
 				ui.Router.Pop()

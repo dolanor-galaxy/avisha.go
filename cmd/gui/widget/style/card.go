@@ -43,7 +43,7 @@ func (c Card) Layout(gtx C, th *material.Theme) D {
 		}),
 		layout.Stacked(func(gtx C) D {
 			return widget.Border{
-				Color:        th.Color.Hint,
+				Color:        th.ContrastBg,
 				CornerRadius: unit.Dp(4),
 				Width:        unit.Dp(0.5),
 			}.Layout(

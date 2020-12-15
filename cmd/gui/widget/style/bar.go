@@ -18,7 +18,7 @@ func (bar TopBar) Layout(gtx C, title string, actions ...layout.Widget) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return util.Rect{
-				Color: bar.Color.Primary,
+				Color: bar.Fg,
 				Size:  gtx.Constraints.Max,
 			}.Layout(gtx)
 		}),
@@ -29,7 +29,7 @@ func (bar TopBar) Layout(gtx C, title string, actions ...layout.Widget) D {
 						gtx,
 						func(gtx C) D {
 							title := material.Label(bar.Theme, unit.Dp(24), title)
-							title.Color = bar.Theme.Color.InvText
+							title.Color = bar.Theme.ContrastFg
 							return title.Layout(gtx)
 						})
 				}),

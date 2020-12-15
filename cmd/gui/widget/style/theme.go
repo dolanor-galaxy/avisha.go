@@ -15,14 +15,15 @@ type Theme struct {
 
 // Palette contains all semantic colors of a theme.
 type Palette struct {
-	Primary   color.NRGBA
-	Secondary color.NRGBA
-	Success   color.NRGBA
-	Info      color.NRGBA
-	Warning   color.NRGBA
-	Danger    color.NRGBA
-	Light     color.NRGBA
-	Dark      color.NRGBA
+	Primary   material.Palette
+	Secondary material.Palette
+	Success   material.Palette
+	Info      material.Palette
+	Warning   material.Palette
+	Danger    material.Palette
+	Light     material.Palette
+	Dark      material.Palette
+	Muted     material.Palette
 }
 
 // ThemeOption can be used to initialise a theme.
@@ -40,57 +41,102 @@ func NewTheme(options ...ThemeOption) *Theme {
 }
 
 func (th Theme) Primary() *material.Theme {
-	return with(th.Theme, th.Palette.Primary)
+	mth := th.Theme.WithPalette(th.Palette.Primary)
+	return &mth
 }
 
 func (th Theme) Secondary() *material.Theme {
-	return with(th.Theme, th.Palette.Secondary)
+	mth := th.Theme.WithPalette(th.Palette.Secondary)
+	return &mth
 }
 
 func (th Theme) Success() *material.Theme {
-	return with(th.Theme, th.Palette.Success)
+	mth := th.Theme.WithPalette(th.Palette.Success)
+	return &mth
 }
 
 func (th Theme) Info() *material.Theme {
-	return with(th.Theme, th.Palette.Info)
+	mth := th.Theme.WithPalette(th.Palette.Info)
+	return &mth
 }
 
 func (th Theme) Warning() *material.Theme {
-	return with(th.Theme, th.Palette.Warning)
+	mth := th.Theme.WithPalette(th.Palette.Warning)
+	return &mth
 }
 
 func (th Theme) Danger() *material.Theme {
-	return with(th.Theme, th.Palette.Danger)
+	mth := th.Theme.WithPalette(th.Palette.Danger)
+	return &mth
 }
 
 func (th Theme) Light() *material.Theme {
-	return with(th.Theme, th.Palette.Light)
+	mth := th.Theme.WithPalette(th.Palette.Light)
+	return &mth
 }
 
 func (th Theme) Dark() *material.Theme {
-	return with(th.Theme, th.Palette.Dark)
+	mth := th.Theme.WithPalette(th.Palette.Dark)
+	return &mth
 }
 
-func with(base *material.Theme, c color.NRGBA) *material.Theme {
-	if base == nil {
-		base = material.NewTheme(gofont.Collection())
-	}
-	th := *base
-	th.Color.Primary = c
-	return &th
+func (th Theme) Muted() *material.Theme {
+	mth := th.Theme.WithPalette(th.Palette.Muted)
+	return &mth
 }
 
-// BootstrapPallet initialises theme with standard colors from bootstrap:
+// BootstrapPalette initialises theme with standard colors from bootstrap:
 // https://getbootstrap.com/docs/4.0/utilities/colors/
 func BootstrapPalette(th *Theme) {
 	th.Palette = Palette{
-		Primary:   color.NRGBA{R: 0, G: 123, B: 255, A: 255},
-		Secondary: color.NRGBA{R: 108, G: 117, B: 125, A: 255},
-		Success:   color.NRGBA{R: 40, G: 167, B: 69, A: 255},
-		Warning:   color.NRGBA{R: 255, G: 193, B: 7, A: 255},
-		Danger:    color.NRGBA{R: 220, G: 53, B: 69, A: 255},
-		Info:      color.NRGBA{R: 23, G: 162, B: 184, A: 255},
-		Light:     color.NRGBA{R: 248, G: 249, B: 250, A: 255},
-		Dark:      color.NRGBA{R: 52, G: 58, B: 64, A: 255},
+		Primary:   Light(rgb(0x007bff)),
+		Secondary: Light(rgb(0x6c757d)),
+		Success:   Light(rgb(0x28a745)),
+		Danger:    Light(rgb(0xdc3545)),
+		Warning:   Light(rgb(0xffc107)),
+		Info:      Light(rgb(0x17a2b8)),
+		Light:     Light(rgb(0xf8f9fa)),
+		Dark:      Light(rgb(0x343a40)),
+		Muted:     Light(rgb(0x6c757d)),
+	}
+}
+
+func BootstrapDarkPalette(th *Theme) {
+	th.Palette = Palette{
+		Primary:   Dark(rgb(0x007bff)),
+		Secondary: Dark(rgb(0x6c757d)),
+		Success:   Dark(rgb(0x28a745)),
+		Danger:    Dark(rgb(0xdc3545)),
+		Warning:   Dark(rgb(0xffc107)),
+		Info:      Dark(rgb(0x17a2b8)),
+		Light:     Dark(rgb(0xf8f9fa)),
+		Dark:      Dark(rgb(0x343a40)),
+		Muted:     Dark(rgb(0x6c757d)),
+	}
+}
+
+func rgb(c uint32) color.NRGBA {
+	return argb(0xff000000 | c)
+}
+
+func argb(c uint32) color.NRGBA {
+	return color.NRGBA{A: uint8(c >> 24), R: uint8(c >> 16), G: uint8(c >> 8), B: uint8(c)}
+}
+
+func Light(c color.NRGBA) material.Palette {
+	return material.Palette{
+		Fg:         c,
+		Bg:         rgb(0xffffff),
+		ContrastBg: c,
+		ContrastFg: rgb(0xffffff),
+	}
+}
+
+func Dark(c color.NRGBA) material.Palette {
+	return material.Palette{
+		Fg:         c,
+		Bg:         rgb(0x000000),
+		ContrastBg: c,
+		ContrastFg: rgb(0x000000),
 	}
 }

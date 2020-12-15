@@ -43,19 +43,19 @@ func (f *UtilitiesInvoiceForm) Layout(gtx C, th *style.Theme) D {
 			}.Layout(
 				gtx,
 				layout.Rigid(func(gtx C) D {
-					return f.IssueDate.Layout(gtx, th.Primary(), "Issue Date")
+					return f.IssueDate.Layout(gtx, th.Dark(), "Issue Date")
 				}),
 				layout.Rigid(func(gtx C) D {
 					f.UnitCost.Prefix = func(gtx C) D {
-						return material.Body1(th.Primary(), "$").Layout(gtx)
+						return material.Body1(th.Dark(), "$").Layout(gtx)
 					}
-					return f.UnitCost.Layout(gtx, th.Primary(), "Unit Cost")
+					return f.UnitCost.Layout(gtx, th.Dark(), "Unit Cost")
 				}),
 				layout.Rigid(func(gtx C) D {
-					return f.UnitsConsumed.Layout(gtx, th.Primary(), "Units Consumed")
+					return f.UnitsConsumed.Layout(gtx, th.Dark(), "Units Consumed")
 				}),
 				layout.Rigid(func(gtx C) D {
-					return f.DueDate.Layout(gtx, th.Primary(), "Due Date")
+					return f.DueDate.Layout(gtx, th.Dark(), "Due Date")
 				}),
 			)
 		}),

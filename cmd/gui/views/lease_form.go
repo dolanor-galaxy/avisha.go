@@ -108,7 +108,7 @@ func (l *LeaseForm) Layout(gtx C, th *style.Theme) D {
 							if l.lease != nil {
 								gtx.Queue = nil
 							}
-							return l.Tenant.Layout(gtx, th.Primary(), "Tenant")
+							return l.Tenant.Layout(gtx, th.Dark(), "Tenant")
 						}),
 						layout.Rigid(func(gtx C) D {
 							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
@@ -117,7 +117,7 @@ func (l *LeaseForm) Layout(gtx C, th *style.Theme) D {
 							if l.lease != nil {
 								gtx.Queue = nil
 							}
-							return l.Site.Layout(gtx, th.Primary(), "Site")
+							return l.Site.Layout(gtx, th.Dark(), "Site")
 						}),
 					)
 				}),
@@ -125,19 +125,19 @@ func (l *LeaseForm) Layout(gtx C, th *style.Theme) D {
 					if l.lease != nil {
 						gtx.Queue = nil
 					}
-					return l.Date.Layout(gtx, th.Primary(), "Start Date")
+					return l.Date.Layout(gtx, th.Dark(), "Start Date")
 				}),
 				layout.Rigid(func(gtx C) D {
 					if l.lease != nil {
 						gtx.Queue = nil
 					}
-					return l.Days.Layout(gtx, th.Primary(), "Duration (days)")
+					return l.Days.Layout(gtx, th.Dark(), "Duration (days)")
 				}),
 				layout.Rigid(func(gtx C) D {
 					l.Rent.Prefix = func(gtx C) D {
-						return material.Body1(th.Primary(), "$").Layout(gtx)
+						return material.Body1(th.Dark(), "$").Layout(gtx)
 					}
-					return l.Rent.Layout(gtx, th.Primary(), "Rent (weekly)")
+					return l.Rent.Layout(gtx, th.Dark(), "Rent (weekly)")
 				}),
 			)
 		}),

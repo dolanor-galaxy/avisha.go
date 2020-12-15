@@ -53,9 +53,9 @@ func (f *TenantForm) Context() (list []layout.Widget) {
 			return layout.UniformInset(unit.Dp(10)).Layout(
 				gtx,
 				func(gtx C) D {
-					label := material.Label(f.Th.Primary(), unit.Dp(24), f.tenant.Name)
+					label := material.Label(f.Th.Dark(), unit.Dp(24), f.tenant.Name)
 					label.Alignment = text.Middle
-					label.Color = f.Th.Primary().Color.InvText
+					label.Color = f.Th.Dark().ContrastFg
 					return label.Layout(gtx)
 				})
 		})
@@ -122,10 +122,10 @@ func (f *TenantForm) Layout(gtx C) D {
 				}.Layout(
 					gtx,
 					layout.Rigid(func(gtx C) D {
-						return f.Name.Layout(gtx, f.Th.Primary(), "Name")
+						return f.Name.Layout(gtx, f.Th.Dark(), "Name")
 					}),
 					layout.Rigid(func(gtx C) D {
-						return f.Contact.Layout(gtx, f.Th.Primary(), "Contact")
+						return f.Contact.Layout(gtx, f.Th.Dark(), "Contact")
 					}),
 				)
 			}),

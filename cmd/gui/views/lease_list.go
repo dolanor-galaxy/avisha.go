@@ -90,7 +90,7 @@ func (l *LeaseList) Layout(gtx C) D {
 		}
 		return style.ListItem(
 			gtx,
-			l.Th.Primary(),
+			l.Th.Dark(),
 			&state.Item,
 			&state.Hover,
 			active,
@@ -104,7 +104,7 @@ func (l *LeaseList) Layout(gtx C) D {
 							}.Layout(
 								gtx,
 								layout.Rigid(func(gtx C) D {
-									return style.TenantLabel(l.Th.Primary(), tenant).Layout(gtx)
+									return style.TenantLabel(l.Th.Dark(), tenant).Layout(gtx)
 								}),
 								layout.Flexed(1.0, func(gtx C) D {
 									return D{Size: image.Point{
@@ -114,7 +114,7 @@ func (l *LeaseList) Layout(gtx C) D {
 								}),
 								layout.Rigid(func(gtx C) D {
 									return material.Label(
-										l.Th.Primary(),
+										l.Th.Dark(),
 										unit.Dp(20),
 										site.Number,
 									).Layout(gtx)
@@ -131,14 +131,14 @@ func (l *LeaseList) Layout(gtx C) D {
 						},
 						func(gtx C) D {
 							lb := material.Label(
-								l.Th.Primary(),
+								l.Th.Muted(),
 								unit.Dp(15),
 								lease.Term.String())
-							lb.Color = style.WithAlpha(l.Th.Primary().Color.Text, 200)
+							// lb.Color = l.Th.Muted().Fg
 							return lb.Layout(gtx)
 						},
 					},
-				}.Layout(gtx, l.Th.Primary())
+				}.Layout(gtx, l.Th.Dark())
 			})
 	})
 }

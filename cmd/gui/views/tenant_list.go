@@ -77,13 +77,13 @@ func (t *Tenants) Layout(gtx C) D {
 		)
 		return style.ListItem(
 			gtx,
-			t.Th.Primary(),
+			t.Th.Dark(),
 			&state.Item,
 			&state.Hover,
 			active,
 			func(gtx C) D {
 				return material.Label(
-					t.Th.Primary(),
+					t.Th.Dark(),
 					unit.Dp(20),
 					tenant.Name,
 				).Layout(gtx)

@@ -33,12 +33,12 @@ func ListItem(
 		layout.Expanded(func(gtx C) D {
 			if active {
 				util.Rect{
-					Color: WithAlpha(th.Color.Hint, 150),
+					Color: WithAlpha(th.ContrastBg, 150),
 					Size:  gtx.Constraints.Max,
 				}.Layout(gtx)
 			} else if hover.Hovered() {
 				util.Rect{
-					Color: WithAlpha(th.Color.Hint, 38),
+					Color: WithAlpha(th.ContrastBg, 38),
 					Size:  gtx.Constraints.Max,
 				}.Layout(gtx)
 			}
@@ -150,13 +150,13 @@ func ModalDialog(gtx C, th *Theme, max unit.Value, title string, w layout.Widget
 		return Card{
 			Content: []layout.Widget{
 				func(gtx C) D {
-					return material.Label(th.Primary(), unit.Dp(20), title).Layout(gtx)
+					return material.Label(th.Dark(), unit.Dp(20), title).Layout(gtx)
 				},
 				func(gtx C) D {
 					return w(gtx)
 				},
 			},
-		}.Layout(gtx, th.Primary())
+		}.Layout(gtx, th.Dark())
 	})
 }
 

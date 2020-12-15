@@ -85,18 +85,18 @@ func (r *NavRail) Layout(gtx C) D {
 							if item.Icon == nil {
 								return D{}
 							}
-							item.Icon.Color = r.Th.Color.Text
+							item.Icon.Color = r.Th.Fg
 							if item.Active {
-								item.Icon.Color = r.Th.Color.Primary
+								item.Icon.Color = r.Th.Fg
 							}
 							return item.Icon.Layout(gtx, unit.Dp(25))
 						}),
 						layout.Rigid(func(gtx C) D {
-							l := material.Label(r.Th.Primary(), unit.Dp(16), item.Label)
+							l := material.Label(r.Th.Dark(), unit.Dp(16), item.Label)
 							l.Alignment = text.Middle
-							l.Color = r.Th.Color.Text
+							l.Color = r.Th.Fg
 							if item.Active {
-								l.Color = r.Th.Color.Primary
+								l.Color = r.Th.Fg
 							}
 							return l.Layout(gtx)
 						}),

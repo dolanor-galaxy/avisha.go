@@ -53,9 +53,9 @@ func TenantLabel(th *material.Theme, t avisha.Tenant) TenantLabelStyle {
 	return TenantLabelStyle{
 		Tenant:    t,
 		Theme:     th,
-		NameColor: th.Color.Text,
+		NameColor: th.Fg,
 		NameSize:  unit.Dp(20),
-		IDColor:   WithAlpha(th.Color.Text, 100),
+		IDColor:   WithAlpha(th.Fg, 100),
 		IDSize:    unit.Dp(15),
 	}
 }

@@ -77,13 +77,13 @@ func (s *Sites) Layout(gtx C) D {
 		)
 		return style.ListItem(
 			gtx,
-			s.Th.Primary(),
+			s.Th.Dark(),
 			&state.Item,
 			&state.Hover,
 			active,
 			func(gtx C) D {
 				return material.Label(
-					s.Th.Primary(),
+					s.Th.Dark(),
 					unit.Dp(20),
 					site.Number,
 				).Layout(gtx)

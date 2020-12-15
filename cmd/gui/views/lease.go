@@ -98,11 +98,11 @@ func (p *LeasePage) Context() (list []layout.Widget) {
 				gtx,
 				func(gtx C) D {
 					label := material.Label(
-						p.Th.Primary(),
+						p.Th.Dark(),
 						unit.Dp(24),
 						fmt.Sprintf("%s-%s", p.Form.tenant.Name, p.Form.site.Number))
 					label.Alignment = text.Middle
-					label.Color = p.Th.Color.InvText
+					label.Color = p.Th.ContrastFg
 					return label.Layout(gtx)
 				})
 		})
@@ -153,7 +153,7 @@ func (p *LeasePage) Update(gtx C) {
 		p.modal = func(gtx C) D {
 			return style.ModalDialog(gtx, p.Th, unit.Dp(700), "Pay Utilities", func(gtx C) D {
 				p.Dialog.Input.Prefix = func(gtx C) D {
-					return material.Label(p.Th.Primary(), p.Th.TextSize, "$").Layout(gtx)
+					return material.Label(p.Th.Dark(), p.Th.TextSize, "$").Layout(gtx)
 				}
 				return p.Dialog.Layout(gtx, p.Th.Primary(), "Amount")
 			})
@@ -172,7 +172,7 @@ func (p *LeasePage) Update(gtx C) {
 		p.modal = func(gtx C) D {
 			return style.ModalDialog(gtx, p.Th, unit.Dp(700), "Pay Rent", func(gtx C) D {
 				p.Dialog.Input.Prefix = func(gtx C) D {
-					return material.Label(p.Th.Primary(), p.Th.TextSize, "$").Layout(gtx)
+					return material.Label(p.Th.Dark(), p.Th.TextSize, "$").Layout(gtx)
 				}
 				return p.Dialog.Layout(gtx, p.Th.Primary(), "Amount")
 			})
@@ -183,7 +183,7 @@ func (p *LeasePage) Update(gtx C) {
 		p.modal = func(gtx C) D {
 			return style.ModalDialog(gtx, p.Th, unit.Dp(700), "Bill Rent", func(gtx C) D {
 				p.Dialog.Input.Prefix = func(gtx C) D {
-					return material.Label(p.Th.Primary(), p.Th.TextSize, "$").Layout(gtx)
+					return material.Label(p.Th.Dark(), p.Th.TextSize, "$").Layout(gtx)
 				}
 				return p.Dialog.Layout(gtx, p.Th.Primary(), "Amount")
 			})
@@ -350,7 +350,7 @@ func (p *LeasePage) LayoutDetails(gtx C) D {
 	}.Layout(
 		gtx,
 		layout.Rigid(func(gtx C) D {
-			return material.Label(p.Th.Primary(), unit.Dp(20), "Details").Layout(gtx)
+			return material.Label(p.Th.Dark(), unit.Dp(20), "Details").Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return D{Size: image.Point{Y: gtx.Px(unit.Dp(10))}}
@@ -375,7 +375,7 @@ func (p *LeasePage) LayoutServices(gtx C) D {
 	}.Layout(
 		gtx,
 		layout.Rigid(func(gtx C) D {
-			return material.Label(p.Th.Primary(), unit.Dp(20), "Services").Layout(gtx)
+			return material.Label(p.Th.Dark(), unit.Dp(20), "Services").Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return D{Size: image.Point{X: gtx.Px(unit.Dp(10)), Y: gtx.Px(unit.Dp(10))}}
@@ -391,7 +391,7 @@ func (p *LeasePage) LayoutServices(gtx C) D {
 					return style.Card{
 						Content: []layout.Widget{
 							func(gtx C) D {
-								return material.H6(p.Th.Primary(), "Utilities").Layout(gtx)
+								return material.H6(p.Th.Dark(), "Utilities").Layout(gtx)
 							},
 							func(gtx C) D {
 								balance := 0
@@ -422,7 +422,7 @@ func (p *LeasePage) LayoutServices(gtx C) D {
 								)
 							},
 						},
-					}.Layout(gtx, p.Th.Primary())
+					}.Layout(gtx, p.Th.Dark())
 				}),
 				layout.Rigid(func(gtx C) D {
 					return D{Size: image.Point{X: gtx.Px(unit.Dp(10)), Y: gtx.Px(unit.Dp(10))}}
@@ -431,7 +431,7 @@ func (p *LeasePage) LayoutServices(gtx C) D {
 					return style.Card{
 						Content: []layout.Widget{
 							func(gtx C) D {
-								return material.H6(p.Th.Primary(), "Rent").Layout(gtx)
+								return material.H6(p.Th.Dark(), "Rent").Layout(gtx)
 							},
 							func(gtx C) D {
 								balance := 0
@@ -462,7 +462,7 @@ func (p *LeasePage) LayoutServices(gtx C) D {
 								)
 							},
 						},
-					}.Layout(gtx, p.Th.Primary())
+					}.Layout(gtx, p.Th.Dark())
 				}),
 			)
 		}),
@@ -487,7 +487,7 @@ func (p *LeasePage) LayoutInvoiceList(gtx C) D {
 	}.Layout(
 		gtx,
 		layout.Rigid(func(gtx C) D {
-			return material.Label(p.Th.Primary(), unit.Dp(20), "Invoices").Layout(gtx)
+			return material.Label(p.Th.Dark(), unit.Dp(20), "Invoices").Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return D{Size: image.Point{X: gtx.Px(unit.Dp(10)), Y: gtx.Px(unit.Dp(10))}}
@@ -501,7 +501,7 @@ func (p *LeasePage) LayoutInvoiceList(gtx C) D {
 				)
 				return style.ListItem(
 					gtx,
-					p.Th.Primary(),
+					p.Th.Dark(),
 					&state.Item,
 					&state.Hover,
 					active,
@@ -512,7 +512,7 @@ func (p *LeasePage) LayoutInvoiceList(gtx C) D {
 							gtx,
 							layout.Flexed(3, func(gtx C) D {
 								return material.Label(
-									p.Th.Primary(),
+									p.Th.Dark(),
 									unit.Dp(14),
 									fmt.Sprintf(
 										"#%d $%d (%d %s %d)",
@@ -526,14 +526,14 @@ func (p *LeasePage) LayoutInvoiceList(gtx C) D {
 							layout.Rigid(func(gtx C) D {
 								var (
 									badge = "PAID"
-									c     = p.Th.Success().Color.Primary
+									c     = p.Th.Success().Fg
 								)
 								if invoice.Paid == (time.Time{}) {
 									badge = "NOT PAID"
-									c = p.Th.Danger().Color.Primary
+									c = p.Th.Danger().Fg
 								}
 								lb := material.Label(
-									p.Th.Primary(),
+									p.Th.Dark(),
 									unit.Dp(14),
 									badge,
 								)

@@ -64,19 +64,19 @@ func (input *DateInput) Layout(gtx C, th *Theme) D {
 	}.Layout(
 		gtx,
 		layout.Flexed(1, func(gtx C) D {
-			return input.Day.Layout(gtx, th.Primary(), "Day")
+			return input.Day.Layout(gtx, th.Dark(), "Day")
 		}),
 		layout.Rigid(func(gtx C) D {
 			return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return input.Month.Layout(gtx, th.Primary(), "Month")
+			return input.Month.Layout(gtx, th.Dark(), "Month")
 		}),
 		layout.Rigid(func(gtx C) D {
 			return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return input.Year.Layout(gtx, th.Primary(), "Year")
+			return input.Year.Layout(gtx, th.Dark(), "Year")
 		}),
 	)
 }
