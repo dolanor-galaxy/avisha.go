@@ -6,7 +6,7 @@ import (
 
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
-	"github.com/jackmordaunt/avisha-fn/notify"
+	"github.com/jackmordaunt/avisha.go/notify"
 )
 
 type ID = int

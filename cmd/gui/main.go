@@ -7,15 +7,15 @@ import (
 	"path/filepath"
 
 	"github.com/asdine/storm/v3"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/icons"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/util"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/icons"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/util"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/widget/style"
 
 	"gioui.org/unit"
-	"github.com/jackmordaunt/avisha-fn"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/views"
-	"github.com/jackmordaunt/avisha-fn/notify"
+	"github.com/jackmordaunt/avisha.go"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/views"
+	"github.com/jackmordaunt/avisha.go/notify"
 
 	"gioui.org/app"
 	"gioui.org/io/system"

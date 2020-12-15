@@ -10,8 +10,8 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"git.sr.ht/~whereswaldon/materials"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/util"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/util"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/widget"
 )
 
 type (

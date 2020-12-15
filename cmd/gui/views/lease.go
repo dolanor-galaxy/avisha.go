@@ -19,11 +19,11 @@ import (
 	"gioui.org/widget/material"
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
-	"github.com/jackmordaunt/avisha-fn"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/util"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
+	"github.com/jackmordaunt/avisha.go"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/util"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/widget"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/widget/style"
 	"github.com/skratchdot/open-golang/open"
 )
 

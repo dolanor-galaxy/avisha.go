@@ -8,7 +8,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
-	"github.com/jackmordaunt/avisha-fn"
+	"github.com/jackmordaunt/avisha.go"
 )
 
 // TenantLabelStyle renders a Tenant label.

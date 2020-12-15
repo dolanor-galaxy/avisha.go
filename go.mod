@@ -1,4 +1,4 @@
-module github.com/jackmordaunt/avisha-fn
+module github.com/jackmordaunt/avisha.go
 
 go 1.14
 

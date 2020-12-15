@@ -9,11 +9,11 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
-	"github.com/jackmordaunt/avisha-fn"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/icons"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/nav"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget"
-	"github.com/jackmordaunt/avisha-fn/cmd/gui/widget/style"
+	"github.com/jackmordaunt/avisha.go"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/icons"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/nav"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/widget"
+	"github.com/jackmordaunt/avisha.go/cmd/gui/widget/style"
 )
 
 // @Todo: Cap width for list items for desktop view and pack into columns?
