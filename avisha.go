@@ -72,7 +72,7 @@ func (t Term) Overlaps(other Term) bool {
 // Services consumed are tracked accordingly, typically involving Rent and
 // Utilities.
 type Lease struct {
-	ID     ID `storm:"id,increment" `
+	ID     ID `storm:"id,increment"`
 	Tenant int
 	Site   int
 
