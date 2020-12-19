@@ -193,7 +193,7 @@ func (p *LeasePage) Update(gtx C) {
 		}
 	}
 	for range p.Dialog.Input.Events() {
-		_, err := util.ParseUint(p.Dialog.Input.Text())
+		_, err := util.ParseCurrency(p.Dialog.Input.Text())
 		if err != nil {
 			p.Dialog.Input.SetError(err.Error())
 		} else {

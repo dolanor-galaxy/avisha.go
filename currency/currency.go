@@ -1,13 +1,15 @@
+// Package currency provides minimalistic currency primitives that maintain
+// precision to the mill (1/100 of a cent).
 package currency
 
 import "fmt"
 
-// Currency with precision up to 1/10 of a cent.
+// Currency with precision up to 1/100 of a cent.
 type Currency int64
 
 const (
 	Mill   Currency = 1
-	Cent            = 10 * Mill
+	Cent            = 100 * Mill
 	Dollar          = 100 * Cent
 )
 
