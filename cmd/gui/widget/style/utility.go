@@ -6,18 +6,19 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/widget/material"
+	"github.com/jackmordaunt/avisha.go/currency"
 )
 
 // ServiceLabelStyle renders the balance of a named service.
 type ServiceLabelStyle struct {
 	Th      *Theme
 	Name    string
-	Balance float64
+	Balance currency.Currency
 }
 
 func (l *ServiceLabelStyle) Layout(gtx C) D {
 	var (
-		balance = math.Abs(l.Balance)
+		balance = math.Abs(l.Balance.Dollars())
 		sign    = ""
 		color   = l.Th.Success().Fg
 	)
@@ -42,7 +43,7 @@ func (l *ServiceLabelStyle) Layout(gtx C) D {
 }
 
 // ServiceLabel renders the balance of a named service.
-func ServiceLabel(th *Theme, name string, balance float64) *ServiceLabelStyle {
+func ServiceLabel(th *Theme, name string, balance currency.Currency) *ServiceLabelStyle {
 	return &ServiceLabelStyle{
 		Th:      th,
 		Name:    name,

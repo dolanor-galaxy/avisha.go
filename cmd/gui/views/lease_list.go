@@ -123,11 +123,11 @@ func (l *LeaseList) Layout(gtx C) D {
 						},
 						func(gtx C) D {
 							u := lease.Services["utilities"]
-							return style.ServiceLabel(l.Th, "Utilities", float64(u.Balance())).Layout(gtx)
+							return style.ServiceLabel(l.Th, "Utilities", u.Balance()).Layout(gtx)
 						},
 						func(gtx C) D {
 							u := lease.Services["rent"]
-							return style.ServiceLabel(l.Th, "Rent", float64(u.Balance())).Layout(gtx)
+							return style.ServiceLabel(l.Th, "Rent", u.Balance()).Layout(gtx)
 						},
 						func(gtx C) D {
 							lb := material.Label(

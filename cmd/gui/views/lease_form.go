@@ -14,6 +14,7 @@ import (
 	"github.com/jackmordaunt/avisha.go/cmd/gui/util"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/widget"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/widget/style"
+	"github.com/jackmordaunt/avisha.go/currency"
 )
 
 // LeaseForm performs data mutations on a Lease entity.
@@ -249,13 +250,6 @@ func (l *LeaseForm) validateDays() (days int, err error) {
 	return n, nil
 }
 
-func (l *LeaseForm) validateRent() (rent uint, err error) {
-	n, err := strconv.Atoi(l.Rent.Text())
-	if err != nil {
-		return rent, fmt.Errorf("rent must be a number")
-	}
-	if n < 0 {
-		return rent, fmt.Errorf("must be a positive number")
-	}
-	return uint(n), nil
+func (l *LeaseForm) validateRent() (rent currency.Currency, err error) {
+	return util.ParseCurrency(l.Rent.Text())
 }

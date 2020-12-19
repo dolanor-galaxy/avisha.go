@@ -17,6 +17,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"github.com/jackmordaunt/avisha.go"
+	"github.com/jackmordaunt/avisha.go/currency"
 )
 
 type (
@@ -89,6 +90,15 @@ func ParseInt(s string) (int, error) {
 		return 0, fmt.Errorf("must be a valid number")
 	}
 	return n, nil
+}
+
+// ParseCurrency parses a dollars from digit characters.
+func ParseCurrency(s string) (currency.Currency, error) {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, fmt.Errorf("must be a valid number")
+	}
+	return currency.Currency(n) * currency.Dollar, nil
 }
 
 // ParseInt parses an unsigned integer from digit characters.

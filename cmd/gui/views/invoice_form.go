@@ -19,6 +19,7 @@ import (
 	"github.com/jackmordaunt/avisha.go/cmd/gui/util"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/widget"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/widget/style"
+	"github.com/jackmordaunt/avisha.go/currency"
 )
 
 // UtilitiesInvoiceForm is form for collecting utility invoice data.
@@ -191,7 +192,7 @@ func (f *UtilitiesInvoiceForm) Submit() (invoice avisha.UtilityInvoice, ok bool)
 		f.UnitCost.SetError(err.Error())
 		ok = false
 	} else {
-		invoice.UnitCost = uint(unitCost)
+		invoice.UnitCost = currency.Dollar * currency.Currency(unitCost)
 	}
 	if unitsConsumed, err := f.validateUnitsConsumed(); err != nil {
 		f.UnitsConsumed.SetError(err.Error())
@@ -211,7 +212,7 @@ func (f *UtilitiesInvoiceForm) Submit() (invoice avisha.UtilityInvoice, ok bool)
 	} else {
 		invoice.Due = dueDate
 	}
-	invoice.Bill = (invoice.UnitCost * uint(invoice.UnitsConsumed))
+	invoice.Bill = (invoice.UnitCost * currency.Currency(invoice.UnitsConsumed))
 	return invoice, ok
 }
 

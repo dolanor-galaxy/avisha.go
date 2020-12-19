@@ -15,6 +15,7 @@ import (
 	"github.com/jackmordaunt/avisha.go/cmd/gui/util"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/widget"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/widget/style"
+	"github.com/jackmordaunt/avisha.go/currency"
 )
 
 // SettingsPage is a page for configuring global settings.
@@ -264,26 +265,14 @@ func (s *SettingsForm) Submit() (settings avisha.Settings, ok bool) {
 	return settings, ok
 }
 
-func (s *SettingsForm) validateUnitCost() (avisha.Currency, error) {
-	c, err := util.ParseUint(s.Defaults.UnitCost.Text())
-	if err != nil {
-		return 0, err
-	}
-	return c, nil
+func (s *SettingsForm) validateUnitCost() (currency.Currency, error) {
+	return util.ParseCurrency(s.Defaults.UnitCost.Text())
 }
 
 func (s *SettingsForm) validateInvoiceNet() (time.Duration, error) {
-	d, err := util.ParseDay(s.Defaults.InvoiceNet.Text())
-	if err != nil {
-		return time.Duration(0), err
-	}
-	return d, nil
+	return util.ParseDay(s.Defaults.InvoiceNet.Text())
 }
 
 func (s *SettingsForm) validateRentCycle() (time.Duration, error) {
-	d, err := util.ParseDay(s.Defaults.RentCycle.Text())
-	if err != nil {
-		return time.Duration(0), err
-	}
-	return d, nil
+	return util.ParseDay(s.Defaults.RentCycle.Text())
 }

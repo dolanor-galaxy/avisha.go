@@ -23,6 +23,7 @@ import (
 	"github.com/jackmordaunt/avisha.go/cmd/gui/util"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/widget"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/widget/style"
+	"github.com/jackmordaunt/avisha.go/currency"
 	"github.com/skratchdot/open-golang/open"
 )
 
@@ -200,7 +201,7 @@ func (p *LeasePage) Update(gtx C) {
 		}
 	}
 	if p.Dialog.Ok.Clicked() {
-		if n, err := util.ParseUint(p.Dialog.Input.Text()); err != nil {
+		if n, err := util.ParseCurrency(p.Dialog.Input.Text()); err != nil {
 			p.Dialog.Input.SetError(err.Error())
 		} else {
 			p.Dialog.Input.Clear()
@@ -233,7 +234,7 @@ func (p *LeasePage) Update(gtx C) {
 			if err := p.App.BillService(
 				p.lease.ID,
 				"utilities",
-				uint(inv.UnitCost*uint(inv.UnitsConsumed)),
+				inv.UnitCost*currency.Currency(inv.UnitsConsumed),
 			); err != nil {
 				log.Printf("billing service: %v", err)
 			}
@@ -404,11 +405,11 @@ func (p *LeasePage) LayoutServices(gtx C) D {
 								return material.H6(p.Th.Dark(), "Utilities").Layout(gtx)
 							},
 							func(gtx C) D {
-								balance := 0
+								var balance currency.Currency
 								if service, ok := p.lease.Services["utilities"]; ok {
 									balance = service.Balance()
 								}
-								return style.ServiceLabel(p.Th, "Balance", float64(balance)).Layout(gtx)
+								return style.ServiceLabel(p.Th, "Balance", balance).Layout(gtx)
 							},
 							func(gtx C) D {
 								return layout.Flex{
@@ -444,11 +445,11 @@ func (p *LeasePage) LayoutServices(gtx C) D {
 								return material.H6(p.Th.Dark(), "Rent").Layout(gtx)
 							},
 							func(gtx C) D {
-								balance := 0
+								var balance currency.Currency
 								if service, ok := p.lease.Services["rent"]; ok {
 									balance = service.Balance()
 								}
-								return style.ServiceLabel(p.Th, "Balance", float64(balance)).Layout(gtx)
+								return style.ServiceLabel(p.Th, "Balance", balance).Layout(gtx)
 							},
 							func(gtx C) D {
 								return layout.Flex{

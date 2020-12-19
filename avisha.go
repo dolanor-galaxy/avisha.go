@@ -6,6 +6,7 @@ import (
 
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
+	"github.com/jackmordaunt/avisha.go/currency"
 	"github.com/jackmordaunt/avisha.go/notify"
 )
 
@@ -51,10 +52,6 @@ func (d Dwelling) String() string {
 	}
 }
 
-// Currency in encoded in AUD cents, where 100 == $1.
-// @Todo handle currency similar to time.Duration, with a multiplied base unit.
-type Currency = uint
-
 // Term describes the active duration of a Lease.
 type Term struct {
 	Start time.Time
@@ -79,7 +76,7 @@ type Lease struct {
 	Site   int
 
 	Term Term
-	Rent Currency
+	Rent currency.Currency
 
 	// Services is a map of named services like rent and utilities.
 	Services map[string]Service
@@ -90,35 +87,35 @@ type Service struct {
 	Ledger Ledger
 }
 
-func (s Service) Balance() int {
+func (s Service) Balance() currency.Currency {
 	return s.Ledger.Balance()
 }
 
-// Ledger maintains a balance of currency.
+// Ledger maintains a balance of currency.currency.
 type Ledger struct {
-	Credits []Currency
-	Debits  []Currency
+	Credits []currency.Currency
+	Debits  []currency.Currency
 }
 
-// Credit record a credit of currency.
-func (l *Ledger) Credit(amount Currency) {
+// Credit record a credit of currency.currency.
+func (l *Ledger) Credit(amount currency.Currency) {
 	l.Credits = append(l.Credits, amount)
 }
 
-// Debit records a debit of currency.
-func (l *Ledger) Debit(amount Currency) {
+// Debit records a debit of currency.currency.
+func (l *Ledger) Debit(amount currency.Currency) {
 	l.Debits = append(l.Debits, amount)
 }
 
 // Balance calculates the Balance of the Service.
-func (l Ledger) Balance() int {
-	credits := 0
+func (l Ledger) Balance() currency.Currency {
+	credits := currency.Currency(0)
 	for _, c := range l.Credits {
-		credits += int(c)
+		credits += c
 	}
-	debits := 0
+	debits := currency.Currency(0)
 	for _, d := range l.Debits {
-		debits += int(d)
+		debits += d
 	}
 	return credits - debits
 }
@@ -127,8 +124,8 @@ func (l Ledger) Balance() int {
 type Invoice struct {
 	ID    ID `storm:"id,increment"`
 	Lease int
-	// Bill is the amount of currency due.
-	Bill Currency
+	// Bill is the amount of currency.currency due.
+	Bill currency.Currency
 	// Important dates.
 	Issued time.Time
 	Due    time.Time
@@ -139,7 +136,7 @@ type Invoice struct {
 type UtilityInvoice struct {
 	Invoice `storm:"inline"`
 	// UnitCost is the cost per unit of power.
-	UnitCost Currency
+	UnitCost currency.Currency
 	// UnitsConsumed is the amount of units to charge for.
 	UnitsConsumed int
 }
@@ -165,7 +162,7 @@ type Bank struct {
 }
 
 type Defaults struct {
-	UnitCost   Currency
+	UnitCost   currency.Currency
 	RentCycle  time.Duration
 	InvoiceNet time.Duration
 }
@@ -230,7 +227,7 @@ func (app App) RegisterTenant(t *Tenant) error {
 }
 
 // PayService records a payment for some service on a lease.
-func (app App) PayService(leaseID int, service string, amount uint) error {
+func (app App) PayService(leaseID int, service string, amount currency.Currency) error {
 	var l Lease
 	if err := app.One("ID", leaseID, &l); err != nil {
 		return fmt.Errorf("finding lease: %w", err)
@@ -248,7 +245,7 @@ func (app App) PayService(leaseID int, service string, amount uint) error {
 }
 
 // BillService records a debt for some service on a lease.
-func (app App) BillService(leaseID int, service string, amount uint) error {
+func (app App) BillService(leaseID int, service string, amount currency.Currency) error {
 	var l Lease
 	if err := app.One("ID", leaseID, &l); err != nil {
 		return fmt.Errorf("finding lease: %w", err)
