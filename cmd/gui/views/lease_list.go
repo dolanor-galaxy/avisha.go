@@ -1,8 +1,10 @@
 package views
 
 import (
+	"fmt"
 	"image"
 	"log"
+	"sort"
 	"sync"
 	"unsafe"
 
@@ -69,25 +71,38 @@ func (l *LeaseList) Layout(gtx C) D {
 	if err := l.App.All(&leases); err != nil {
 		log.Printf("loading leases: %v", err)
 	}
-	return l.list.Layout(gtx, len(leases), func(gtx C, index int) D {
+	// @Improve
+	// Using this composite type so we can order by site number, since
+	// we can't do alphabetic ordering of integer IDs.
+	// Not sure about performance hit this takes, it's at least O(2n).
+	type Lease struct {
+		Lease  avisha.Lease
+		Site   avisha.Site
+		Tenant avisha.Tenant
+	}
+	var (
+		list = make([]Lease, len(leases))
+	)
+	for ii := range leases {
+		list[ii].Lease = *leases[ii]
+		if err := l.App.One("ID", leases[ii].Tenant, &list[ii].Tenant); err != nil {
+			log.Printf("lease list: %v", err)
+		}
+		if err := l.App.One("ID", leases[ii].Site, &list[ii].Site); err != nil {
+			log.Printf("lease list: %v", err)
+		}
+	}
+	sort.Slice(list, func(ii, jj int) bool {
+		return list[ii].Site.Number < list[jj].Site.Number
+	})
+	return l.list.Layout(gtx, len(list), func(gtx C, index int) D {
 		var (
-			lease  = leases[index]
+			lease  = &list[index].Lease
+			tenant = &list[index].Tenant
+			site   = &list[index].Site
 			state  = l.states.Next(unsafe.Pointer(lease))
 			active = false
-			tenant avisha.Tenant
-			site   avisha.Site
 		)
-		// @Todo: handle data loading errors by
-		// - Displaying a message to the user that something went wrong.
-		// - Logging error (it's a system bug, not a user error) to service.
-		// - Generate bug report?
-		// Is it worth trying to abstract this data loading stuff?
-		if err := l.App.One("ID", lease.Tenant, &tenant); err != nil {
-			log.Printf("lease list: %v", err)
-		}
-		if err := l.App.One("ID", lease.Site, &site); err != nil {
-			log.Printf("lease list: %v", err)
-		}
 		return style.ListItem(
 			gtx,
 			l.Th.Dark(),
@@ -104,7 +119,11 @@ func (l *LeaseList) Layout(gtx C) D {
 							}.Layout(
 								gtx,
 								layout.Rigid(func(gtx C) D {
-									return style.TenantLabel(l.Th.Dark(), tenant).Layout(gtx)
+									return material.Label(
+										l.Th.Dark(),
+										unit.Dp(20),
+										fmt.Sprintf("Site %v", site.Number),
+									).Layout(gtx)
 								}),
 								layout.Flexed(1.0, func(gtx C) D {
 									return D{Size: image.Point{
@@ -113,11 +132,7 @@ func (l *LeaseList) Layout(gtx C) D {
 									}}
 								}),
 								layout.Rigid(func(gtx C) D {
-									return material.Label(
-										l.Th.Dark(),
-										unit.Dp(20),
-										site.Number,
-									).Layout(gtx)
+									return style.TenantLabel(l.Th.Dark(), *tenant).Layout(gtx)
 								}),
 							)
 						},
