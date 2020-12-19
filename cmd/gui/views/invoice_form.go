@@ -7,8 +7,8 @@ package views
 // 3. Submission validation (validate all fields and collect errors)
 
 import (
-	"fmt"
 	"image"
+	"strconv"
 	"time"
 
 	"gioui.org/layout"
@@ -23,12 +23,16 @@ import (
 
 // UtilitiesInvoiceForm is form for collecting utility invoice data.
 type UtilitiesInvoiceForm struct {
-	UnitsConsumed materials.TextField
-	UnitCost      materials.TextField
-	IssueDate     materials.TextField
-	DueDate       materials.TextField
-	SubmitBtn     widget.Clickable
-	CancelBtn     widget.Clickable
+	UnitsConsumed   materials.TextField
+	PreviousReading materials.TextField
+	CurrentReading  materials.TextField
+	UnitCost        materials.TextField
+	TotalCost       materials.TextField
+	IssueDate       materials.TextField
+	DueDate         materials.TextField
+
+	SubmitBtn widget.Clickable
+	CancelBtn widget.Clickable
 }
 
 func (f *UtilitiesInvoiceForm) Layout(gtx C, th *style.Theme) D {
@@ -43,7 +47,20 @@ func (f *UtilitiesInvoiceForm) Layout(gtx C, th *style.Theme) D {
 			}.Layout(
 				gtx,
 				layout.Rigid(func(gtx C) D {
-					return f.IssueDate.Layout(gtx, th.Dark(), "Issue Date")
+					return layout.Flex{
+						Axis: layout.Horizontal,
+					}.Layout(
+						gtx,
+						layout.Flexed(1, func(gtx C) D {
+							return f.IssueDate.Layout(gtx, th.Dark(), "Issue Date")
+						}),
+						layout.Rigid(func(gtx C) D {
+							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							return f.DueDate.Layout(gtx, th.Dark(), "Due Date (net 14)")
+						}),
+					)
 				}),
 				layout.Rigid(func(gtx C) D {
 					f.UnitCost.Prefix = func(gtx C) D {
@@ -52,10 +69,38 @@ func (f *UtilitiesInvoiceForm) Layout(gtx C, th *style.Theme) D {
 					return f.UnitCost.Layout(gtx, th.Dark(), "Unit Cost")
 				}),
 				layout.Rigid(func(gtx C) D {
-					return f.UnitsConsumed.Layout(gtx, th.Dark(), "Units Consumed")
+					return layout.Flex{
+						Axis: layout.Horizontal,
+					}.Layout(
+						gtx,
+						layout.Flexed(1, func(gtx C) D {
+							return f.PreviousReading.Layout(gtx, th.Dark(), "Previous Reading")
+						}),
+						layout.Rigid(func(gtx C) D {
+							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							return f.CurrentReading.Layout(gtx, th.Dark(), "Current Reading")
+						}),
+					)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return f.DueDate.Layout(gtx, th.Dark(), "Due Date")
+					return layout.Flex{
+						Axis: layout.Horizontal,
+					}.Layout(
+						gtx,
+						layout.Flexed(1, func(gtx C) D {
+							gtx.Queue = nil
+							return f.UnitsConsumed.Layout(gtx, th.Dark(), "Units Consumed")
+						}),
+						layout.Rigid(func(gtx C) D {
+							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							gtx.Queue = nil
+							return f.TotalCost.Layout(gtx, th.Dark(), "Total Cost")
+						}),
+					)
 				}),
 			)
 		}),
@@ -86,12 +131,12 @@ func (f *UtilitiesInvoiceForm) Layout(gtx C, th *style.Theme) D {
 
 func (f *UtilitiesInvoiceForm) Clear() {
 	f.IssueDate.Clear()
-	t := time.Now()
-	f.IssueDate.SetText(fmt.Sprintf("%d/%d/%d", t.Day(), t.Month(), t.Year()))
+	f.IssueDate.SetText(util.FormatTime(time.Now()))
+	f.DueDate.Clear()
+	f.DueDate.SetText(util.FormatTime(time.Now().Add(time.Hour * 24 * 14)))
 	// @Todo load unit cost default value from storage.
 	f.UnitCost.Clear()
 	f.UnitCost.SetText("1")
-	f.DueDate.Clear()
 	f.UnitsConsumed.Clear()
 }
 
@@ -103,11 +148,12 @@ func (f *UtilitiesInvoiceForm) Update(gtx C) {
 			f.UnitCost.ClearError()
 		}
 	}
-	for range f.UnitsConsumed.Events() {
-		if _, err := f.validateUnitsConsumed(); err != nil {
-			f.UnitsConsumed.SetError(err.Error())
+	for range f.IssueDate.Events() {
+		if t, err := f.validateIssueDate(); err != nil {
+			f.IssueDate.SetError(err.Error())
 		} else {
-			f.UnitsConsumed.ClearError()
+			f.IssueDate.ClearError()
+			f.DueDate.SetText(util.FormatTime(t.Add(time.Hour * 24 * 14)))
 		}
 	}
 	for range f.DueDate.Events() {
@@ -117,11 +163,24 @@ func (f *UtilitiesInvoiceForm) Update(gtx C) {
 			f.DueDate.ClearError()
 		}
 	}
-	for range f.IssueDate.Events() {
-		if _, err := f.validateIssueDate(); err != nil {
-			f.IssueDate.SetError(err.Error())
+	for range f.CurrentReading.Events() {
+		if current, err := f.validateCurrentReading(); err != nil {
+			f.CurrentReading.SetError(err.Error())
 		} else {
-			f.IssueDate.ClearError()
+			f.CurrentReading.ClearError()
+			if previous, err := f.validatePreviousReading(); err != nil {
+				f.PreviousReading.SetError(err.Error())
+			} else {
+				f.PreviousReading.ClearError()
+				consumed := current - previous
+				f.UnitsConsumed.SetText(strconv.Itoa(consumed))
+				if cost, err := f.validateUnitCost(); err != nil {
+					f.UnitCost.SetError(err.Error())
+				} else {
+					f.UnitCost.ClearError()
+					f.TotalCost.SetText(strconv.Itoa(consumed * cost))
+				}
+			}
 		}
 	}
 }
@@ -162,6 +221,14 @@ func (f *UtilitiesInvoiceForm) validateUnitCost() (int, error) {
 
 func (f *UtilitiesInvoiceForm) validateUnitsConsumed() (int, error) {
 	return util.ParseInt(f.UnitsConsumed.Text())
+}
+
+func (f *UtilitiesInvoiceForm) validatePreviousReading() (int, error) {
+	return util.ParseInt(f.PreviousReading.Text())
+}
+
+func (f *UtilitiesInvoiceForm) validateCurrentReading() (int, error) {
+	return util.ParseInt(f.CurrentReading.Text())
 }
 
 func (f *UtilitiesInvoiceForm) validateIssueDate() (time.Time, error) {

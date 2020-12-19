@@ -110,6 +110,11 @@ func FieldRequired(s string) (string, error) {
 	return s, nil
 }
 
+// FormatTime formats a time object into a string.
+func FormatTime(t time.Time) string {
+	return fmt.Sprintf("%d/%d/%d", t.Day(), t.Month(), t.Year())
+}
+
 // FlexStrategy renders flexed with the given weight if the axis matches.
 // Otherwise the widget is rendered rigid and weight is ignored.
 func FlexStrategy(weight float32, flex, actual layout.Axis, w layout.Widget) layout.FlexChild {
