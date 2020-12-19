@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 	"unsafe"
@@ -31,25 +30,27 @@ import (
 // and service payments.
 type LeasePage struct {
 	nav.Route
-	App  *avisha.App
-	Th   *style.Theme
-	Form LeaseForm
+	App *avisha.App
+	Th  *style.Theme
+
+	lease  avisha.Lease
+	tenant avisha.Tenant
+	site   avisha.Site
+
+	Form                 LeaseForm
+	Dialog               style.Dialog
+	UtilitiesInvoiceForm UtilitiesInvoiceForm
 
 	PayUtility  widget.Clickable
 	BillUtility widget.Clickable
 	PayRent     widget.Clickable
 	BillRent    widget.Clickable
 
-	Dialog               style.Dialog
-	UtilitiesInvoiceForm UtilitiesInvoiceForm
-
-	modal layout.Widget
-	lease avisha.Lease
-
+	modal         layout.Widget
 	invoiceStates States
 	invoiceList   layout.List
-
-	scroll layout.List
+	scroll        layout.List
+	dummy         widget.Editor
 }
 
 func (page *LeasePage) Title() string {
@@ -72,21 +73,15 @@ func (p *LeasePage) Receive(data interface{}) {
 		// Note: this just copies the data; one copy goes to the form, and one
 		// to the page.
 		p.lease = *lease
-		p.Form.lease = lease
-		if err := p.App.One("ID", lease.Tenant, &p.Form.tenant); err != nil {
+		if err := p.App.One("ID", lease.Tenant, &p.tenant); err != nil {
 			log.Printf("loading tenant: %+v: %v", lease.Tenant, err)
 			return
 		}
-		if err := p.App.One("ID", lease.Site, &p.Form.site); err != nil {
+		if err := p.App.One("ID", lease.Site, &p.site); err != nil {
 			log.Printf("loading site: %v", err)
 			return
 		}
-		p.Form.Tenant.SetText(p.Form.tenant.Name)
-		p.Form.Site.SetText(p.Form.site.Number)
-		p.Form.Days.SetText(strconv.Itoa(p.Form.lease.Term.Days))
-		p.Form.Rent.SetText(strconv.Itoa(int(p.Form.lease.Rent)))
-		start := lease.Term.Start
-		p.Form.Date.SetText(fmt.Sprintf("%d/%d/%d", start.Day(), start.Month(), start.Year()))
+		p.Form.Load(&p.lease, p.tenant, p.site)
 		p.UtilitiesInvoiceForm.Clear()
 	}
 }
@@ -139,14 +134,12 @@ func (p *LeasePage) Update(gtx C) {
 			}(); err != nil {
 				log.Printf("%v", err)
 			} else {
-				p.Form.Clear()
-				p.Route.Back()
+				p.Unfocus()
 			}
 		}
 	}
 	if p.Form.CancelBtn.Clicked() {
 		p.Form.Clear()
-		p.Route.Back()
 	}
 	if p.PayUtility.Clicked() {
 		p.Dialog.Context = "pay-utilities"
@@ -289,6 +282,10 @@ func (p *LeasePage) Update(gtx C) {
 		// 2. best way to make this dep explicit?
 		p.Dialog.Input.Focus()
 	}
+	// @Improvement proper strategy for handling "unfocus".
+	// Currenty strategy is to use a dummy editor to take the focus away.
+	// Note: could use the dummy for capturing commands.
+	material.Editor(p.Th.Primary(), &p.dummy, "").Layout(gtx)
 }
 
 // @Todo Make navigation independent of the details form.
@@ -546,4 +543,8 @@ func (p *LeasePage) LayoutInvoiceList(gtx C) D {
 			})
 		}),
 	)
+}
+
+func (p *LeasePage) Unfocus() {
+	p.dummy.Focus()
 }

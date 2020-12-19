@@ -40,14 +40,33 @@ type LeaseForm struct {
 	CancelBtn widget.Clickable
 }
 
-// Clear the form fields.
+// Clear resets the form to previous values.
+// If the form is in create mode (no lease entity attached), it empties the
+// fields.
+// @Todo make clear-reset pattern common accross forms.
 func (l *LeaseForm) Clear() {
-	l.Tenant.Clear()
-	l.Site.Clear()
-	l.Days.Clear()
-	l.Rent.Clear()
-	l.Date.Clear()
-	l.lease = nil
+	if l.lease == nil {
+		l.Tenant.Clear()
+		l.Site.Clear()
+		l.Days.Clear()
+		l.Rent.Clear()
+		l.Date.Clear()
+	} else {
+		l.Load(l.lease, l.tenant, l.site)
+	}
+}
+
+// Load form data from a lease entity.
+func (l *LeaseForm) Load(lease *avisha.Lease, tenant avisha.Tenant, site avisha.Site) {
+	l.lease = lease
+	l.tenant = tenant
+	l.site = site
+	l.Tenant.SetText(l.tenant.Name)
+	l.Site.SetText(l.site.Number)
+	l.Days.SetText(strconv.Itoa(l.lease.Term.Days))
+	l.Rent.SetText(strconv.Itoa(int(l.lease.Rent)))
+	start := lease.Term.Start
+	l.Date.SetText(fmt.Sprintf("%d/%d/%d", start.Day(), start.Month(), start.Year()))
 }
 
 func (l *LeaseForm) Update(gtx C) {
@@ -105,32 +124,20 @@ func (l *LeaseForm) Layout(gtx C, th *style.Theme) D {
 					}.Layout(
 						gtx,
 						layout.Flexed(1, func(gtx C) D {
-							if l.lease != nil {
-								gtx.Queue = nil
-							}
 							return l.Tenant.Layout(gtx, th.Dark(), "Tenant")
 						}),
 						layout.Rigid(func(gtx C) D {
 							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
 						}),
 						layout.Flexed(1, func(gtx C) D {
-							if l.lease != nil {
-								gtx.Queue = nil
-							}
 							return l.Site.Layout(gtx, th.Dark(), "Site")
 						}),
 					)
 				}),
 				layout.Rigid(func(gtx C) D {
-					if l.lease != nil {
-						gtx.Queue = nil
-					}
 					return l.Date.Layout(gtx, th.Dark(), "Start Date")
 				}),
 				layout.Rigid(func(gtx C) D {
-					if l.lease != nil {
-						gtx.Queue = nil
-					}
 					return l.Days.Layout(gtx, th.Dark(), "Duration (days)")
 				}),
 				layout.Rigid(func(gtx C) D {
