@@ -1,11 +1,9 @@
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9 h1:VpgP7xuJadIUuKccphEpTJnWhS2jkQyMt6Y7pJCD7fY=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
-gioui.org v0.0.0-20201106195654-dbc0796d0207/go.mod h1:Y+uS7hHMvku1Q+ooaoq6fYD5B2LGoT8JtFgvmYmRzTw=
 gioui.org v0.0.0-20201206220452-acc3f704e478 h1:BOuNQF8yZHQUGhL1G93akbzJ2+G9EJySzPssDic9acY=
 gioui.org v0.0.0-20201206220452-acc3f704e478/go.mod h1:Y+uS7hHMvku1Q+ooaoq6fYD5B2LGoT8JtFgvmYmRzTw=
 gioui.org v0.0.0-20201218091821-40c082e94961 h1:bV4/GvQeHuWxSXdY/osqMZLhybo1CXFXX63TRe7HH88=
 gioui.org v0.0.0-20201218091821-40c082e94961/go.mod h1:Y+uS7hHMvku1Q+ooaoq6fYD5B2LGoT8JtFgvmYmRzTw=
-git.sr.ht/~whereswaldon/materials v0.0.0-20201108152851-4af89701ceb6/go.mod h1:TayKd2ixEIPSq7ZzJIb1hcIsV1FapB43GCSx8GnLyUg=
 git.sr.ht/~whereswaldon/materials v0.0.0-20201212021906-748774a2ad9b h1:XDu43OWpqnqDH/IrnU7kmxHzpLZp5bMu2aGptPlr+Nw=
 git.sr.ht/~whereswaldon/materials v0.0.0-20201212021906-748774a2ad9b/go.mod h1:T+qQ+uWh7paSXI7QzQViqUPnxd+axqH6Wn9JG5sxiWY=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802 h1:1BDTz0u9nC3//pOCMdNH+CiXJVYJh5UQNCOBG7jbELc=
@@ -50,7 +48,6 @@ golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8U
 golang.org/x/exp v0.0.0-20190306152737-a1d7652674e8/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/exp v0.0.0-20191002040644-a1355ae1e2c3 h1:n9HxLrNxWWtEb1cA950nuEEj3QnKbtsCJ6KjcgisNUs=
 golang.org/x/exp v0.0.0-20191002040644-a1355ae1e2c3/go.mod h1:NOZ3BPKG0ec/BKJQgnvsSFpcKLM5xXVWnvZS97DWHgE=
-golang.org/x/exp v0.0.0-20201008143054-e3b2a7f2fdc7/go.mod h1:1phAWC201xIgDyaFpmDeZkgf70Q4Pd/CNqfRtVPtxNw=
 golang.org/x/exp v0.0.0-20201203231725-fa01524bc59d h1:FscZqdyN/qhN9in1p2FLXl6vsrWY792O5bak6GHqVs0=
 golang.org/x/exp v0.0.0-20201203231725-fa01524bc59d/go.mod h1:1phAWC201xIgDyaFpmDeZkgf70Q4Pd/CNqfRtVPtxNw=
 golang.org/x/exp v0.0.0-20201215153530-b5a6e247da10 h1:XJ9H6vK91O+GoSdT6asXF5xRhlXzAY1J6XeSKpzyOxY=

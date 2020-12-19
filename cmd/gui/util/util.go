@@ -102,6 +102,15 @@ func ParseUint(s string) (uint, error) {
 	return uint(n), nil
 }
 
+// ParseDay parses a day from digit characters.
+func ParseDay(s string) (time.Duration, error) {
+	n, err := ParseUint(s)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	return time.Hour * 24 * time.Duration(n), nil
+}
+
 // FieldRequired ensures that a string is not empty.
 func FieldRequired(s string) (string, error) {
 	if strings.TrimSpace(s) == "" {

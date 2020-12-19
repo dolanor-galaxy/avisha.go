@@ -52,6 +52,7 @@ func (d Dwelling) String() string {
 }
 
 // Currency in encoded in AUD cents, where 100 == $1.
+// @Todo handle currency similar to time.Duration, with a multiplied base unit.
 type Currency = uint
 
 // Term describes the active duration of a Lease.
@@ -142,10 +143,62 @@ type UtilityInvoice struct {
 	UnitsConsumed int
 }
 
+// Settings are global settings that don't pertain to any specific entity.
+type Settings struct {
+	Landlord Landlord
+	Bank     Bank
+	Defaults Defaults
+}
+
+// Landlord details.
+type Landlord struct {
+	Name  string
+	Email string
+	Phone string
+}
+
+// Banks details to make invoices payable to.
+type Bank struct {
+	Name    string
+	Account string
+}
+
+type Defaults struct {
+	UnitCost   Currency
+	RentCycle  time.Duration
+	InvoiceNet time.Duration
+}
+
+// Default to sane values.
+func (d *Defaults) Default() {
+	d.UnitCost = 1
+	d.RentCycle = time.Hour * 24 * 14
+	d.InvoiceNet = time.Hour * 24 * 14
+}
+
 // App implements use cases.
 type App struct {
 	*storm.DB
 	notify.Notifier
+}
+
+// LoadSettings loads global settings.
+func (app App) LoadSettings() (s Settings, err error) {
+	if err := app.Get("settings", "global", &s); err != nil && err != storm.ErrNotFound {
+		return s, err
+	}
+	if s.Defaults == (Defaults{}) {
+		s.Defaults.Default()
+	}
+	return s, nil
+}
+
+// SaveSettings saves global settings.
+func (app App) SaveSettings(s Settings) (err error) {
+	if s.Defaults == (Defaults{}) {
+		s.Defaults.Default()
+	}
+	return app.Set("settings", "global", &s)
 }
 
 // CreateLease creates a new lease.

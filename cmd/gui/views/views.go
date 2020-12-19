@@ -21,6 +21,7 @@ const (
 	RouteLeasePage  Route = "lease-page"
 	RouteTenantForm Route = "tenant-form"
 	RouteSiteForm   Route = "site-form"
+	RouteSettings   Route = "settings"
 )
 
 // States maintains list-item state, between frame updates.
