@@ -68,6 +68,8 @@ func (p *LeasePage) Receive(data interface{}) {
 		err := p.App.One("Number", number, &s)
 		return s, err == nil
 	}
+	p.Form.lease = nil
+	p.Form.Clear()
 	if lease, ok := data.(*avisha.Lease); ok && lease != nil {
 		// @Improvement: use one source of lease data.
 		// Note: this just copies the data; one copy goes to the form, and one
@@ -135,11 +137,18 @@ func (p *LeasePage) Update(gtx C) {
 				log.Printf("%v", err)
 			} else {
 				p.Unfocus()
+				if p.Form.lease == nil {
+					p.Route.Back()
+				}
 			}
 		}
 	}
 	if p.Form.CancelBtn.Clicked() {
 		p.Form.Clear()
+		p.Unfocus()
+		if p.Form.lease == nil {
+			p.Route.Back()
+		}
 	}
 	if p.PayUtility.Clicked() {
 		p.Dialog.Context = "pay-utilities"
@@ -282,16 +291,10 @@ func (p *LeasePage) Update(gtx C) {
 		// 2. best way to make this dep explicit?
 		p.Dialog.Input.Focus()
 	}
-	// @Improvement proper strategy for handling "unfocus".
-	// Currenty strategy is to use a dummy editor to take the focus away.
-	// Note: could use the dummy for capturing commands.
-	material.Editor(p.Th.Primary(), &p.dummy, "").Layout(gtx)
 }
 
-// @Todo Make navigation independent of the details form.
 // It doesn't make that much sense to navigate back on form cancel in this
 // context.
-// @Todo Make details form read-only until edit button is clicked.
 func (p *LeasePage) Layout(gtx C) D {
 	p.scroll.Axis = layout.Vertical
 	p.scroll.ScrollToEnd = false
@@ -309,6 +312,16 @@ func (p *LeasePage) Layout(gtx C) D {
 			cs.Max.X = breakpoint
 		}
 	}
+	func() {
+		// @Improvement proper strategy for handling "unfocus".
+		// Currenty strategy is to use a dummy editor to take the focus away.
+		// Note: could use the dummy for capturing commands.
+		th := material.Theme{
+			Shaper:   p.Th.Shaper,
+			TextSize: unit.Dp(0),
+		}
+		material.Editor(&th, &p.dummy, "").Layout(gtx)
+	}()
 	return p.scroll.Layout(gtx, 1, func(gtx C, ii int) D {
 		return layout.Flex{
 			Axis:      axis,
