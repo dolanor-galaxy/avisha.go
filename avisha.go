@@ -63,6 +63,7 @@ type Term struct {
 
 // Overlaps returns whether both terms overlap.
 // A term overlaps another if they share active days.
+// @Todo test this.
 func (t Term) Overlaps(other Term) bool {
 	end := t.Start.Add(time.Hour * time.Duration(24) * time.Duration(t.Days))
 	return other.Start.After(t.Start) && other.Start.Before(end) || other.Overlaps(t)
@@ -280,8 +281,7 @@ func (app App) markInvoices(leaseID int, service Service) error {
 	// Pay all the invoices we can, marking them paid as of now if they weren't
 	// marked already.
 	//
-	// @Fix this is kinda hacky. Think about how payments and invoices should
-	// interact.
+	// @Note this is valid for utilties, but rent needs to be payable out-of-order.
 	for _, inv := range invoices {
 		if total < int(inv.Bill) {
 			break
