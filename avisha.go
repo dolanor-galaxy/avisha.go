@@ -54,15 +54,15 @@ func (d Dwelling) String() string {
 
 // Term describes the active duration of a Lease.
 type Term struct {
-	Start time.Time
-	Days  int
+	Start    time.Time
+	Duration time.Duration
 }
 
 // Overlaps returns whether both terms overlap.
 // A term overlaps another if they share active days.
 // @Todo test this.
 func (t Term) Overlaps(other Term) bool {
-	end := t.Start.Add(time.Hour * time.Duration(24) * time.Duration(t.Days))
+	end := t.Start.Add(time.Duration(t.Duration))
 	return other.Start.After(t.Start) && other.Start.Before(end) || other.Overlaps(t)
 }
 
@@ -302,5 +302,5 @@ func (t Term) String() string {
 }
 
 func (t Term) End() time.Time {
-	return t.Start.Add(time.Hour * 24 * time.Duration(t.Days))
+	return t.Start.Add(t.Duration)
 }
