@@ -43,7 +43,7 @@ func (s *SettingsForm) Clear() {
 	if s.Settings != nil {
 		s.Load(s.Settings)
 	} else {
-		// @Todo zero the fields.
+		s.Form.Clear()
 	}
 }
 
@@ -52,42 +52,34 @@ func (s *SettingsForm) Load(settings *avisha.Settings) {
 	s.Settings = settings
 	s.Form.Load([]widget.Field{
 		{
-			Name:  "Name",
 			Value: widget.TextValuer{Value: &s.Settings.Landlord.Name},
 			Input: &s.Landlord.Name,
 		},
 		{
-			Name:  "Email",
 			Value: widget.TextValuer{Value: &s.Settings.Landlord.Email},
 			Input: &s.Landlord.Email,
 		},
 		{
-			Name:  "Phone",
 			Value: widget.TextValuer{Value: &s.Settings.Landlord.Phone},
 			Input: &s.Landlord.Phone,
 		},
 		{
-			Name:  "Name",
 			Value: widget.TextValuer{Value: &s.Settings.Bank.Name},
 			Input: &s.Bank.Name,
 		},
 		{
-			Name:  "Account",
 			Value: widget.TextValuer{Value: &s.Settings.Bank.Account},
 			Input: &s.Bank.Account,
 		},
 		{
-			Name:  "Unit Cost",
 			Value: widget.CurrencyValuer{Value: &s.Settings.Defaults.UnitCost},
 			Input: &s.Defaults.UnitCost,
 		},
 		{
-			Name:  "Rent Cycle",
 			Value: widget.DaysValuer{Value: &s.Settings.Defaults.RentCycle},
 			Input: &s.Defaults.RentCycle,
 		},
 		{
-			Name:  "Invoice Net",
 			Value: widget.DaysValuer{Value: &s.Settings.Defaults.InvoiceNet},
 			Input: &s.Defaults.InvoiceNet,
 		},
