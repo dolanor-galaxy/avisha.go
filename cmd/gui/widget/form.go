@@ -218,3 +218,15 @@ func (v DateValuer) From(text string) (err error) {
 func (v DateValuer) Clear() {
 	*v.Value = time.Now()
 }
+
+// RequiredValuer ensures the field is not empty.
+type RequiredValuer struct {
+	Valuer
+}
+
+func (v RequiredValuer) From(text string) error {
+	if len(strings.TrimSpace(text)) == 0 {
+		return fmt.Errorf("required")
+	}
+	return v.Valuer.From(text)
+}

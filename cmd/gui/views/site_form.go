@@ -12,24 +12,20 @@ import (
 	"git.sr.ht/~whereswaldon/materials"
 	"github.com/jackmordaunt/avisha.go"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/nav"
-	"github.com/jackmordaunt/avisha.go/cmd/gui/util"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/widget"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/widget/style"
 )
 
 type SiteForm struct {
-	// Page state.
 	nav.Route
 	App *avisha.App
 	Th  *style.Theme
 
-	// Entity data.
-	site *avisha.Site
+	Site avisha.Site
 
-	// Form field.
 	Number materials.TextField
 
-	// Actions.
+	Form      widget.Form
 	SubmitBtn widget.Clickable
 	CancelBtn widget.Clickable
 }
@@ -40,18 +36,25 @@ func (l *SiteForm) Title() string {
 
 func (l *SiteForm) Receive(data interface{}) {
 	if site, ok := data.(*avisha.Site); ok && site != nil {
-		l.site = site
-		l.Number.SetText(site.Number)
+		l.Site = *site
+	} else {
+		l.Site = avisha.Site{}
 	}
+	l.Form.Load([]widget.Field{
+		{
+			Value: widget.RequiredValuer{Valuer: widget.TextValuer{Value: &l.Site.Number}},
+			Input: &l.Number,
+		},
+	})
 }
 
 func (l *SiteForm) Context() (list []layout.Widget) {
-	if l.site != nil {
+	if l.Site != (avisha.Site{}) {
 		list = append(list, func(gtx C) D {
 			return layout.UniformInset(unit.Dp(10)).Layout(
 				gtx,
 				func(gtx C) D {
-					label := material.Label(l.Th.Dark(), unit.Dp(24), l.site.Number)
+					label := material.Label(l.Th.Dark(), unit.Dp(24), l.Site.Number)
 					label.Alignment = text.Middle
 					label.Color = l.Th.Dark().ContrastFg
 					return label.Layout(gtx)
@@ -61,13 +64,13 @@ func (l *SiteForm) Context() (list []layout.Widget) {
 	return list
 }
 
-// Clear the form fields.
-func (l *SiteForm) Clear() {
-	l.Number.Clear()
-	l.site = nil
+// Submit validates form data and returns a boolean to indicate validity.
+func (l *SiteForm) Submit() (s avisha.Site, ok bool) {
+	return l.Site, l.Form.Submit()
 }
 
 func (l *SiteForm) Update(gtx C) {
+	l.Form.Validate(gtx)
 	if l.SubmitBtn.Clicked() {
 		if s, ok := l.Submit(); ok {
 			if err := func() error {
@@ -84,13 +87,13 @@ func (l *SiteForm) Update(gtx C) {
 			}(); err != nil {
 				log.Printf("%v", err)
 			} else {
-				l.Clear()
+				l.Form.Clear()
 				l.Route.Back()
 			}
 		}
 	}
 	if l.CancelBtn.Clicked() {
-		l.Clear()
+		l.Form.Clear()
 		l.Route.Back()
 	}
 }
@@ -140,19 +143,4 @@ func (l *SiteForm) Layout(gtx C) D {
 			}),
 		)
 	})
-}
-
-// Submit validates form data and returns a boolean to indicate validity.
-func (l *SiteForm) Submit() (s avisha.Site, ok bool) {
-	ok = true
-	if l.site != nil {
-		s.ID = l.site.ID
-	}
-	if n, err := util.FieldRequired(l.Number.Text()); err != nil {
-		l.Number.SetError(err.Error())
-		ok = false
-	} else {
-		s.Number = n
-	}
-	return s, ok
 }

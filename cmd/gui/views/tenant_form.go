@@ -12,25 +12,21 @@ import (
 	"git.sr.ht/~whereswaldon/materials"
 	"github.com/jackmordaunt/avisha.go"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/nav"
-	"github.com/jackmordaunt/avisha.go/cmd/gui/util"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/widget"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/widget/style"
 )
 
 type TenantForm struct {
-	// Page data.
 	nav.Route
 	App *avisha.App
 	Th  *style.Theme
 
-	// Entity data.
-	tenant *avisha.Tenant
+	Tenant avisha.Tenant
 
-	// Form fields.
 	Name    materials.TextField
 	Contact materials.TextField
 
-	// Actions.
+	Form      widget.Form
 	SubmitBtn widget.Clickable
 	CancelBtn widget.Clickable
 }
@@ -41,19 +37,29 @@ func (f *TenantForm) Title() string {
 
 func (f *TenantForm) Receive(data interface{}) {
 	if tenant, ok := data.(*avisha.Tenant); ok && tenant != nil {
-		f.tenant = tenant
-		f.Name.SetText(tenant.Name)
-		f.Contact.SetText(tenant.Contact)
+		f.Tenant = *tenant
+	} else {
+		f.Tenant = avisha.Tenant{}
 	}
+	f.Form.Load([]widget.Field{
+		{
+			Value: widget.RequiredValuer{Valuer: widget.TextValuer{Value: &f.Tenant.Name}},
+			Input: &f.Name,
+		},
+		{
+			Value: widget.TextValuer{Value: &f.Tenant.Contact},
+			Input: &f.Contact,
+		},
+	})
 }
 
 func (f *TenantForm) Context() (list []layout.Widget) {
-	if f.tenant != nil {
+	if f.Tenant != (avisha.Tenant{}) {
 		list = append(list, func(gtx C) D {
 			return layout.UniformInset(unit.Dp(10)).Layout(
 				gtx,
 				func(gtx C) D {
-					label := material.Label(f.Th.Dark(), unit.Dp(24), f.tenant.Name)
+					label := material.Label(f.Th.Dark(), unit.Dp(24), f.Tenant.Name)
 					label.Alignment = text.Middle
 					label.Color = f.Th.Dark().ContrastFg
 					return label.Layout(gtx)
@@ -63,14 +69,13 @@ func (f *TenantForm) Context() (list []layout.Widget) {
 	return list
 }
 
-// Clear the form fields.
-func (f *TenantForm) Clear() {
-	f.Name.Clear()
-	f.Contact.Clear()
-	f.tenant = nil
+// Submit validates the input adata and returns a boolean indicating validity.
+func (f *TenantForm) Submit() (tenant avisha.Tenant, ok bool) {
+	return f.Tenant, f.Form.Submit()
 }
 
 func (f *TenantForm) Update(gtx C) {
+	f.Form.Validate(gtx)
 	if f.SubmitBtn.Clicked() {
 		if t, ok := f.Submit(); ok {
 			if err := func() error {
@@ -84,7 +89,7 @@ func (f *TenantForm) Update(gtx C) {
 					}
 					// Allow for zero value contact field.
 					if err := f.App.UpdateField(
-						&avisha.Tenant{ID: f.tenant.ID},
+						&avisha.Tenant{ID: f.Tenant.ID},
 						"Contact",
 						t.Contact,
 					); err != nil {
@@ -95,13 +100,13 @@ func (f *TenantForm) Update(gtx C) {
 			}(); err != nil {
 				log.Printf("%v", err)
 			} else {
-				f.Clear()
+				f.Form.Clear()
 				f.Route.Back()
 			}
 		}
 	}
 	if f.CancelBtn.Clicked() {
-		f.Clear()
+		f.Form.Clear()
 		f.Route.Back()
 	}
 }
@@ -154,24 +159,4 @@ func (f *TenantForm) Layout(gtx C) D {
 			}),
 		)
 	})
-}
-
-// Submit validates the input adata and returns a boolean indicating validity.
-func (f *TenantForm) Submit() (tenant avisha.Tenant, ok bool) {
-	ok = true
-	if f.tenant != nil {
-		tenant.ID = f.tenant.ID
-	}
-	if name, err := f.validateName(); err != nil {
-		f.Name.SetError(err.Error())
-		ok = false
-	} else {
-		tenant.Name = name
-	}
-	tenant.Contact = f.Contact.Text()
-	return tenant, ok
-}
-
-func (f *TenantForm) validateName() (string, error) {
-	return util.FieldRequired(f.Name.Text())
 }
