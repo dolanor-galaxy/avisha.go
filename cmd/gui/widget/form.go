@@ -3,7 +3,6 @@ package widget
 import (
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/jackmordaunt/avisha.go/cmd/gui/util"
@@ -14,6 +13,7 @@ import (
 // data.
 // Valuer contains the precise validation logic, which is expresssed by the
 // error return.
+// @Taxonomy Is there a better name for this? FieldMapper, Mapper, Value.
 type Valuer interface {
 	To() (text string, err error)
 	From(text string) (err error)
@@ -58,13 +58,6 @@ func (field *Field) Validate() bool {
 // Form manipulates fields in a consistent way.
 type Form struct {
 	Fields []Field
-	init   sync.Once
-}
-
-func (f *Form) Init(fields []Field) {
-	f.init.Do(func() {
-		f.Fields = fields
-	})
 }
 
 // Load values into inputs.
