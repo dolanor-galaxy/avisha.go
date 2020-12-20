@@ -92,13 +92,44 @@ func ParseInt(s string) (int, error) {
 	return n, nil
 }
 
-// ParseCurrency parses a dollars from digit characters.
-func ParseCurrency(s string) (currency.Currency, error) {
-	n, err := strconv.Atoi(s)
+// ParseFloat parses a floating point number from digit characters.
+func ParseFloat(s string) (float64, error) {
+	n, err := strconv.ParseFloat(s, 64)
 	if err != nil {
 		return 0, fmt.Errorf("must be a valid number")
 	}
-	return currency.Currency(n) * currency.Dollar, nil
+	return n, nil
+}
+
+// ParseCurrency parses a dollars from digit characters.
+func ParseCurrency(s string) (c currency.Currency, err error) {
+	// s = strings.TrimPrefix(s, "$")
+	parts := strings.Split(s, ".")
+	d, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return 0, fmt.Errorf("must be a valid number")
+	}
+	c += (currency.Currency(d) * currency.Dollar)
+	if len(parts) > 1 {
+		var (
+			fraction = parts[1]
+			length   = len(fraction)
+		)
+		// Ignore extra digits.
+		if length > 4 {
+			length = 4
+		}
+		// Pad with zeros for correct precision.
+		if length < 4 {
+			fraction += strings.Repeat("0", 4-length)
+		}
+		mills, err := strconv.Atoi(fraction)
+		if err != nil {
+			return 0, fmt.Errorf("must be a valid number")
+		}
+		c += (currency.Currency(mills) * currency.Mill)
+	}
+	return c, nil
 }
 
 // ParseInt parses an unsigned integer from digit characters.

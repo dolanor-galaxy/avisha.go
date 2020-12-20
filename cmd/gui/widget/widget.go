@@ -19,12 +19,13 @@ type (
 
 // Re-export widget types.
 type (
-	Editor    = widget.Editor
-	Enum      = widget.Enum
-	Clickable = widget.Clickable
-	Bool      = widget.Bool
-	Border    = widget.Border
-	Icon      = widget.Icon
+	Editor      = widget.Editor
+	EditorEvent = widget.EditorEvent
+	Enum        = widget.Enum
+	Clickable   = widget.Clickable
+	Bool        = widget.Bool
+	Border      = widget.Border
+	Icon        = widget.Icon
 )
 
 // Div is a visual divider: a colored line with a thickness.
