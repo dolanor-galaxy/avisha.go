@@ -47,6 +47,7 @@ func (s *SettingsForm) Clear() {
 	}
 }
 
+// Load initialises the form fields.
 func (s *SettingsForm) Load(settings *avisha.Settings) {
 	s.Settings = settings
 	s.Form.Load([]widget.Field{
