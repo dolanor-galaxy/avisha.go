@@ -1,6 +1,7 @@
 package widget
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -15,8 +16,12 @@ import (
 // error return.
 // @Taxonomy Is there a better name for this? FieldMapper, Mapper, Value.
 type Valuer interface {
+	// To converts the value into a string.
 	To() (text string, err error)
+	// From parses the value from a string.
 	From(text string) (err error)
+	// Clear resets the value.
+	Clear()
 }
 
 // Input can handle text content and error content.
@@ -37,7 +42,6 @@ type Input interface {
 // Field associates a value with a name.
 // Name is the formatted title of the field, suitable for rendering to the UI.
 type Field struct {
-	Name  string
 	Value Valuer
 	Input Input
 }
@@ -96,6 +100,15 @@ func (f *Form) Validate(gtx C) {
 	}
 }
 
+func (f *Form) Clear() {
+	for _, field := range f.Fields {
+		field.Value.Clear()
+		text, _ := field.Value.To()
+		field.Input.ClearError()
+		field.Input.SetText(text)
+	}
+}
+
 // Basic Value implementations.
 // @Cleanup Move to appropriate package.
 
@@ -105,18 +118,16 @@ type IntValuer struct {
 }
 
 func (v IntValuer) To() (string, error) {
-	if v.Value == nil {
-		return "0", nil
-	}
 	return strconv.Itoa(*v.Value), nil
 }
 
 func (v IntValuer) From(text string) (err error) {
-	if v.Value == nil {
-		return nil
-	}
 	*v.Value, err = util.ParseInt(text)
 	return err
+}
+
+func (v IntValuer) Clear() {
+	*v.Value = 0
 }
 
 // FloatValuer maps floating points to text.
@@ -125,18 +136,16 @@ type FloatValuer struct {
 }
 
 func (v FloatValuer) To() (string, error) {
-	if v.Value == nil {
-		return "0.00", nil
-	}
 	return strconv.FormatFloat(*v.Value, 'f', 2, 64), nil
 }
 
 func (v FloatValuer) From(text string) (err error) {
-	if v.Value == nil {
-		return nil
-	}
 	*v.Value, err = util.ParseFloat(text)
 	return err
+}
+
+func (v FloatValuer) Clear() {
+	*v.Value = 0
 }
 
 // CurrencyValuer maps currency to text.
@@ -145,18 +154,16 @@ type CurrencyValuer struct {
 }
 
 func (v CurrencyValuer) To() (string, error) {
-	if v.Value == nil {
-		return "0.00", nil
-	}
 	return strings.TrimPrefix(v.Value.String(), "$"), nil
 }
 
 func (v CurrencyValuer) From(text string) (err error) {
-	if v.Value == nil {
-		return nil
-	}
 	*v.Value, err = util.ParseCurrency(text)
 	return err
+}
+
+func (v CurrencyValuer) Clear() {
+	*v.Value = 0
 }
 
 // TextValuer wraps a text value.
@@ -165,18 +172,16 @@ type TextValuer struct {
 }
 
 func (v TextValuer) To() (string, error) {
-	if v.Value == nil {
-		return "", nil
-	}
 	return *v.Value, nil
 }
 
 func (v TextValuer) From(text string) error {
-	if v.Value == nil {
-		return nil
-	}
 	*v.Value = text
 	return nil
+}
+
+func (v TextValuer) Clear() {
+	*v.Value = ""
 }
 
 type DaysValuer struct {
@@ -184,17 +189,32 @@ type DaysValuer struct {
 }
 
 func (v DaysValuer) To() (string, error) {
-	if v.Value == nil {
-		return "", nil
-	}
 	days := (*v.Value) / (time.Hour * 24)
 	return strconv.Itoa(int(days)), nil
 }
 
 func (v DaysValuer) From(text string) (err error) {
-	if v.Value == nil {
-		return nil
-	}
 	*v.Value, err = util.ParseDay(text)
 	return err
+}
+
+func (v DaysValuer) Clear() {
+	*v.Value = time.Hour * 24
+}
+
+type DateValuer struct {
+	Value *time.Time
+}
+
+func (v DateValuer) To() (string, error) {
+	return fmt.Sprintf("%d/%d/%d", v.Value.Day(), v.Value.Month(), v.Value.Year()), nil
+}
+
+func (v DateValuer) From(text string) (err error) {
+	*v.Value, err = util.ParseDate(text)
+	return err
+}
+
+func (v DateValuer) Clear() {
+	*v.Value = time.Now()
 }
