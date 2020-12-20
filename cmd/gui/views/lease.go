@@ -34,9 +34,7 @@ type LeasePage struct {
 	App *avisha.App
 	Th  *style.Theme
 
-	lease  avisha.Lease
-	tenant avisha.Tenant
-	site   avisha.Site
+	lease avisha.Lease
 
 	Form                 LeaseForm
 	Dialog               style.Dialog
@@ -58,35 +56,16 @@ func (page *LeasePage) Title() string {
 	return "Lease"
 }
 
-// @Todo: route back on error?
 func (p *LeasePage) Receive(data interface{}) {
-	p.lease = avisha.Lease{}
-	p.Form.TenantFinder = func(name string) (t avisha.Tenant, ok bool) {
-		err := p.App.One("Name", name, &t)
-		return t, err == nil
-	}
-	p.Form.SiteFinder = func(number string) (s avisha.Site, ok bool) {
-		err := p.App.One("Number", number, &s)
-		return s, err == nil
-	}
-	p.Form.lease = nil
-	p.Form.Clear()
+	p.Form.App = p.App
 	if lease, ok := data.(*avisha.Lease); ok && lease != nil {
-		// @Improvement: use one source of lease data.
-		// Note: this just copies the data; one copy goes to the form, and one
-		// to the page.
 		p.lease = *lease
-		if err := p.App.One("ID", lease.Tenant, &p.tenant); err != nil {
-			log.Printf("loading tenant: %+v: %v", lease.Tenant, err)
-			return
-		}
-		if err := p.App.One("ID", lease.Site, &p.site); err != nil {
-			log.Printf("loading site: %v", err)
-			return
-		}
-		p.Form.Load(&p.lease, p.tenant, p.site)
-		p.UtilitiesInvoiceForm.Clear()
+	} else {
+		p.lease = avisha.Lease{}
+		defer p.Form.Clear()
 	}
+	p.Form.Load(p.lease)
+	p.UtilitiesInvoiceForm.Clear()
 }
 
 func (p *LeasePage) Context() (list []layout.Widget) {
@@ -98,7 +77,7 @@ func (p *LeasePage) Context() (list []layout.Widget) {
 					label := material.Label(
 						p.Th.Dark(),
 						unit.Dp(24),
-						fmt.Sprintf("%s-%s", p.Form.tenant.Name, p.Form.site.Number))
+						fmt.Sprintf("%s-%s", p.Form.Site.Text(), p.Form.Tenant.Text()))
 					label.Alignment = text.Middle
 					label.Color = p.Th.ContrastFg
 					return label.Layout(gtx)
@@ -116,15 +95,10 @@ func (p *LeasePage) Modal(gtx C) D {
 }
 
 func (p *LeasePage) Update(gtx C) {
-	if p.lease.ID != 0 {
-		if err := p.App.One("ID", p.lease.ID, &p.lease); err != nil {
-			log.Printf("error: loading lease: %d: %v", p.lease.ID, err)
-		}
-	}
 	if p.Form.SubmitBtn.Clicked() {
 		if lease, ok := p.Form.Submit(); ok {
 			if err := func() error {
-				if create := lease.ID == 0; create {
+				if create := p.lease.ID == 0; create {
 					if err := p.App.CreateLease(&lease); err != nil {
 						return fmt.Errorf("creating lease: %w", err)
 					}
@@ -138,16 +112,17 @@ func (p *LeasePage) Update(gtx C) {
 				log.Printf("%v", err)
 			} else {
 				p.Unfocus()
-				if p.Form.lease == nil {
-					p.Route.Back()
+				if err := p.App.One("ID", p.lease.ID, &p.lease); err != nil {
+					log.Printf("error: loading lease: %d: %v", p.lease.ID, err)
 				}
 			}
 		}
 	}
 	if p.Form.CancelBtn.Clicked() {
-		p.Form.Clear()
 		p.Unfocus()
-		if p.Form.lease == nil {
+		p.Form.Load(p.lease)
+		if p.lease.ID == 0 {
+			p.Form.Clear()
 			p.Route.Back()
 		}
 	}
@@ -294,8 +269,6 @@ func (p *LeasePage) Update(gtx C) {
 	}
 }
 
-// It doesn't make that much sense to navigate back on form cancel in this
-// context.
 func (p *LeasePage) Layout(gtx C) D {
 	p.scroll.Axis = layout.Vertical
 	p.scroll.ScrollToEnd = false
@@ -561,4 +534,62 @@ func (p *LeasePage) LayoutInvoiceList(gtx C) D {
 
 func (p *LeasePage) Unfocus() {
 	p.dummy.Focus()
+}
+
+// TenantValuer maps tenant name to ID.
+//
+// @Todo How to handle several tenants with the same name?
+type TenantValuer struct {
+	ID  *int
+	App *avisha.App
+}
+
+func (v TenantValuer) To() (string, error) {
+	var t avisha.Tenant
+	if err := v.App.One("ID", *v.ID, &t); err != nil {
+		return "", err
+	}
+	return t.Name, nil
+}
+
+func (v TenantValuer) From(text string) error {
+	var t avisha.Tenant
+	if err := v.App.One("Name", text, &t); err != nil {
+		return err
+	}
+	*v.ID = t.ID
+	return nil
+}
+
+func (v TenantValuer) Clear() {
+	*v.ID = -1
+}
+
+// SiteValuer maps site number to ID.
+//
+// @Todo How to handle several sites with the same number?
+type SiteValuer struct {
+	ID  *int
+	App *avisha.App
+}
+
+func (v SiteValuer) To() (string, error) {
+	var s avisha.Site
+	if err := v.App.One("ID", *v.ID, &s); err != nil {
+		return "", err
+	}
+	return s.Number, nil
+}
+
+func (v SiteValuer) From(text string) error {
+	var s avisha.Site
+	if err := v.App.One("Number", text, &s); err != nil {
+		return err
+	}
+	*v.ID = s.ID
+	return nil
+}
+
+func (v SiteValuer) Clear() {
+	*v.ID = -1
 }
