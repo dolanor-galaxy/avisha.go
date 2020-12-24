@@ -103,7 +103,7 @@ func ParseFloat(s string) (float64, error) {
 
 // ParseCurrency parses a dollars from digit characters.
 func ParseCurrency(s string) (c currency.Currency, err error) {
-	// s = strings.TrimPrefix(s, "$")
+	s = strings.TrimPrefix(s, "$")
 	parts := strings.Split(s, ".")
 	d, err := strconv.Atoi(parts[0])
 	if err != nil {

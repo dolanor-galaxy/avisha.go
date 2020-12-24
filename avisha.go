@@ -139,6 +139,8 @@ type UtilityInvoice struct {
 	UnitCost currency.Currency
 	// UnitsConsumed is the amount of units to charge for.
 	UnitsConsumed int
+	// Reading is the units read off the meter.
+	Reading int
 }
 
 // Settings are global settings that don't pertain to any specific entity.

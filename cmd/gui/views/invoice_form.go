@@ -1,11 +1,5 @@
 package views
 
-// @Todo Form field abstraction; consider if we can abstract forms in a way that
-// reduces the per-field boilerplate.
-// 1. Realtime validation (run per event, per field)
-// 2. Validation function (pure validation logic, common funcs for "isnumber", "isemail", "isdate", etc)
-// 3. Submission validation (validate all fields and collect errors)
-
 import (
 	"image"
 	"strconv"
@@ -24,6 +18,8 @@ import (
 
 // UtilitiesInvoiceForm is form for collecting utility invoice data.
 type UtilitiesInvoiceForm struct {
+	Invoice avisha.UtilityInvoice
+
 	UnitsConsumed   materials.TextField
 	PreviousReading materials.TextField
 	CurrentReading  materials.TextField
@@ -32,8 +28,115 @@ type UtilitiesInvoiceForm struct {
 	IssueDate       materials.TextField
 	DueDate         materials.TextField
 
+	dueDateOverride      bool
+	dueDatePreviousValue string
+
+	Form      widget.Form
 	SubmitBtn widget.Clickable
 	CancelBtn widget.Clickable
+}
+
+func (f *UtilitiesInvoiceForm) Load(
+	invoice avisha.UtilityInvoice,
+	// previousReading will be used to calculate consumption as a subtraction
+	// from the current reading.
+	previousReading int,
+) {
+	f.Invoice = invoice
+	f.PreviousReading.SetText(strconv.Itoa(previousReading))
+	f.Form.Load([]widget.Field{
+		{
+			Value: widget.IntValuer{
+				Value:   &f.Invoice.Reading,
+				Default: previousReading,
+			},
+			Input: &f.CurrentReading,
+		},
+		{
+			Value: widget.CurrencyValuer{
+				Value:   &f.Invoice.UnitCost,
+				Default: currency.Dollar * 1,
+			},
+			Input: &f.UnitCost,
+		},
+		{
+			Value: widget.DateValuer{
+				Value:   &f.Invoice.Issued,
+				Default: time.Now(),
+			},
+			Input: &f.IssueDate,
+		},
+		{
+			// @Todo pull net from config?
+			Value: widget.DateValuer{
+				Value: &f.Invoice.Due,
+			},
+			Input: &f.DueDate,
+		},
+		{
+			Value: widget.IntValuer{
+				Value: &f.Invoice.UnitsConsumed,
+			},
+			Input: &f.UnitsConsumed,
+		},
+		{
+			Value: widget.CurrencyValuer{
+				Value: &f.Invoice.Bill,
+			},
+			Input: &f.TotalCost,
+		},
+	})
+}
+
+func (f *UtilitiesInvoiceForm) Submit() (invoice avisha.UtilityInvoice, ok bool) {
+	return f.Invoice, f.Form.Submit()
+}
+
+func (f *UtilitiesInvoiceForm) Clear() {
+	f.Form.Clear()
+}
+
+func (f *UtilitiesInvoiceForm) Update(gtx C) {
+	// Compute DueDate unless manually overridden.
+	{
+		if f.DueDate.Focused() && f.dueDatePreviousValue != f.DueDate.Text() {
+			f.dueDateOverride = true
+		}
+		if !f.dueDateOverride {
+			f.DueDate.SetText(func() string {
+				issued, err := util.ParseDate(f.IssueDate.Text())
+				if err != nil {
+					return f.DueDate.Text()
+				}
+				return util.FormatTime(issued.Add(time.Hour * 24 * 14))
+			}())
+			f.dueDatePreviousValue = f.DueDate.Text()
+		}
+	}
+	f.UnitsConsumed.SetText(func() string {
+		current, err := util.ParseInt(f.CurrentReading.Text())
+		if err != nil {
+			return "0"
+		}
+		previous, err := util.ParseInt(f.PreviousReading.Text())
+		if err != nil {
+			return "0"
+		}
+		return strconv.Itoa(current - previous)
+	}())
+	f.TotalCost.SetText(func() string {
+		consumed, err := util.ParseInt(f.UnitsConsumed.Text())
+		if err != nil {
+			return "0"
+		}
+		cost, err := util.ParseCurrency(f.UnitCost.Text())
+		if err != nil {
+			return "0"
+		}
+		total := cost * currency.Currency(consumed)
+		return strconv.FormatFloat(total.Dollars(), 'f', 2, 64)
+	}())
+	f.Form.Validate(gtx)
 }
 
 func (f *UtilitiesInvoiceForm) Layout(gtx C, th *style.Theme) D {
@@ -75,6 +178,7 @@ func (f *UtilitiesInvoiceForm) Layout(gtx C, th *style.Theme) D {
 					}.Layout(
 						gtx,
 						layout.Flexed(1, func(gtx C) D {
+							gtx.Queue = nil
 							return f.PreviousReading.Layout(gtx, th.Dark(), "Previous Reading")
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -99,6 +203,9 @@ func (f *UtilitiesInvoiceForm) Layout(gtx C, th *style.Theme) D {
 						}),
 						layout.Flexed(1, func(gtx C) D {
 							gtx.Queue = nil
+							f.TotalCost.Prefix = func(gtx C) D {
+								return material.Body1(th.Dark(), "$").Layout(gtx)
+							}
 							return f.TotalCost.Layout(gtx, th.Dark(), "Total Cost")
 						}),
 					)
@@ -128,114 +235,4 @@ func (f *UtilitiesInvoiceForm) Layout(gtx C, th *style.Theme) D {
 				})
 		}),
 	)
-}
-
-func (f *UtilitiesInvoiceForm) Clear() {
-	f.IssueDate.Clear()
-	f.IssueDate.SetText(util.FormatTime(time.Now()))
-	f.DueDate.Clear()
-	f.DueDate.SetText(util.FormatTime(time.Now().Add(time.Hour * 24 * 14)))
-	// @Todo load unit cost default value from storage.
-	f.UnitCost.Clear()
-	f.UnitCost.SetText("1")
-	f.UnitsConsumed.Clear()
-}
-
-func (f *UtilitiesInvoiceForm) Update(gtx C) {
-	for range f.UnitCost.Events() {
-		if _, err := f.validateUnitCost(); err != nil {
-			f.UnitCost.SetError(err.Error())
-		} else {
-			f.UnitCost.ClearError()
-		}
-	}
-	for range f.IssueDate.Events() {
-		if t, err := f.validateIssueDate(); err != nil {
-			f.IssueDate.SetError(err.Error())
-		} else {
-			f.IssueDate.ClearError()
-			f.DueDate.SetText(util.FormatTime(t.Add(time.Hour * 24 * 14)))
-		}
-	}
-	for range f.DueDate.Events() {
-		if _, err := f.validateDueDate(); err != nil {
-			f.DueDate.SetError(err.Error())
-		} else {
-			f.DueDate.ClearError()
-		}
-	}
-	for range f.CurrentReading.Events() {
-		if current, err := f.validateCurrentReading(); err != nil {
-			f.CurrentReading.SetError(err.Error())
-		} else {
-			f.CurrentReading.ClearError()
-			if previous, err := f.validatePreviousReading(); err != nil {
-				f.PreviousReading.SetError(err.Error())
-			} else {
-				f.PreviousReading.ClearError()
-				consumed := current - previous
-				f.UnitsConsumed.SetText(strconv.Itoa(consumed))
-				if cost, err := f.validateUnitCost(); err != nil {
-					f.UnitCost.SetError(err.Error())
-				} else {
-					f.UnitCost.ClearError()
-					f.TotalCost.SetText(strconv.Itoa(consumed * cost))
-				}
-			}
-		}
-	}
-}
-
-func (f *UtilitiesInvoiceForm) Submit() (invoice avisha.UtilityInvoice, ok bool) {
-	ok = true
-	if unitCost, err := f.validateUnitCost(); err != nil {
-		f.UnitCost.SetError(err.Error())
-		ok = false
-	} else {
-		invoice.UnitCost = currency.Dollar * currency.Currency(unitCost)
-	}
-	if unitsConsumed, err := f.validateUnitsConsumed(); err != nil {
-		f.UnitsConsumed.SetError(err.Error())
-		ok = false
-	} else {
-		invoice.UnitsConsumed = unitsConsumed
-	}
-	if issueDate, err := f.validateIssueDate(); err != nil {
-		f.UnitsConsumed.SetError(err.Error())
-		ok = false
-	} else {
-		invoice.Issued = issueDate
-	}
-	if dueDate, err := f.validateDueDate(); err != nil {
-		f.UnitsConsumed.SetError(err.Error())
-		ok = false
-	} else {
-		invoice.Due = dueDate
-	}
-	invoice.Bill = (invoice.UnitCost * currency.Currency(invoice.UnitsConsumed))
-	return invoice, ok
-}
-
-func (f *UtilitiesInvoiceForm) validateUnitCost() (int, error) {
-	return util.ParseInt(f.UnitCost.Text())
-}
-
-func (f *UtilitiesInvoiceForm) validateUnitsConsumed() (int, error) {
-	return util.ParseInt(f.UnitsConsumed.Text())
-}
-
-func (f *UtilitiesInvoiceForm) validatePreviousReading() (int, error) {
-	return util.ParseInt(f.PreviousReading.Text())
-}
-
-func (f *UtilitiesInvoiceForm) validateCurrentReading() (int, error) {
-	return util.ParseInt(f.CurrentReading.Text())
-}
-
-func (f *UtilitiesInvoiceForm) validateIssueDate() (time.Time, error) {
-	return util.ParseDate(f.IssueDate.Text())
-}
-
-func (f *UtilitiesInvoiceForm) validateDueDate() (time.Time, error) {
-	return util.ParseDate(f.DueDate.Text())
 }

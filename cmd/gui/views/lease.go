@@ -139,6 +139,19 @@ func (p *LeasePage) Update(gtx C) {
 	}
 	if p.BillUtility.Clicked() {
 		p.Dialog.Context = "bill-utilities"
+		var (
+			prevReading = 0
+			invoices    []*avisha.UtilityInvoice
+		)
+		if err := p.App.Select(q.Eq("Lease", p.lease.ID)).OrderBy("ID", "Paid").Reverse().Find(&invoices); err != nil {
+			if err != storm.ErrNotFound {
+				log.Printf("loading invoices: %v", err)
+			}
+		}
+		if len(invoices) > 0 {
+			prevReading = invoices[len(invoices)-1].Reading
+		}
+		p.UtilitiesInvoiceForm.Load(avisha.UtilityInvoice{}, prevReading)
 		p.modal = func(gtx C) D {
 			return style.ModalDialog(gtx, p.Th, unit.Dp(700), "Bill Utilities", func(gtx C) D {
 				return p.UtilitiesInvoiceForm.Layout(gtx, p.Th)
@@ -499,7 +512,7 @@ func (p *LeasePage) LayoutInvoiceList(gtx C) D {
 									p.Th.Dark(),
 									unit.Dp(14),
 									fmt.Sprintf(
-										"#%d $%d (%d %s %d)",
+										"#%d %s (%d %s %d)",
 										invoice.ID,
 										invoice.Bill,
 										invoice.Issued.Day(),
