@@ -2,8 +2,8 @@
 
 ## Utilities
 
-- [ ] use power readings to calculate units consumed
-  - [ ] pre populate reading from last invoice
+- [x] use power readings to calculate units consumed
+  - [x] pre populate reading from last invoice
   - [x] automate the calculation
   - tenants like to argue over it, so keep both values and calc the difference
 - [ ] late fees field
@@ -11,7 +11,7 @@
 - [ ] line rental charged with utilities, constant per lease
   - [ ] tack onto bill as dollar value
 - [x] unit cost is global variable
-- [x] due date net 14 for utility bill, global variabl
+- [x] due date net 14 for utility bill, global variable
 - [ ] utility invoice shows any previous unpaid invoices
 - [ ] service reference number (unique per lease?)
 
