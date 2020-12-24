@@ -95,6 +95,9 @@ func (p *LeasePage) Modal(gtx C) D {
 }
 
 func (p *LeasePage) Update(gtx C) {
+	if err := p.App.One("ID", p.lease.ID, &p.lease); err != nil {
+		log.Printf("error: loading lease: %d: %v", p.lease.ID, err)
+	}
 	if p.Form.SubmitBtn.Clicked() {
 		if lease, ok := p.Form.Submit(); ok {
 			if err := func() error {
@@ -112,9 +115,6 @@ func (p *LeasePage) Update(gtx C) {
 				log.Printf("%v", err)
 			} else {
 				p.Unfocus()
-				if err := p.App.One("ID", p.lease.ID, &p.lease); err != nil {
-					log.Printf("error: loading lease: %d: %v", p.lease.ID, err)
-				}
 			}
 		}
 	}
