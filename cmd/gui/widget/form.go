@@ -33,10 +33,6 @@ type Input interface {
 	// @Cleanup Could SetError and ClearError be collapsed into a single method?
 	SetError(string)
 	ClearError()
-	// @Note We want some way of validating on input event, but we don't care
-	// about the representation of the event. For now we will hard code to the
-	// widget.EditorEvent, but maybe that's not appropriate.
-	Events() []EditorEvent
 }
 
 // Field associates a value with a name.
@@ -62,6 +58,8 @@ func (field *Field) Validate() bool {
 // Form manipulates fields in a consistent way.
 type Form struct {
 	Fields []Field
+	// cache contains the previous contents of each field to detect changes.
+	cache []string
 }
 
 // Load values into inputs.
@@ -69,10 +67,12 @@ func (f *Form) Load(fields []Field) {
 	if len(fields) > 0 {
 		f.Fields = fields
 	}
-	for _, field := range f.Fields {
+	f.cache = make([]string, len(fields))
+	for ii, field := range f.Fields {
 		if text, err := field.Value.To(); err != nil {
 			field.Input.SetError(err.Error())
 		} else {
+			f.cache[ii] = field.Input.Text()
 			field.Input.ClearError()
 			field.Input.SetText(text)
 		}
@@ -93,19 +93,25 @@ func (f *Form) Submit() (ok bool) {
 
 // Validate form fields in realtime.
 func (f *Form) Validate(gtx C) {
-	for _, field := range f.Fields {
-		for range field.Input.Events() {
+	for ii, field := range f.Fields {
+		var (
+			text    = field.Input.Text()
+			changed = f.cache[ii] != text
+		)
+		if changed {
+			f.cache[ii] = text
 			field.Validate()
 		}
 	}
 }
 
 func (f *Form) Clear() {
-	for _, field := range f.Fields {
+	for ii, field := range f.Fields {
 		field.Value.Clear()
 		text, _ := field.Value.To()
 		field.Input.ClearError()
 		field.Input.SetText(text)
+		f.cache[ii] = text
 	}
 }
 
@@ -114,11 +120,16 @@ func (f *Form) Clear() {
 
 // IntValuer maps integers to text.
 type IntValuer struct {
-	Value *int
+	Value   *int
+	Default int
 }
 
 func (v IntValuer) To() (string, error) {
-	return strconv.Itoa(*v.Value), nil
+	var n = *v.Value
+	if n == 0 {
+		n = v.Default
+	}
+	return strconv.Itoa(n), nil
 }
 
 func (v IntValuer) From(text string) (err error) {
@@ -150,11 +161,16 @@ func (v FloatValuer) Clear() {
 
 // CurrencyValuer maps currency to text.
 type CurrencyValuer struct {
-	Value *currency.Currency
+	Value   *currency.Currency
+	Default currency.Currency
 }
 
 func (v CurrencyValuer) To() (string, error) {
-	return strings.TrimPrefix(v.Value.String(), "$"), nil
+	var c currency.Currency = *v.Value
+	if c == 0 {
+		c = v.Default
+	}
+	return strings.TrimPrefix(c.String(), "$"), nil
 }
 
 func (v CurrencyValuer) From(text string) (err error) {
@@ -203,11 +219,16 @@ func (v DaysValuer) Clear() {
 }
 
 type DateValuer struct {
-	Value *time.Time
+	Value   *time.Time
+	Default time.Time
 }
 
 func (v DateValuer) To() (string, error) {
-	return fmt.Sprintf("%d/%d/%d", v.Value.Day(), v.Value.Month(), v.Value.Year()), nil
+	var t = *v.Value
+	if t.IsZero() {
+		t = v.Default
+	}
+	return fmt.Sprintf("%d/%d/%d", t.Day(), t.Month(), t.Year()), nil
 }
 
 func (v DateValuer) From(text string) (err error) {
