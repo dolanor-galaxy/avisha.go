@@ -149,9 +149,13 @@ func (p *LeasePage) Update(gtx C) {
 			}
 		}
 		if len(invoices) > 0 {
-			prevReading = invoices[len(invoices)-1].Reading
+			prevReading = invoices[0].Reading
 		}
-		p.UtilitiesInvoiceForm.Load(avisha.UtilityInvoice{}, prevReading)
+		settings, err := p.App.LoadSettings()
+		if err != nil {
+			log.Printf("loading settings: %v", err)
+		}
+		p.UtilitiesInvoiceForm.Load(avisha.UtilityInvoice{}, prevReading, settings.Defaults.InvoiceNet)
 		p.modal = func(gtx C) D {
 			return style.ModalDialog(gtx, p.Th, unit.Dp(700), "Bill Utilities", func(gtx C) D {
 				return p.UtilitiesInvoiceForm.Layout(gtx, p.Th)

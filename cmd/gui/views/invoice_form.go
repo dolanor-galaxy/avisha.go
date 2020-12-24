@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"image"
 	"strconv"
 	"time"
@@ -31,6 +32,8 @@ type UtilitiesInvoiceForm struct {
 	dueDateOverride      bool
 	dueDatePreviousValue string
 
+	invoiceNet time.Duration
+
 	Form      widget.Form
 	SubmitBtn widget.Clickable
 	CancelBtn widget.Clickable
@@ -41,8 +44,10 @@ func (f *UtilitiesInvoiceForm) Load(
 	// previousReading will be used to calculate consumption as a subtraction
 	// from the current reading.
 	previousReading int,
+	invoiceNet time.Duration,
 ) {
 	f.Invoice = invoice
+	f.invoiceNet = invoiceNet
 	f.PreviousReading.SetText(strconv.Itoa(previousReading))
 	f.Form.Load([]widget.Field{
 		{
@@ -67,7 +72,6 @@ func (f *UtilitiesInvoiceForm) Load(
 			Input: &f.IssueDate,
 		},
 		{
-			// @Todo pull net from config?
 			Value: widget.DateValuer{
 				Value: &f.Invoice.Due,
 			},
@@ -94,6 +98,9 @@ func (f *UtilitiesInvoiceForm) Submit() (invoice avisha.UtilityInvoice, ok bool)
 
 func (f *UtilitiesInvoiceForm) Clear() {
 	f.Form.Clear()
+	f.dueDateOverride = false
+	f.invoiceNet = 0
+	f.dueDatePreviousValue = ""
 }
 
 func (f *UtilitiesInvoiceForm) Update(gtx C) {
@@ -108,7 +115,7 @@ func (f *UtilitiesInvoiceForm) Update(gtx C) {
 				if err != nil {
 					return f.DueDate.Text()
 				}
-				return util.FormatTime(issued.Add(time.Hour * 24 * 14))
+				return util.FormatTime(issued.Add(f.invoiceNet))
 			}())
 			f.dueDatePreviousValue = f.DueDate.Text()
 		}
@@ -162,7 +169,7 @@ func (f *UtilitiesInvoiceForm) Layout(gtx C, th *style.Theme) D {
 							return D{Size: image.Point{X: gtx.Px(unit.Dp(10))}}
 						}),
 						layout.Flexed(1, func(gtx C) D {
-							return f.DueDate.Layout(gtx, th.Dark(), "Due Date (net 14)")
+							return f.DueDate.Layout(gtx, th.Dark(), fmt.Sprintf("Due Date (net %d)", int(f.invoiceNet.Hours()/24)))
 						}),
 					)
 				}),
