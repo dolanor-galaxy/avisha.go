@@ -180,12 +180,19 @@ type UtilityInvoiceDocument struct {
 	Lease   avisha.Lease
 	Tenant  avisha.Tenant
 	Site    avisha.Site
+
+	PreviousReading int
 }
 
 // Render the document into a buffer.
 func (doc UtilityInvoiceDocument) Render() (*bytes.Buffer, error) {
 	tmpl, err := template.
 		New("utility-invoice-document").
+		Funcs(template.FuncMap{
+			"date": func(t time.Time) string {
+				return t.Format("Monday, 2 January 2006")
+			},
+		}).
 		Parse(strings.TrimSpace(UtilityInvoiceTemplateLiteral))
 	if err != nil {
 		return nil, fmt.Errorf("parsing template: %w", err)
@@ -197,13 +204,223 @@ func (doc UtilityInvoiceDocument) Render() (*bytes.Buffer, error) {
 	return by, nil
 }
 
+// UtilityInvoiceTemplateLiteral contains the literal html used to generate
+// an html invoice, which can be saved as pdf by most browers.
+//
+// @Todo render direct to pdf.
 var UtilityInvoiceTemplateLiteral = `
-<html>
+<!doctype html>
+<html lang="en">
 	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+		<link rel="stylesheet" href="https://vanillacss.com/vanilla.css" media="all">
 		<title>Invoice {{.Invoice.ID}}</title>
+		<style>
+			body{
+				margin: 0 auto;
+				max-width: 50rem;
+			}
+			@media(max-width: 50rem) {
+				body {
+					padding: 10px;
+				}
+			}
+			table,tbody {
+				text-align: center;
+			}
+			table td {
+				padding: 0.25rem;
+			}
+			blockquote p:last-child {
+				margin-bottom: 0;
+			}
+			cards {
+				display: flex;
+				flex-direction: row;
+				justify-content: space-between;
+			}
+			card {
+				width: 100%;
+				margin: 0.5rem;
+				border: 1px solid var(--primary-color) !important;
+			}
+			card.no-border {
+				border: 0px;
+			}
+			card header {
+				width: 100%;
+				padding: 0 1rem;
+				font-weight: bold;
+				background: var(--secondary-color);
+				border-bottom: 1px solid var(--primary-color) !important;
+			}
+			card p  {
+				width: 100%;
+				padding: 1rem;
+				margin: 0;
+			}
+			.compact {
+				margin: 0;
+				padding: 0;
+			}
+			.compact li {
+				margin: 0;
+				padding: 0;
+				margin-left: 4rem;
+			}
+			table caption {
+				margin: 0;
+				padding: 0.25rem;
+				text-align: left;
+				font-weight: bold;
+			}
+			table tbody {
+				text-align: center !important;
+			}
+			td var {
+				font-weight: normal !important;
+			}
+			@media print {
+				body {
+					font-size: 14pt;
+				}
+				// Printed page already has top margin.
+				article:first-of-type h1 {
+					margin-top: 0;
+				}
+				table {
+					page-break-inside: avoid;
+					margin: 1rem 0;
+				}
+				card {
+					page-break-inside: avoid;
+				}
+			}
+		</style>
 	</head>
-	<body>
-		<h1>Invoice {{.Invoice.ID}}</h1>
+	<body id="top" role="document">
+		<article id="preamble">
+			<header><h1>Tax Invoice {{.Invoice.ID}}</h1></header>
+			<cards>
+				<card class="no-border">
+					<p>
+						<b>AVISHA GROUP LTD</b>
+						</br>
+						Property Management Services
+						</br>
+						GST No. 125544207
+						</br>
+						5/280 Riverhead Rd | Riverhead | AKL
+					</p>
+				</card>
+				<card class="no-border">
+					<p>
+						Statement Date
+						</br>
+						{{date .Invoice.Issued}}
+					</p>
+				</card>
+			</cards>
+			<cards>
+				<card>
+					<header>Site</header>
+					<p>
+						Number: {{.Site.Number}}
+						</br>
+						Type: {{.Site.Dwelling}}
+						</br>
+						Period: <var>{{.Invoice.Period}}</var>
+						</br>
+						Service: <b>Electricity</b>
+					</p>
+				</card>
+				<!-- @Todo polymorph the service? -->
+				<card>
+					<header>Tenant</header>
+					<p>
+						<!-- @Todo Address of tenant? Appears to be set to 6/280 Riverhead for all tenants.-->
+						Bill To: {{.Tenant.Name}}
+						</br>
+						Contact: {{.Tenant.Contact}}
+					</p>
+				</card>
+			</cards>
+		</article>
+		<article id="activity">
+			<header><h1>Activity</h1></header>
+			<!-- @Todo Show previous unpaid invoices for this service -->
+			<table>
+				<caption>Current Activity</caption>
+				<thead>
+					<tr>
+						<th>Unit Cost</th>
+						<th>Previous Reading</th>
+						<th>Current Reading</th>
+						<th>Units Used</th>
+						<th>Activity Charge</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><var>{{.Invoice.UnitCost}}</var></td>
+						<td><var>{{.PreviousReading}}</var></td>
+						<td><var>{{.Invoice.Reading}}</var></td>
+						<td><var>{{.Invoice.UnitsConsumed}}</var></td>
+						<!-- @Todo utilities cost, not total bill -->
+						<td><var>{{.Invoice.Bill}}</var></td>
+					</tr>
+				</tbody>
+			</table>
+			<table>
+				<caption>Charges</caption>
+				<thead>
+					<tr>
+						<th>Line Charge</th>
+						<th>Late Fee</th>
+						<!-- @Todo pull gst from settings -->
+						<th>GST (%10)</th>
+						<th>Total Charges</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><var>@Todo Line charge</var></td>
+						<td><var>@Todo Late payment fee</var></td>
+						<td><var>@Todo GST</var></td>
+						<td><var>{{.Invoice.Bill}}</var></td>
+					</tr>
+				</tbody>
+			</table>
+			<blockquote>
+				<p>
+					Total Amount Due by <time>{{date .Invoice.Due}}</time> <var>{{.Invoice.Bill}}</var>
+					</br>
+					<small>(please note late payment fee will be charged if payment not received by due date)</small>
+				</p>
+			</blockquote>
+			<cards>
+				<card>
+					<header>Make Payable To</header>
+					<p>
+						<!-- @Todo drive from settings --> 
+						<!-- @Todo "service reference" driven from the service being invoiced --> 
+						<b>Reference</b>
+					</p>
+					<ul class="compact">
+						<li>Power: <var>HAT-S.01 POWR</var></li>
+						<li>Rent: <var>HAT-S.01 RENT</var></li>
+					</ul>
+					<p>
+						<b>Bank Acc:</b> Westpac <var>03-1393-001-6007-000</var>
+						</br>
+						<b>Email:</b> admin@avishagroup.co.nz
+						</br>
+						<b>Phone:</b> 027 502 2142
+					</p>
+				</card>
+			</cards>
+		</article>
 	</body>
 </html>
 `

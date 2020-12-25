@@ -95,8 +95,20 @@ func (p *LeasePage) Modal(gtx C) D {
 }
 
 func (p *LeasePage) Update(gtx C) {
-	if err := p.App.One("ID", p.lease.ID, &p.lease); err != nil {
-		log.Printf("error: loading lease: %d: %v", p.lease.ID, err)
+	var (
+		tenant avisha.Tenant
+		site   avisha.Site
+	)
+	if p.lease.ID > 0 {
+		if err := p.App.One("ID", p.lease.ID, &p.lease); err != nil {
+			log.Printf("error: loading lease: %d: %v", p.lease.ID, err)
+		}
+		if err := p.App.One("ID", p.lease.Tenant, &tenant); err != nil {
+			log.Printf("erorr: loading tenant: %v", err)
+		}
+		if err := p.App.One("ID", p.lease.Site, &site); err != nil {
+			log.Printf("erorr: loading site: %v", err)
+		}
 	}
 	if p.Form.SubmitBtn.Clicked() {
 		if lease, ok := p.Form.Submit(); ok {
@@ -238,15 +250,24 @@ func (p *LeasePage) Update(gtx C) {
 		p.UtilitiesInvoiceForm.Clear()
 		p.modal = nil
 	}
-	for _, state := range p.invoiceStates.List() {
+	states := p.invoiceStates.List()
+	for ii, state := range states {
 		var (
-			invoice = (*avisha.UtilityInvoice)(state.Data)
+			invoice         = (*avisha.UtilityInvoice)(state.Data)
+			previousReading = 0
 		)
+		if ii < len(states)-1 {
+			previousReading = (*avisha.UtilityInvoice)(states[ii+1].Data).Reading
+		}
 		// @Todo Do io async to avoid blocking ui.
 		if state.Item.Clicked() {
 			if err := func() error {
 				doc := util.UtilityInvoiceDocument{
-					Invoice: *invoice,
+					Invoice:         *invoice,
+					Lease:           p.lease,
+					Site:            site,
+					Tenant:          tenant,
+					PreviousReading: previousReading,
 				}
 				buffer, err := doc.Render()
 				if err != nil {
