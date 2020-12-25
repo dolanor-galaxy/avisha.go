@@ -130,6 +130,7 @@ type Invoice struct {
 	Issued time.Time
 	Due    time.Time
 	Paid   time.Time
+	Period Term
 }
 
 // UtilityInvoice is a document requesting payment for utility consumption.
