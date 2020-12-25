@@ -301,7 +301,7 @@ func (t Term) String() string {
 	format := func(t time.Time) string {
 		return fmt.Sprintf("%02d/%02d/%04d", t.Day(), t.Month(), t.Year())
 	}
-	return fmt.Sprintf("%s - %s", format(t.Start), format(t.End()))
+	return fmt.Sprintf("%s to %s", format(t.Start), format(t.End()))
 }
 
 func (t Term) End() time.Time {
