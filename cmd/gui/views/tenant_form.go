@@ -26,6 +26,9 @@ type TenantForm struct {
 	Name    materials.TextField
 	Contact materials.TextField
 
+	// @Improvemnt mixing form implementations is janky.
+	Address AddressForm
+
 	Form      widget.Form
 	SubmitBtn widget.Clickable
 	CancelBtn widget.Clickable
@@ -41,6 +44,14 @@ func (f *TenantForm) Receive(data interface{}) {
 	} else {
 		f.Tenant = avisha.Tenant{}
 	}
+	if f.Tenant.Address == (avisha.Address{}) {
+		settings, err := f.App.LoadSettings()
+		if err != nil {
+			log.Printf("loading settings: %v", err)
+		}
+		f.Tenant.Address = settings.Defaults.Address
+	}
+	f.Address.Load(&f.Tenant.Address)
 	f.Form.Load([]widget.Field{
 		{
 			Value: widget.RequiredValuer{Valuer: widget.TextValuer{Value: &f.Tenant.Name}},
@@ -133,6 +144,9 @@ func (f *TenantForm) Layout(gtx C) D {
 						return f.Contact.Layout(gtx, f.Th.Dark(), "Contact")
 					}),
 				)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return f.Address.Layout(gtx, f.Th)
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{

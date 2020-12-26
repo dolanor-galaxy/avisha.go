@@ -17,6 +17,23 @@ type Tenant struct {
 	ID      ID     `storm:"id,increment"`
 	Name    string `storm:"unique"`
 	Contact string
+	Address Address
+}
+
+// Address represents a location.
+type Address struct {
+	Unit   int
+	Number int
+	Street string
+	City   string
+}
+
+func (a Address) String() string {
+	var unit string
+	if a.Unit > 0 {
+		unit = fmt.Sprintf("%d/", a.Unit)
+	}
+	return fmt.Sprintf("%s%d | %s | %s", unit, a.Number, a.Street, a.City)
 }
 
 // Site is a unique lot of land with a dwelling that can be Leased by at most
@@ -169,6 +186,9 @@ type Landlord struct {
 	Name  string
 	Email string
 	Phone string
+	// @Todo migrate to slice of contacts.
+	Contact []string
+	Address Address
 }
 
 // Banks details to make invoices payable to.
@@ -181,7 +201,12 @@ type Defaults struct {
 	UnitCost   currency.Currency
 	RentCycle  time.Duration
 	InvoiceNet time.Duration
-	GST        float64
+	// GST stored as a percentage.
+	GST float64
+	// Address is the default for Tenants.
+	// Note: for the moment, all tenants have the same billable address so this
+	// is here to reduce tedium.
+	Address Address
 }
 
 // Default to sane values.

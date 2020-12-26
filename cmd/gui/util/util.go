@@ -348,12 +348,13 @@ var UtilityInvoiceTemplateLiteral = `
 				</card>
 				<!-- @Todo polymorph the service? -->
 				<card>
-					<header>Tenant</header>
+					<header>Bill To</header>
 					<p>
-						<!-- @Todo Address of tenant? Appears to be set to 6/280 Riverhead for all tenants.-->
-						Bill To: {{.Tenant.Name}}
+						{{.Tenant.Name}}
 						</br>
-						Contact: {{.Tenant.Contact}}
+						{{.Tenant.Address}}
+						</br>
+						{{.Tenant.Contact}}
 					</p>
 				</card>
 			</cards>

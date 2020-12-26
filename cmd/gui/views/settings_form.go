@@ -35,6 +35,16 @@ type SettingsForm struct {
 		GST        materials.TextField
 	}
 
+	// // BillTo is the default billable address for Tenants.
+	// BillTo struct {
+	// 	Unit   materials.TextField
+	// 	Number materials.TextField
+	// 	Street materials.TextField
+	// 	City   materials.TextField
+	// }
+
+	BillTo AddressForm
+
 	Form      widget.Form
 	SubmitBtn widget.Clickable
 	CancelBtn widget.Clickable
@@ -51,6 +61,7 @@ func (s *SettingsForm) Clear() {
 // Load initialises the form fields.
 func (s *SettingsForm) Load(settings *avisha.Settings) {
 	s.Settings = settings
+	s.BillTo.Load(&s.Settings.Defaults.Address)
 	s.Form.Load([]widget.Field{
 		{
 			Value: widget.TextValuer{Value: &s.Settings.Landlord.Name},
@@ -102,20 +113,35 @@ func (s *SettingsForm) Submit() (settings avisha.Settings, ok bool) {
 func (s *SettingsForm) Layout(gtx C, th *style.Theme) D {
 	spacer := func(size ...unit.Value) layout.Widget {
 		return func(gtx C) D {
-			var sz unit.Value
+			var sz int
 			if len(size) > 0 {
 				for ii := range size {
-					sz.V += size[ii].V
+					sz += gtx.Px(size[ii])
 				}
 			} else {
-				sz = unit.Dp(10)
+				sz = gtx.Px(unit.Dp(10))
 			}
-			return D{Size: image.Point{X: gtx.Px(sz), Y: gtx.Px(sz)}}
+			return D{Size: image.Point{X: sz, Y: sz}}
 		}
 	}
-	title := func(title string) layout.Widget {
+	title := func(title string, size ...unit.Value) layout.Widget {
+		var (
+			top    = unit.Dp(20)
+			bottom = unit.Dp(10)
+		)
+		if len(size) > 0 {
+			top = size[0]
+		}
+		if len(size) > 1 {
+			bottom = size[1]
+		}
 		return func(gtx C) D {
-			return material.Label(th.Dark(), unit.Dp(20), title).Layout(gtx)
+			return layout.Inset{
+				Top:    top,
+				Bottom: bottom,
+			}.Layout(gtx, func(gtx C) D {
+				return material.Label(th.Dark(), unit.Dp(20), title).Layout(gtx)
+			})
 		}
 	}
 	field := func(f *materials.TextField, name string, options ...func(f *materials.TextField)) layout.Widget {
@@ -134,15 +160,13 @@ func (s *SettingsForm) Layout(gtx C, th *style.Theme) D {
 				Axis: layout.Vertical,
 			}.Layout(
 				gtx,
-				layout.Rigid(title("Landlord")),
+				layout.Rigid(title("Landlord", unit.Dp(0))),
 				layout.Rigid(field(&s.Landlord.Name, "Name")),
 				layout.Rigid(field(&s.Landlord.Email, "Email")),
 				layout.Rigid(field(&s.Landlord.Phone, "Phone")),
-				layout.Rigid(spacer()),
 				layout.Rigid(title("Bank Details")),
 				layout.Rigid(field(&s.Bank.Name, "Name")),
 				layout.Rigid(field(&s.Bank.Account, "Account")),
-				layout.Rigid(spacer()),
 				layout.Rigid(title("Defaults")),
 				layout.Rigid(field(
 					&s.Defaults.UnitCost,
@@ -162,7 +186,12 @@ func (s *SettingsForm) Layout(gtx C, th *style.Theme) D {
 							return material.Body1(th.Theme, "%").Layout(gtx)
 						}
 					})),
-				layout.Rigid(spacer()),
+				layout.Rigid(title("Default Billable Address")),
+				layout.Rigid(func(gtx C) D {
+					return s.BillTo.Layout(gtx, th)
+				}),
+				layout.Rigid(spacer(unit.Dp(20))),
+				// @Todo sticky controls.
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{
 						Axis: layout.Horizontal,
