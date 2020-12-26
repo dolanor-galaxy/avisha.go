@@ -312,7 +312,7 @@ var UtilityInvoiceTemplateLiteral = `
 	</head>
 	<body id="top" role="document">
 		<article id="preamble">
-			<header><h1>Tax Invoice {{.Invoice.ID}}</h1></header>
+			<header><h1>Tax Invoice / Statement {{.Invoice.ID}}</h1></header>
 			<cards>
 				<card class="no-border">
 					<p>
