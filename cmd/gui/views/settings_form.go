@@ -32,6 +32,7 @@ type SettingsForm struct {
 		UnitCost   materials.TextField
 		RentCycle  materials.TextField
 		InvoiceNet materials.TextField
+		GST        materials.TextField
 	}
 
 	Form      widget.Form
@@ -82,6 +83,10 @@ func (s *SettingsForm) Load(settings *avisha.Settings) {
 		{
 			Value: widget.DaysValuer{Value: &s.Settings.Defaults.InvoiceNet},
 			Input: &s.Defaults.InvoiceNet,
+		},
+		{
+			Value: widget.FloatValuer{Value: &s.Settings.Defaults.GST},
+			Input: &s.Defaults.GST,
 		},
 	})
 }
@@ -149,6 +154,14 @@ func (s *SettingsForm) Layout(gtx C, th *style.Theme) D {
 					})),
 				layout.Rigid(field(&s.Defaults.RentCycle, "Rent Cycle (days)")),
 				layout.Rigid(field(&s.Defaults.InvoiceNet, "Invoice Net (days)")),
+				layout.Rigid(field(
+					&s.Defaults.GST,
+					"GST",
+					func(f *materials.TextField) {
+						f.Suffix = func(gtx C) D {
+							return material.Body1(th.Theme, "%").Layout(gtx)
+						}
+					})),
 				layout.Rigid(spacer()),
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{

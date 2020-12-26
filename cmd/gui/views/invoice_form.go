@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"strconv"
+	"strings"
 	"time"
 
 	"gioui.org/layout"
@@ -25,9 +26,18 @@ type UtilitiesInvoiceForm struct {
 	PreviousReading materials.TextField
 	CurrentReading  materials.TextField
 	UnitCost        materials.TextField
-	TotalCost       materials.TextField
-	IssueDate       materials.TextField
-	DueDate         materials.TextField
+
+	// Bill is the final amount due.
+	Bill materials.TextField
+
+	// Charges.
+	LateFee    materials.TextField
+	LineCharge materials.TextField
+	GST        materials.TextField
+	Activity   materials.TextField
+
+	IssueDate materials.TextField
+	DueDate   materials.TextField
 
 	dueDateOverride      bool
 	dueDatePreviousValue string
@@ -41,13 +51,12 @@ type UtilitiesInvoiceForm struct {
 
 func (f *UtilitiesInvoiceForm) Load(
 	invoice avisha.UtilityInvoice,
-	// previousReading will be used to calculate consumption as a subtraction
-	// from the current reading.
+	settings avisha.Settings,
 	previousReading int,
-	invoiceNet time.Duration,
 ) {
 	f.Invoice = invoice
-	f.invoiceNet = invoiceNet
+	f.invoiceNet = settings.Defaults.InvoiceNet
+	f.Invoice.GST = settings.Defaults.GST
 	f.PreviousReading.SetText(strconv.Itoa(previousReading))
 	f.Form.Load([]widget.Field{
 		{
@@ -85,9 +94,33 @@ func (f *UtilitiesInvoiceForm) Load(
 		},
 		{
 			Value: widget.CurrencyValuer{
+				Value: &f.Invoice.Charges.LateFee,
+			},
+			Input: &f.LateFee,
+		},
+		{
+			Value: widget.CurrencyValuer{
+				Value: &f.Invoice.Charges.LineCharge,
+			},
+			Input: &f.LineCharge,
+		},
+		{
+			Value: widget.CurrencyValuer{
+				Value: &f.Invoice.Charges.GST,
+			},
+			Input: &f.GST,
+		},
+		{
+			Value: widget.CurrencyValuer{
+				Value: &f.Invoice.Charges.Activity,
+			},
+			Input: &f.Activity,
+		},
+		{
+			Value: widget.CurrencyValuer{
 				Value: &f.Invoice.Bill,
 			},
-			Input: &f.TotalCost,
+			Input: &f.Bill,
 		},
 	})
 }
@@ -131,7 +164,7 @@ func (f *UtilitiesInvoiceForm) Update(gtx C) {
 		}
 		return strconv.Itoa(current - previous)
 	}())
-	f.TotalCost.SetText(func() string {
+	f.Activity.SetText(func() string {
 		consumed, err := util.ParseInt(f.UnitsConsumed.Text())
 		if err != nil {
 			return "0"
@@ -142,6 +175,42 @@ func (f *UtilitiesInvoiceForm) Update(gtx C) {
 		}
 		total := cost * currency.Currency(consumed)
 		return strconv.FormatFloat(total.Dollars(), 'f', 2, 64)
+	}())
+	f.GST.SetText(func() string {
+		activity, err := util.ParseCurrency(f.Activity.Text())
+		if err != nil {
+			return "0"
+		}
+		latefee, err := util.ParseCurrency(f.LateFee.Text())
+		if err != nil {
+			return "0"
+		}
+		linecharge, err := util.ParseCurrency(f.LineCharge.Text())
+		if err != nil {
+			return "0"
+		}
+		total := activity + latefee + linecharge
+		return strings.TrimPrefix(currency.Currency(float64(total)*(f.Invoice.GST/100)).String(), "$")
+	}())
+	f.Bill.SetText(func() string {
+		activity, err := util.ParseCurrency(f.Activity.Text())
+		if err != nil {
+			return "0"
+		}
+		latefee, err := util.ParseCurrency(f.LateFee.Text())
+		if err != nil {
+			return "0"
+		}
+		linecharge, err := util.ParseCurrency(f.LineCharge.Text())
+		if err != nil {
+			return "0"
+		}
+		gst, err := util.ParseCurrency(f.GST.Text())
+		if err != nil {
+			return "0"
+		}
+		total := activity + latefee + linecharge + gst
+		return strings.TrimPrefix(total.String(), "$")
 	}())
 	f.Form.Validate(gtx)
 }
@@ -210,12 +279,38 @@ func (f *UtilitiesInvoiceForm) Layout(gtx C, th *style.Theme) D {
 						}),
 						layout.Flexed(1, func(gtx C) D {
 							gtx.Queue = nil
-							f.TotalCost.Prefix = func(gtx C) D {
+							f.Activity.Prefix = func(gtx C) D {
 								return material.Body1(th.Dark(), "$").Layout(gtx)
 							}
-							return f.TotalCost.Layout(gtx, th.Dark(), "Total Cost")
+							return f.Activity.Layout(gtx, th.Dark(), "Activity")
 						}),
 					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					f.LineCharge.Prefix = func(gtx C) D {
+						return material.Body1(th.Dark(), "$").Layout(gtx)
+					}
+					return f.LineCharge.Layout(gtx, th.Dark(), "LineCharge")
+				}),
+				layout.Rigid(func(gtx C) D {
+					f.LateFee.Prefix = func(gtx C) D {
+						return material.Body1(th.Dark(), "$").Layout(gtx)
+					}
+					return f.LateFee.Layout(gtx, th.Dark(), "LateFee")
+				}),
+				layout.Rigid(func(gtx C) D {
+					gtx.Queue = nil
+					f.GST.Prefix = func(gtx C) D {
+						return material.Body1(th.Dark(), "$").Layout(gtx)
+					}
+					return f.GST.Layout(gtx, th.Dark(), fmt.Sprintf("GST (%.0f%%)", f.Invoice.GST))
+				}),
+				layout.Rigid(func(gtx C) D {
+					gtx.Queue = nil
+					f.Bill.Prefix = func(gtx C) D {
+						return material.Body1(th.Dark(), "$").Layout(gtx)
+					}
+					return f.Bill.Layout(gtx, th.Dark(), "Bill")
 				}),
 			)
 		}),

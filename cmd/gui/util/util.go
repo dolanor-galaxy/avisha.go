@@ -176,12 +176,16 @@ func FlexStrategy(weight float32, flex, actual layout.Axis, w layout.Widget) lay
 
 // UtilityInvoiceDocument renders utility invoices to an html document.
 type UtilityInvoiceDocument struct {
-	Invoice avisha.UtilityInvoice
-	Lease   avisha.Lease
-	Tenant  avisha.Tenant
-	Site    avisha.Site
+	// @Todo drive previous reading from history
+	// @Todo use history to display unpaid invoices
+	// History []avisha.UtilityInvoice
+	Previous avisha.UtilityInvoice
+	Invoice  avisha.UtilityInvoice
 
-	PreviousReading int
+	Lease    avisha.Lease
+	Tenant   avisha.Tenant
+	Site     avisha.Site
+	Settings avisha.Settings
 }
 
 // Render the document into a buffer.
@@ -191,6 +195,13 @@ func (doc UtilityInvoiceDocument) Render() (*bytes.Buffer, error) {
 		Funcs(template.FuncMap{
 			"date": func(t time.Time) string {
 				return t.Format("Monday, 2 January 2006")
+			},
+			"generateReference": func() string {
+				// Get the first three letters of the last name.
+				fields := strings.Fields(doc.Tenant.Name)
+				name := strings.ToUpper(fields[len(fields)-1][0:3])
+				site := strings.ToUpper(doc.Site.Number)
+				return fmt.Sprintf("%s-S.%s POWR", name, site)
 			},
 		}).
 		Parse(strings.TrimSpace(UtilityInvoiceTemplateLiteral))
@@ -364,11 +375,11 @@ var UtilityInvoiceTemplateLiteral = `
 				<tbody>
 					<tr>
 						<td><var>{{.Invoice.UnitCost}}</var></td>
-						<td><var>{{.PreviousReading}}</var></td>
+						<td><var>{{.Previous.Reading}}</var></td>
 						<td><var>{{.Invoice.Reading}}</var></td>
 						<td><var>{{.Invoice.UnitsConsumed}}</var></td>
 						<!-- @Todo utilities cost, not total bill -->
-						<td><var>{{.Invoice.Bill}}</var></td>
+						<td><var>{{.Invoice.Charges.Activity}}</var></td>
 					</tr>
 				</tbody>
 			</table>
@@ -379,15 +390,15 @@ var UtilityInvoiceTemplateLiteral = `
 						<th>Line Charge</th>
 						<th>Late Fee</th>
 						<!-- @Todo pull gst from settings -->
-						<th>GST (%10)</th>
+						<th>GST ({{.Invoice.GST}}%)</th>
 						<th>Total Charges</th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr>
-						<td><var>@Todo Line charge</var></td>
-						<td><var>@Todo Late payment fee</var></td>
-						<td><var>@Todo GST</var></td>
+						<td><var>{{.Invoice.Charges.LineCharge}}</var></td>
+						<td><var>{{.Invoice.Charges.LateFee}}</var></td>
+						<td><var>{{.Invoice.Charges.GST}}</var></td>
 						<td><var>{{.Invoice.Bill}}</var></td>
 					</tr>
 				</tbody>
@@ -403,20 +414,14 @@ var UtilityInvoiceTemplateLiteral = `
 				<card>
 					<header>Make Payable To</header>
 					<p>
-						<!-- @Todo drive from settings --> 
-						<!-- @Todo "service reference" driven from the service being invoiced --> 
-						<b>Reference</b>
-					</p>
-					<ul class="compact">
-						<li>Power: <var>HAT-S.01 POWR</var></li>
-						<li>Rent: <var>HAT-S.01 RENT</var></li>
-					</ul>
-					<p>
-						<b>Bank Acc:</b> Westpac <var>03-1393-001-6007-000</var>
+						<b>Bank Acc:</b> {{.Settings.Bank.Name}} <var>{{.Settings.Bank.Account}}</var>
 						</br>
-						<b>Email:</b> admin@avishagroup.co.nz
+						<b>Reference:</b> {{generateReference}}
 						</br>
-						<b>Phone:</b> 027 502 2142
+						<!-- @Todo list contact items in generic fashion -->
+						<b>Email:</b> {{.Settings.Landlord.Email}}
+						</br>
+						<b>Phone:</b> {{.Settings.Landlord.Phone}}
 					</p>
 				</card>
 			</cards>

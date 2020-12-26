@@ -142,6 +142,19 @@ type UtilityInvoice struct {
 	UnitsConsumed int
 	// Reading is the units read off the meter.
 	Reading int
+	// GST records the GST used at the time the invoice was generated.
+	GST float64
+	// Charges contains all the constituent parts of the total bill.
+	Charges struct {
+		// LateFee for when payment is late.
+		LateFee currency.Currency
+		// LineCharge fee.
+		LineCharge currency.Currency
+		// GST calculated based on percentage.
+		GST currency.Currency
+		// Activity charge is "units-consumed * unit-cost".
+		Activity currency.Currency
+	}
 }
 
 // Settings are global settings that don't pertain to any specific entity.
@@ -168,6 +181,7 @@ type Defaults struct {
 	UnitCost   currency.Currency
 	RentCycle  time.Duration
 	InvoiceNet time.Duration
+	GST        float64
 }
 
 // Default to sane values.

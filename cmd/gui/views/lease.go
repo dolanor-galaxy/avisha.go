@@ -167,7 +167,7 @@ func (p *LeasePage) Update(gtx C) {
 		if err != nil {
 			log.Printf("loading settings: %v", err)
 		}
-		p.UtilitiesInvoiceForm.Load(avisha.UtilityInvoice{}, prevReading, settings.Defaults.InvoiceNet)
+		p.UtilitiesInvoiceForm.Load(avisha.UtilityInvoice{}, settings, prevReading)
 		p.modal = func(gtx C) D {
 			return style.ModalDialog(gtx, p.Th, unit.Dp(700), "Bill Utilities", func(gtx C) D {
 				return p.UtilitiesInvoiceForm.Layout(gtx, p.Th)
@@ -252,22 +252,29 @@ func (p *LeasePage) Update(gtx C) {
 	}
 	states := p.invoiceStates.List()
 	for ii, state := range states {
-		var (
-			invoice         = (*avisha.UtilityInvoice)(state.Data)
-			previousReading = 0
-		)
-		if ii < len(states)-1 {
-			previousReading = (*avisha.UtilityInvoice)(states[ii+1].Data).Reading
-		}
 		// @Todo Do io async to avoid blocking ui.
 		if state.Item.Clicked() {
+			var (
+				invoice  = (*avisha.UtilityInvoice)(state.Data)
+				previous avisha.UtilityInvoice
+				settings avisha.Settings
+			)
+			if ii < len(states)-1 {
+				previous = *(*avisha.UtilityInvoice)(states[ii+1].Data)
+			}
+			if s, err := p.App.LoadSettings(); err != nil {
+				log.Printf("loading settings: %v", err)
+			} else {
+				settings = s
+			}
 			if err := func() error {
 				doc := util.UtilityInvoiceDocument{
-					Invoice:         *invoice,
-					Lease:           p.lease,
-					Site:            site,
-					Tenant:          tenant,
-					PreviousReading: previousReading,
+					Invoice:  *invoice,
+					Previous: previous,
+					Lease:    p.lease,
+					Site:     site,
+					Tenant:   tenant,
+					Settings: settings,
 				}
 				buffer, err := doc.Render()
 				if err != nil {
