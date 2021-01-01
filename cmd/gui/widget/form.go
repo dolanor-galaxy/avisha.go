@@ -36,7 +36,9 @@ type Input interface {
 }
 
 // Field associates a value with a name.
-// Name is the formatted title of the field, suitable for rendering to the UI.
+// Value performs validation and text-data mapping.
+// Input is the object that the user interacts with that can display text and
+// errors.
 type Field struct {
 	Value Valuer
 	Input Input
@@ -44,7 +46,7 @@ type Field struct {
 
 // Validate the field by running the text through the Valuer.
 // Precise validation logic is implemented by the Valuer.
-// Returns a boolean indication success.
+// Returns a boolean indicating success.
 func (field *Field) Validate() bool {
 	err := field.Value.From(field.Input.Text())
 	if err != nil {
