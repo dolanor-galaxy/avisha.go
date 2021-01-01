@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"github.com/jackmordaunt/avisha.go/cmd/gui/nav"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/util"
 	"github.com/jackmordaunt/avisha.go/cmd/gui/widget/style"
+	"github.com/spf13/pflag"
 
 	"gioui.org/unit"
 	"github.com/jackmordaunt/avisha.go"
@@ -23,19 +25,51 @@ import (
 	"gioui.org/op"
 )
 
+var (
+	develop bool
+	fresh   bool
+)
+
+func init() {
+	pflag.BoolVar(&develop, "develop", false, "development mode")
+	pflag.BoolVar(&fresh, "fresh", false, "clear the database when in development mode")
+	pflag.Parse()
+}
+
 func main() {
 	db, err := func() (*storm.DB, error) {
 		db, err := storm.Open(func() string {
-			db, ok := os.LookupEnv("avisha_db")
+			var (
+				db  string
+				ok  bool
+				err error
+			)
+			defer func() {
+				if develop {
+					if fresh {
+						if err := os.Remove(db); err != nil {
+							fmt.Printf("error: clearing database: %v", err)
+						}
+					}
+					fmt.Printf("info: db located at: %v\n", db)
+				}
+			}()
+			db, ok = os.LookupEnv("avisha_db")
 			if !ok {
-				db, err := app.DataDir()
+				var (
+					name = "avisha.db"
+				)
+				if develop {
+					name = "develop_avisha.db"
+				}
+				db, err = app.DataDir()
 				if err != nil {
 					log.Printf("error: finding data dir: defaulting to cwd\n")
-					db := filepath.Join("target", "avisha.db")
-					_ = os.Mkdir(filepath.Dir(db), 0777)
-					return db
+					_ = os.Mkdir("target", 0777)
+					db = filepath.Join("target", name)
+				} else {
+					db = filepath.Join(db, name)
 				}
-				return filepath.Join(db, "avisha.db")
 			}
 			return db
 		}())
@@ -51,8 +85,14 @@ func main() {
 		if err := db.Init(&avisha.Tenant{}); err != nil {
 			return nil, err
 		}
+		// @TODO: invoice bucket per service.
 		if err := db.Init(&avisha.UtilityInvoice{}); err != nil {
 			return nil, err
+		}
+		if develop {
+			if err := LoadFakeData(db); err != nil {
+				return nil, fmt.Errorf("loading fake data: %v", err)
+			}
 		}
 		return db, nil
 	}()
