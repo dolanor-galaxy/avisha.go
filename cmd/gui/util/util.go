@@ -178,7 +178,7 @@ func FlexStrategy(weight float32, flex, actual layout.Axis, w layout.Widget) lay
 type UtilityInvoiceDocument struct {
 	// @Todo drive previous reading from history
 	// @Todo use history to display unpaid invoices
-	// History []avisha.UtilityInvoice
+	History  []*avisha.UtilityInvoice
 	Previous avisha.UtilityInvoice
 	Invoice  avisha.UtilityInvoice
 
@@ -361,7 +361,30 @@ var UtilityInvoiceTemplateLiteral = `
 		</article>
 		<article id="activity">
 			<header><h1>Activity</h1></header>
-			<!-- @Todo Show previous unpaid invoices for this service -->
+			<table>
+				<caption>Previous Activity</caption>
+				<thead>
+					<tr>
+						<th>Invoice</th>
+						<th>Bill</th>
+						<th>Received</th>
+						<th>Outstanding</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{range $invoice := .History}}
+						{{if not $invoice.IsPaid}}
+						<tr>
+							<td><var>{{$invoice.ID}}</var></td>
+							<td><var>{{$invoice.Bill}}</var></td>
+							<!-- When was the most recent payment received, if at all? --> 
+							<td><var></var></td>
+							<td><var>{{$invoice.Balance}}</var></td>
+						</tr>
+						{{end}}
+					{{end}}
+				</tbody>
+			</table>
 			<table>
 				<caption>Current Activity</caption>
 				<thead>

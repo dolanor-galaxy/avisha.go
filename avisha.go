@@ -137,17 +137,56 @@ func (l Ledger) Balance() currency.Currency {
 	return credits - debits
 }
 
+func (l Ledger) String() string {
+	return l.Balance().String()
+}
+
 // Invoice is a document requesting payment for a service.
 type Invoice struct {
 	ID    ID `storm:"id,increment"`
 	Lease int
-	// Bill is the amount of currency.currency due.
+
+	// Bill is the amount of currency due.
 	Bill currency.Currency
-	// Important dates.
+	// Balance tracks partial payments.
+	// @Todo automatically set Paid time based on when the Balance hits zero,
+	// rather than in the "mark paid" func.
+	Balance Ledger
+	// Issused is when the invoice is set to the invoicee.
 	Issued time.Time
-	Due    time.Time
-	Paid   time.Time
+	// Due is when the invoice must be paid by, else a penalty is issued.
+	Due time.Time
+	// Paid is when the invoice was fully paid.
+	Paid time.Time
+	// Period over which the invoice applies.
 	Period Term
+}
+
+// IsPaid reports whether the invoice has been paid.
+func (inv Invoice) IsPaid() bool {
+	return !inv.Paid.IsZero()
+}
+
+// Pay the invoice.
+// Overpayment is an error.
+// Negative amount is invalid.
+//
+// @Todo overpayment policy: store up credit for this service, which automatically
+// pays down the next invoice.
+func (inv *Invoice) Pay(amount currency.Currency) error {
+	if amount < 0 {
+		return fmt.Errorf("invoice payment must be a positive value, got %s", amount)
+	}
+	if amount > inv.Bill {
+		return fmt.Errorf("attempted overpay for invoice %d bill %s, payment %s", inv.ID, inv.Bill, amount)
+	}
+	inv.Balance.Credit(amount)
+	if inv.Balance.Balance() == 0 {
+		if inv.Paid == (time.Time{}) {
+			inv.Paid = time.Now()
+		}
+	}
+	return nil
 }
 
 // UtilityInvoice is a document requesting payment for utility consumption.
@@ -325,13 +364,15 @@ func (app App) markInvoices(leaseID int, service Service) error {
 		if total < int(inv.Bill) {
 			break
 		}
-		if inv.Paid == (time.Time{}) {
-			inv.Paid = time.Now()
+		if err := inv.Pay(inv.Bill); err != nil {
+			return fmt.Errorf("paying invoice: %v", err)
 		}
+		total -= int(inv.Bill)
+	}
+	for _, inv := range invoices {
 		if err := app.Update(inv); err != nil {
 			return fmt.Errorf("update: %w", err)
 		}
-		total -= int(inv.Bill)
 	}
 	return nil
 }

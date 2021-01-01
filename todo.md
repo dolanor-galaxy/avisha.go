@@ -12,7 +12,7 @@
   - [ ] constant per lease, part of the utilities service
 - [x] unit cost is global variable
 - [x] due date net 14 for utility bill, global variable
-- [ ] utility invoice shows any previous unpaid invoices
+- [x] utility invoice shows any previous unpaid invoices
 - [x] service reference number (unique per lease?)
 
 ## Rent

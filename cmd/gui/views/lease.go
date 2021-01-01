@@ -238,7 +238,7 @@ func (p *LeasePage) Update(gtx C) {
 			if err := p.App.BillService(
 				p.lease.ID,
 				"utilities",
-				inv.UnitCost*currency.Currency(inv.UnitsConsumed),
+				inv.Bill,
 			); err != nil {
 				log.Printf("billing service: %v", err)
 			}
@@ -255,6 +255,7 @@ func (p *LeasePage) Update(gtx C) {
 		// @Todo Do io async to avoid blocking ui.
 		if state.Item.Clicked() {
 			var (
+				history  []*avisha.UtilityInvoice
 				invoice  = (*avisha.UtilityInvoice)(state.Data)
 				previous avisha.UtilityInvoice
 				settings avisha.Settings
@@ -267,10 +268,16 @@ func (p *LeasePage) Update(gtx C) {
 			} else {
 				settings = s
 			}
+			if err := p.App.Select(q.Eq("Lease", p.lease.ID)).OrderBy("ID", "Paid").Reverse().Find(&history); err != nil {
+				if err != storm.ErrNotFound {
+					log.Printf("loading invoices: %v", err)
+				}
+			}
 			if err := func() error {
 				doc := util.UtilityInvoiceDocument{
 					Invoice:  *invoice,
 					Previous: previous,
+					History:  history,
 					Lease:    p.lease,
 					Site:     site,
 					Tenant:   tenant,
