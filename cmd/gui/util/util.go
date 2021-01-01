@@ -322,7 +322,7 @@ var UtilityInvoiceTemplateLiteral = `
 						</br>
 						GST No. 125544207
 						</br>
-						5/280 Riverhead Rd | Riverhead | AKL
+						{{.Settings.Landlord.Address}}
 					</p>
 				</card>
 				<card class="no-border">

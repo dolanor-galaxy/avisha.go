@@ -26,6 +26,7 @@ type SettingsForm struct {
 		Name  materials.TextField
 		Email materials.TextField
 		Phone materials.TextField
+		AddressForm
 	}
 
 	Defaults struct {
@@ -61,6 +62,7 @@ func (s *SettingsForm) Clear() {
 // Load initialises the form fields.
 func (s *SettingsForm) Load(settings *avisha.Settings) {
 	s.Settings = settings
+	s.Landlord.Load(&s.Settings.Landlord.Address)
 	s.BillTo.Load(&s.Settings.Defaults.Address)
 	s.Form.Load([]widget.Field{
 		{
@@ -104,6 +106,12 @@ func (s *SettingsForm) Load(settings *avisha.Settings) {
 
 // Submit validates the data and returns a boolean indicating validity.
 func (s *SettingsForm) Submit() (settings avisha.Settings, ok bool) {
+	if !s.Landlord.Form.Submit() {
+		return settings, false
+	}
+	if !s.BillTo.Form.Submit() {
+		return settings, false
+	}
 	if !s.Form.Submit() {
 		return settings, false
 	}
@@ -153,6 +161,8 @@ func (s *SettingsForm) Layout(gtx C, th *style.Theme) D {
 		}
 	}
 	s.Form.Validate(gtx)
+	s.BillTo.Form.Validate(gtx)
+	s.Landlord.AddressForm.Form.Validate(gtx)
 	return layout.UniformInset(unit.Dp(10)).Layout(
 		gtx,
 		func(gtx C) D {
@@ -164,6 +174,10 @@ func (s *SettingsForm) Layout(gtx C, th *style.Theme) D {
 				layout.Rigid(field(&s.Landlord.Name, "Name")),
 				layout.Rigid(field(&s.Landlord.Email, "Email")),
 				layout.Rigid(field(&s.Landlord.Phone, "Phone")),
+				layout.Rigid(title("Landlord Address", unit.Dp(10))),
+				layout.Rigid(func(gtx C) D {
+					return s.Landlord.AddressForm.Layout(gtx, th)
+				}),
 				layout.Rigid(title("Bank Details")),
 				layout.Rigid(field(&s.Bank.Name, "Name")),
 				layout.Rigid(field(&s.Bank.Account, "Account")),
