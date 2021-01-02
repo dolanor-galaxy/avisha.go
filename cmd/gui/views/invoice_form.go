@@ -126,7 +126,10 @@ func (f *UtilitiesInvoiceForm) Load(
 }
 
 func (f *UtilitiesInvoiceForm) Submit() (invoice avisha.UtilityInvoice, ok bool) {
-	f.Invoice.Balance.Debit(f.Invoice.Bill)
+	f.Invoice.Balance.Debit(avisha.Payment{
+		Amount: f.Invoice.Bill,
+		Time:   time.Now(),
+	})
 	return f.Invoice, f.Form.Submit()
 }
 

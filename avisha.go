@@ -108,31 +108,37 @@ func (s Service) Balance() currency.Currency {
 	return s.Ledger.Balance()
 }
 
+// Payment tracks currency transfer.
+type Payment struct {
+	Time   time.Time
+	Amount currency.Currency
+}
+
 // Ledger maintains a balance of currency.currency.
 type Ledger struct {
-	Credits []currency.Currency
-	Debits  []currency.Currency
+	Credits []Payment
+	Debits  []Payment
 }
 
 // Credit record a credit of currency.currency.
-func (l *Ledger) Credit(amount currency.Currency) {
-	l.Credits = append(l.Credits, amount)
+func (l *Ledger) Credit(p Payment) {
+	l.Credits = append(l.Credits, p)
 }
 
 // Debit records a debit of currency.currency.
-func (l *Ledger) Debit(amount currency.Currency) {
-	l.Debits = append(l.Debits, amount)
+func (l *Ledger) Debit(p Payment) {
+	l.Debits = append(l.Debits, p)
 }
 
 // Balance calculates the Balance of the Service.
 func (l Ledger) Balance() currency.Currency {
 	credits := currency.Currency(0)
 	for _, c := range l.Credits {
-		credits += c
+		credits += c.Amount
 	}
 	debits := currency.Currency(0)
 	for _, d := range l.Debits {
-		debits += d
+		debits += d.Amount
 	}
 	return credits - debits
 }
@@ -173,17 +179,18 @@ func (inv Invoice) IsPaid() bool {
 //
 // @Todo overpayment policy: store up credit for this service, which automatically
 // pays down the next invoice.
-func (inv *Invoice) Pay(amount currency.Currency) error {
-	if amount < 0 {
-		return fmt.Errorf("invoice payment must be a positive value, got %s", amount)
+func (inv *Invoice) Pay(p Payment) error {
+	fmt.Printf("paying invoice: %v\n", p)
+	if p.Amount < 0 {
+		return fmt.Errorf("invoice payment must be a positive value, got %s", p.Amount)
 	}
-	if amount > inv.Bill {
-		return fmt.Errorf("attempted overpay for invoice %d bill %s, payment %s", inv.ID, inv.Bill, amount)
+	if p.Amount > inv.Bill {
+		return fmt.Errorf("attempted overpay for invoice %d bill %s, payment %s", inv.ID, inv.Bill, p.Amount)
 	}
-	inv.Balance.Credit(amount)
+	inv.Balance.Credit(p)
 	if inv.Balance.Balance() == 0 {
 		if inv.Paid == (time.Time{}) {
-			inv.Paid = time.Now()
+			inv.Paid = p.Time
 		}
 	}
 	return nil
@@ -308,7 +315,12 @@ func (app App) RegisterTenant(t *Tenant) error {
 }
 
 // PayService records a payment for some service on a lease.
+//
+// @Refactor When paying a service we want to pay a specific invoice of that service.
+// Otherwise, if no invoice is specified, we want to pay the oldest invoice first
+// and store as credits any overpayment.
 func (app App) PayService(leaseID int, service string, amount currency.Currency) error {
+	fmt.Printf("PayService: %v\n", amount)
 	var l Lease
 	if err := app.One("ID", leaseID, &l); err != nil {
 		return fmt.Errorf("finding lease: %w", err)
@@ -317,7 +329,10 @@ func (app App) PayService(leaseID int, service string, amount currency.Currency)
 		l.Services = make(map[string]Service)
 	}
 	s := l.Services[service]
-	s.Ledger.Credit(amount)
+	s.Ledger.Credit(Payment{
+		Amount: amount,
+		Time:   time.Now(),
+	})
 	l.Services[service] = s
 	if err := app.markInvoices(leaseID, s); err != nil {
 		return fmt.Errorf("marking invoices: %w", err)
@@ -335,7 +350,10 @@ func (app App) BillService(leaseID int, service string, amount currency.Currency
 		l.Services = make(map[string]Service)
 	}
 	s := l.Services[service]
-	s.Ledger.Debit(amount)
+	s.Ledger.Debit(Payment{
+		Amount: amount,
+		Time:   time.Now(),
+	})
 	l.Services[service] = s
 	if err := app.markInvoices(leaseID, s); err != nil {
 		return fmt.Errorf("marking invoices: %w", err)
@@ -354,7 +372,7 @@ func (app App) markInvoices(leaseID int, service Service) error {
 		return fmt.Errorf("loading invoices: %w", err)
 	}
 	for _, credit := range service.Ledger.Credits {
-		total += int(credit)
+		total += int(credit.Amount)
 	}
 	// Pay all the invoices we can, marking them paid as of now if they weren't
 	// marked already.
@@ -364,7 +382,10 @@ func (app App) markInvoices(leaseID int, service Service) error {
 		if total < int(inv.Bill) {
 			break
 		}
-		if err := inv.Pay(inv.Bill); err != nil {
+		if err := inv.Pay(Payment{
+			Amount: inv.Bill,
+			Time:   time.Now(),
+		}); err != nil {
 			return fmt.Errorf("paying invoice: %v", err)
 		}
 		total -= int(inv.Bill)

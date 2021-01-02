@@ -384,7 +384,15 @@ var UtilityInvoiceTemplateLiteral = `
 								<td><var>{{$invoice.Bill}}</var></td>
 								<!-- @Todo per-invoice payments -->
 								<!-- How much of this overdue invoice has been received? --> 
-								<td><var>$0.00</var></td>
+								<td><var>
+									<ul>
+									{{range $payment := $invoice.Balance.Credits}}
+										<li>
+											{{$payment.Amount}}
+										</li>
+									{{end}}
+									</ul>
+								</var></td>
 								<td><var>{{abs $invoice.Balance.Balance}}</var></td>
 							</tr>
 							{{end}}
@@ -436,10 +444,8 @@ var UtilityInvoiceTemplateLiteral = `
 			</table>
 			<blockquote>
 				<p>
-					<--!
-						@Todo do prevoius outstanding invoices factor into the bill? 
-						I don't think so because then you would'nt be able to accumulate the bill amounts
-					--> 
+					<!-- @Todo do prevoius outstanding invoices factor into the bill? -->
+					<!-- I don't think so because then you would'nt be able to accumulate the bill amounts -->
 					Total Amount Due by <time>{{date .Invoice.Due}}</time> <var>{{.Invoice.Bill}}</var>
 					</br>
 					<small>(please note late payment fee will be charged if payment not received by due date)</small>
