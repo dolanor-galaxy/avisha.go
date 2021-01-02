@@ -273,6 +273,9 @@ func (p *LeasePage) Update(gtx C) {
 					log.Printf("loading invoices: %v", err)
 				}
 			}
+			if len(history) > ii {
+				history = history[ii+1:]
+			}
 			if err := func() error {
 				doc := util.UtilityInvoiceDocument{
 					Invoice:  *invoice,

@@ -203,6 +203,12 @@ func (doc UtilityInvoiceDocument) Render() (*bytes.Buffer, error) {
 				site := strings.ToUpper(doc.Site.Number)
 				return fmt.Sprintf("%s-S.%s POWR", name, site)
 			},
+			"abs": func(c currency.Currency) string {
+				if c < 0 {
+					c *= -1
+				}
+				return c.String()
+			},
 		}).
 		Parse(strings.TrimSpace(UtilityInvoiceTemplateLiteral))
 	if err != nil {
@@ -361,30 +367,32 @@ var UtilityInvoiceTemplateLiteral = `
 		</article>
 		<article id="activity">
 			<header><h1>Activity</h1></header>
-			<table>
-				<caption>Previous Activity</caption>
-				<thead>
-					<tr>
-						<th>Invoice</th>
-						<th>Bill</th>
-						<th>Received</th>
-						<th>Outstanding</th>
-					</tr>
-				</thead>
-				<tbody>
-					{{range $invoice := .History}}
-						{{if not $invoice.IsPaid}}
+			{{if .History}}
+				<table>
+					<caption>Previous Activity</caption>
+					<thead>
 						<tr>
-							<td><var>{{$invoice.ID}}</var></td>
-							<td><var>{{$invoice.Bill}}</var></td>
-							<!-- When was the most recent payment received, if at all? --> 
-							<td><var></var></td>
-							<td><var>{{$invoice.Balance}}</var></td>
+							<th>Invoice</th>
+							<th>Bill</th>
+							<th>Received</th>
+							<th>Outstanding</th>
 						</tr>
+					</thead>
+					<tbody>
+						{{range $invoice := .History}}
+							{{if not $invoice.IsPaid}}
+							<tr>
+								<td><var>{{$invoice.ID}}</var></td>
+								<td><var>{{$invoice.Bill}}</var></td>
+								<!-- When was the most recent payment received, if at all? --> 
+								<td><var>$0.00</var></td>
+								<td><var>{{abs $invoice.Balance.Balance}}</var></td>
+							</tr>
+							{{end}}
 						{{end}}
-					{{end}}
-				</tbody>
-			</table>
+					</tbody>
+				</table>
+			{{end}}
 			<table>
 				<caption>Current Activity</caption>
 				<thead>
