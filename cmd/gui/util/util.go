@@ -176,8 +176,6 @@ func FlexStrategy(weight float32, flex, actual layout.Axis, w layout.Widget) lay
 
 // UtilityInvoiceDocument renders utility invoices to an html document.
 type UtilityInvoiceDocument struct {
-	// @Todo drive previous reading from history
-	// @Todo use history to display unpaid invoices
 	History  []*avisha.UtilityInvoice
 	Previous avisha.UtilityInvoice
 	Invoice  avisha.UtilityInvoice
@@ -384,7 +382,8 @@ var UtilityInvoiceTemplateLiteral = `
 							<tr>
 								<td><var>{{$invoice.ID}}</var></td>
 								<td><var>{{$invoice.Bill}}</var></td>
-								<!-- When was the most recent payment received, if at all? --> 
+								<!-- @Todo per-invoice payments -->
+								<!-- How much of this overdue invoice has been received? --> 
 								<td><var>$0.00</var></td>
 								<td><var>{{abs $invoice.Balance.Balance}}</var></td>
 							</tr>
@@ -437,6 +436,10 @@ var UtilityInvoiceTemplateLiteral = `
 			</table>
 			<blockquote>
 				<p>
+					<--!
+						@Todo do prevoius outstanding invoices factor into the bill? 
+						I don't think so because then you would'nt be able to accumulate the bill amounts
+					--> 
 					Total Amount Due by <time>{{date .Invoice.Due}}</time> <var>{{.Invoice.Bill}}</var>
 					</br>
 					<small>(please note late payment fee will be charged if payment not received by due date)</small>
