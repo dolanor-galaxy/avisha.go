@@ -114,6 +114,12 @@ type Payment struct {
 	Amount currency.Currency
 }
 
+func (p Payment) Equal(other Payment) bool {
+	py, pm, pd := p.Time.Date()
+	oy, om, od := other.Time.Date()
+	return p.Amount == other.Amount && py == oy && pm == om && pd == od
+}
+
 // Ledger maintains a balance of currency.currency.
 type Ledger struct {
 	Credits []Payment
@@ -168,6 +174,13 @@ type Invoice struct {
 	Period Term
 }
 
+func (inv Invoice) Equal(other Invoice) bool {
+	return inv.Lease == other.Lease &&
+		inv.Bill == other.Bill &&
+
+		equalDate(inv.Paid, other.Paid)
+}
+
 // IsPaid reports whether the invoice has been paid.
 func (inv Invoice) IsPaid() bool {
 	return !inv.Paid.IsZero()
@@ -179,8 +192,9 @@ func (inv Invoice) IsPaid() bool {
 //
 // @Todo overpayment policy: store up credit for this service, which automatically
 // pays down the next invoice.
+//
+// @Todo error if attempt to pay an already paid invoice.
 func (inv *Invoice) Pay(p Payment) error {
-	fmt.Printf("paying invoice: %v\n", p)
 	if p.Amount < 0 {
 		return fmt.Errorf("invoice payment must be a positive value, got %s", p.Amount)
 	}
@@ -188,7 +202,7 @@ func (inv *Invoice) Pay(p Payment) error {
 		return fmt.Errorf("attempted overpay for invoice %d bill %s, payment %s", inv.ID, inv.Bill, p.Amount)
 	}
 	inv.Balance.Credit(p)
-	if inv.Balance.Balance() == 0 {
+	if len(inv.Balance.Debits) > 0 && len(inv.Balance.Credits) > 0 && inv.Balance.Balance() == 0 {
 		if inv.Paid == (time.Time{}) {
 			inv.Paid = p.Time
 		}
@@ -267,6 +281,51 @@ type App struct {
 	*storm.DB
 	notify.Notifier
 }
+
+// Pay an invoice.
+func (app App) Pay(invoiceID int, p Payment) error {
+	var (
+		invoice Invoice
+	)
+	if err := app.One("ID", invoiceID, &invoice); err != nil {
+		return err
+	}
+	if err := invoice.Pay(p); err != nil {
+		return err
+	}
+	return app.Update(&invoice)
+}
+
+// PayUtilityInvoice an invoice.
+// Overpayment policy: pay the oldest overdue invoice and store excess as credit
+// to paydown the next invoice.
+func (app App) PayUtilityInvoice(invoiceID int, p Payment) error {
+	var (
+		invoice UtilityInvoice
+		// lease   Lease
+	)
+	if err := app.One("ID", invoiceID, &invoice); err != nil {
+		return err
+	}
+	// if err := app.One("ID", invoice.Lease, &lease); err != nil {
+	// 	return err
+	// }
+	// @Todo store excess as credit for service.
+	if err := invoice.Pay(p); err != nil {
+		return err
+	}
+	if err := app.Save(&invoice); err != nil {
+		return err
+	}
+	fmt.Printf("payed invoice: %v\n", invoice)
+	return nil
+}
+
+// Bill creates an invoice.
+// func (app App) Bill() error {
+
+// 	return nil
+// }
 
 // LoadSettings loads global settings.
 func (app App) LoadSettings() (s Settings, err error) {
@@ -407,4 +466,10 @@ func (t Term) String() string {
 
 func (t Term) End() time.Time {
 	return t.Start.Add(t.Duration)
+}
+
+func equalDate(left, right time.Time) bool {
+	ly, lm, ld := left.Date()
+	ry, rm, rd := right.Date()
+	return ly == ry && lm == rm && ld == rd
 }

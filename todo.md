@@ -14,6 +14,7 @@
 - [x] due date net 14 for utility bill, global variable
 - [x] utility invoice shows any previous unpaid invoices
 - [x] service reference number (unique per lease?)
+- [ ] out of order invoice payments
 
 ## Rent
 
@@ -43,3 +44,9 @@
 - [x] global: bank details
 - [ ] how to handle hosted data and users
 - [ ] show site first and order leases by site alphabetically
+
+## GUI Patterns
+
+### List Selection
+
+Instead of using overlays to hide list content, render list of items off to the side or underneath the result box.

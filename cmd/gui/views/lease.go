@@ -39,6 +39,7 @@ type LeasePage struct {
 	Form                 LeaseForm
 	Dialog               style.Dialog
 	UtilitiesInvoiceForm UtilitiesInvoiceForm
+	UtilitiesPaymentForm UtilitiesPaymentForm
 
 	PayUtility  widget.Clickable
 	BillUtility widget.Clickable
@@ -140,12 +141,10 @@ func (p *LeasePage) Update(gtx C) {
 	}
 	if p.PayUtility.Clicked() {
 		p.Dialog.Context = "pay-utilities"
+		p.UtilitiesPaymentForm.Load(UtilitiesPayment{}, nil)
 		p.modal = func(gtx C) D {
 			return style.ModalDialog(gtx, p.Th, unit.Dp(700), "Pay Utilities", func(gtx C) D {
-				p.Dialog.Input.Prefix = func(gtx C) D {
-					return material.Label(p.Th.Dark(), p.Th.TextSize, "$").Layout(gtx)
-				}
-				return p.Dialog.Layout(gtx, p.Th.Primary(), "Amount")
+				return p.UtilitiesPaymentForm.Layout(gtx, p.Th)
 			})
 		}
 	}
@@ -227,6 +226,19 @@ func (p *LeasePage) Update(gtx C) {
 	}
 	if p.Dialog.Cancel.Clicked() {
 		p.Dialog.Input.Clear()
+		p.modal = nil
+	}
+	if p.UtilitiesPaymentForm.SubmitBtn.Clicked() {
+		if payment, ok := p.UtilitiesPaymentForm.Submit(); ok {
+			if err := p.App.PayUtilityInvoice(payment.InvoiceID, payment.Payment); err != nil {
+				log.Printf("paying invoice: %v", err)
+			}
+		}
+		p.UtilitiesPaymentForm.Clear()
+		p.modal = nil
+	}
+	if p.UtilitiesPaymentForm.CancelBtn.Clicked() {
+		p.UtilitiesPaymentForm.Clear()
 		p.modal = nil
 	}
 	if p.UtilitiesInvoiceForm.SubmitBtn.Clicked() {
